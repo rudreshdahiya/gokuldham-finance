@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>31 Revolutions</title>
+
+    <link rel="stylesheet" href="styles.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+
+<body>
+
+    <div id="ui-layer">
+        <div id="atmosphere-overlay" class="hidden"></div>
+        <div id="intro-screen">
+            <!-- Decorative Intro Constellation -->
+            <div class="intro-constellation">
+                <svg width="120" height="60" viewBox="0 0 120 60">
+                    <path class="constellation-path" d="M10,50 Q40,10 110,30"
+                        style="stroke: var(--accent); opacity: 0.6;" />
+                    <circle class="star-point" cx="10" cy="50" r="2" />
+                    <circle class="star-point" cx="110" cy="30" r="3" />
+                    <circle class="star-point" cx="60" cy="20" r="1" style="animation-delay: 1s;" />
+                </svg>
+            </div>
+
+            <h1>Congratulations J on completing 31 rounds!</h1>
+            <p class="secondary-text">You have now lived more years than any month has days.</p>
+            <p class="interactive-prompt">There are many "You's" out there... <strong>wanna find out?</strong></p>
+
+            <div class="button-container">
+                <button id="btn-no" onclick="showFakePopup()">NO</button>
+                <button id="btn-yes" onclick="startJourney()" aria-label="Start Journey">YES</button>
+            </div>
+        </div>
+
+        <button id="btn-back" class="universal-back-btn hidden" onclick="goBackToSpace()"
+            aria-label="Back to Universe View">
+            <img src="assets/images/back.jpeg" alt="Back" class="back-icon-img">
+        </button>
+
+        <!-- COUNTRY VIEW (2D Map Layer) -->
+        <div id="country-view" class="hidden">
+            <div class="country-header">
+                <button id="btn-back-earth" class="universal-back-btn" onclick="backToEarth()">
+                    <img src="assets/images/back.jpeg" alt="Back" class="back-icon-img">
+                </button>
+                <h2 id="country-name-title">Country Name</h2>
+            </div>
+
+            <div id="country-map-container">
+                <!-- Map Image injected via CSS or img tag -->
+                <img id="country-map-img" src="" alt="Country Map">
+
+                <!-- City Pins Container (Overlaid) -->
+                <div id="country-pins-layer">
+                    <!-- City Pins injected here -->
+                </div>
+            </div>
+        </div>
+
+        <div id="city-gallery" class="hidden">
+            <!-- Dynamic Background -->
+            <div id="neon-background"></div>
+            <!-- City Map Background (Leaflet) -->
+            <div id="city-map-background"></div>
+
+            <!-- New Layout Container: Split View -->
+            <!-- New Layout Container: Split View -->
+            <main class="city-layout-main">
+                <!-- 2. Top Left Back Button (Absolute) -->
+                <button id="neon-back-btn" class="neon-back-btn" onclick="closeCityGallery()" aria-label="Back">
+                    <span class="material-icon-back">←</span> <span>Back to Orbit</span>
+                </button>
+
+                <!-- 3. Left Column - City Info -->
+                <div class="city-info-column">
+                    <h1 id="gallery-city-name" class="city-title-large">City Name</h1>
+                    <p class="city-subtitle">Where the journey began...</p>
+                </div>
+
+                <!-- 4. Right Column - Person Command Card (Auto-Fit) -->
+                <div class="command-card-column">
+                    <aside id="command-card" class="glass-card">
+
+                        <!-- A. Top: Connections (Fixed) -->
+                        <div class="card-section-top">
+                            <div id="neon-mini-gallery"></div>
+                        </div>
+
+                        <!-- B. Middle: Image (Shrinks) + Overlay Info -->
+                        <div class="card-section-middle">
+                            <!-- Absolute Image filling this flex space -->
+                            <img id="neon-main-img" src="" alt="Person Image">
+
+                            <!-- Overlay Text at Bottom of Image -->
+                            <div class="neon-card-overlay-text">
+                                <h3 id="neon-person-name">Person Name</h3>
+                                <p id="neon-person-desc">Unlock this memory to see the message.</p>
+                            </div>
+                        </div>
+
+                        <!-- C. Bottom: CTA (Fixed) -->
+                        <div class="card-section-bottom">
+                            <button id="btn-enter-memory">UNLOCK MEMORY</button>
+                        </div>
+
+                    </aside>
+                </div>
+            </main>
+
+            <div id="puzzle-container" class="hidden">
+                <div id="puzzle-header">
+                    <div id="puzzle-timer">00:00</div>
+                    <div class="puzzle-controls">
+                        <button id="btn-skip-puzzle" onclick="skipPuzzle()" aria-label="Skip Puzzle">bhak</button>
+                        <button id="btn-quit" class="universal-back-btn" onclick="quitPuzzle()" aria-label="Exit Puzzle"
+                            style="position:static;">
+                            <img src="assets/images/back.jpeg" alt="Quit" class="back-icon-img">
+                        </button>
+                    </div>
+                </div>
+
+                <div id="puzzle-board">
+                    <!-- Canvas injected here -->
+                </div>
+            </div>
+
+            <div id="success-popup" class="hidden">
+                <div class="success-content">
+                    <button class="close-popup-btn" onclick="closeSuccessPopup()" aria-label="Close Popup">×</button>
+                    <!-- Constellation Effect -->
+                    <div class="constellation-wrapper">
+                        <svg id="constellation-svg" width="100" height="50" viewBox="0 0 100 50">
+                            <path class="constellation-path" d="M10,25 Q50,5 90,25" />
+                            <circle class="star-point" cx="10" cy="25" r="3" />
+                            <circle class="star-point" cx="90" cy="25" r="3" />
+                        </svg>
+                    </div>
+
+                    <h2>Amazing Job!</h2>
+                    <p>You solved the puzzle in <span id="success-time">00:00</span></p>
+                    <button onclick="proceedToDetail()" aria-label="Continue to Person Detail">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div id="person-detail" class="hidden">
+        <div class="detail-container">
+            <div class="detail-header">
+                <!-- Prominent Back Navigation -->
+                <button class="back-nav-btn" onclick="closePersonDetail()" aria-label="Back to City Gallery">
+                    <span class="back-arrow">←</span> Back to Cities
+                </button>
+            </div>
+            <div class="detail-body">
+                <div class="detail-left">
+                    <div class="carousel-wrapper">
+                        <button id="carousel-prev" class="carousel-btn">❮</button>
+                        <img id="carousel-img" src="" alt="Detail Photo">
+                        <button id="carousel-next" class="carousel-btn">❯</button>
+                    </div>
+                </div>
+                <div class="detail-right">
+                    <div class="intro-letter">
+                        <span class="icon-star">✦</span> A Message for You
+                        <a id="pdf-download-btn" href="#" class="download-btn hidden" download target="_blank">Download
+                            PDF</a>
+                    </div>
+                    <div class="letter-container">
+                        <img id="detail-letter-img" class="letter-image" alt="Letter from friend" src="">
+                        <iframe id="detail-letter-pdf" class="letter-pdf hidden" src=""></iframe>
+
+                        <!-- Audio Player (Right Side Mode) -->
+                        <div id="detail-audio-right" class="hidden">
+                            <div class="right-audio-card">
+                                <h3>Voice Note</h3>
+                                <div class="custom-audio-player">
+                                    <button id="ra-play-btn" class="af-btn">▶</button>
+                                    <input type="range" id="ra-progress" value="0" step="0.1" class="af-progress">
+                                    <span id="ra-time">00:00</span>
+                                </div>
+                                <audio id="ra-audio-element" preload="metadata"></audio>
+                                <div class="transcription-feed small">
+                                    <p id="ra-transcription-text">[Transcription...]</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Gallery (Hidden by default) -->
+                    <div id="detail-gallery-container" class="hidden"></div>
+
+                    <div class="voice-note-card">
+                        <span class="icon-mic">🎙️</span>
+                        <div class="audio-wrapper">
+                            <span class="voice-label">Voice Note</span>
+                            <audio id="detail-audio" controls></audio>
+                        </div>
+                    </div>
+
+                    <a id="whatsapp-btn" href="#" target="_blank" class="whatsapp-btn" aria-label="Chat on WhatsApp">
+                        Chat on WhatsApp
+                    </a>
+                </div>
+            </div>
+
+            <div id="audio-focus-view" class="hidden">
+                <div class="audio-center-card">
+                    <h2>Voice Note</h2>
+                    <div class="custom-audio-player">
+                        <button id="af-play-btn" class="af-btn">▶</button>
+                        <input type="range" id="af-progress" value="0" step="0.1" class="af-progress">
+                        <span id="af-time">00:00</span>
+                    </div>
+                    <audio id="af-audio-element" preload="metadata"></audio>
+
+                    <div class="transcription-feed">
+                        <h3>Transcription</h3>
+                        <p id="af-transcription-text">
+                            [Transcription loading...]
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="video-focus-view" class="hidden">
+                <div class="video-center-container">
+                    <video id="vf-video-element" controls playsinline>
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div id="custom-modal" class="hidden">
+        <div class="modal-content">
+            <h3>⚠️ Access Denied</h3>
+            <p>Don't be an ass, just click YES.</p>
+            <button onclick="closePopupAndStart()">Okay, fine.</button>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
