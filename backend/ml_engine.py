@@ -11,8 +11,8 @@ class MLEngine:
     def __init__(self):
         self.persona_model = None
         self.scaler = None
-        self.data_path = "../dataset_personas.csv"
-        self.allocations_path = "../dataset_allocations.csv"
+        self.data_path = "dataset_personas.csv"
+        self.allocations_path = "dataset_allocations.csv"
         self.model_path = "persona_kmeans.pkl"
         self.prescription_model = None
 
