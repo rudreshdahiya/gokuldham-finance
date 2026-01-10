@@ -1,17 +1,29 @@
-:root {
-    /* Bear Blog Dark Mode Palette */
-    --bg-color: #111;
-    --card-bg: #1c1c1c;
-    --text-main: #e0e0e0;
-    --text-muted: #bbb;
-    --accent: #d4af37;
-    /* Keeping Gold for special items */
-    --link-color: #e0e0e0;
-    --border-color: #333;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap');
 
-    /* Typography */
-    --font-body: Georgia, Cambria, "Times New Roman", serif;
-    --font-ui: system-ui, -apple-system, sans-serif;
+:root {
+    /* HELLO FRIEND NG THEME - Source: _variables.scss */
+    --bg-color: #232425;
+    --bg-secondary: #3b3d42;
+    --bg-header: #1b1c1d;
+
+    --text-main: #a9a9b3;
+    --text-secondary: #b3b3bd;
+    --border-color: #4e4e57;
+
+    /* Accents (Kept from Fintech Theme as Hello Friend is neutral) */
+    --accent: #ffcd00;
+    --accent-secondary: #fe5186;
+
+    /* Fonts */
+    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Fira Code', Consolas, Monaco, monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html,
@@ -25,13 +37,11 @@ body {
 }
 
 body {
+    margin: 0;
+    overflow: hidden;
     background-color: var(--bg-color);
     font-family: var(--font-ui);
-    /* Sans-Serif Body */
     color: var(--text-main);
-    /* Responsive Base Typography */
-    font-size: clamp(16px, 2vw, 18px);
-    line-height: 1.6;
     /* Generous line height */
     letter-spacing: 0.02em;
     /* Subtle spacing */
@@ -2378,6 +2388,7 @@ a:focus {
         /* Let it flow on mobile */
     }
 }
+
 /* Audio Focus View (Jai) */
 #audio-focus-view {
     display: flex;
@@ -2535,5 +2546,1053 @@ a:focus {
     max-width: 100%;
     max-height: 100%;
     border-radius: 8px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+/* === UI LAYER === */
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* QUIZ CONTAINER */
+.quiz-container {
+    pointer-events: auto;
+    background: rgba(35, 36, 37, 0.95);
+    /* --bg-color transparent */
+    padding: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+}
+
+.step-title {
+    font-family: var(--font-ui);
+    color: #fff;
+    /* White for headings per theme */
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.step-desc {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+}
+
+/* BUTTONS (Hello Friend Style) */
+button {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    border-radius: 5px;
+    transition: all 0.2s ease;
+}
+
+.primary-btn {
+    background: var(--bg-secondary);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 12px 24px;
+    font-size: 1rem;
+    margin-top: 20px;
+    width: 100%;
+    cursor: pointer;
+}
+
+.primary-btn:hover {
+    background: var(--text-main);
+    /* Inverted hover effect common in minimalism */
+    color: var(--bg-color);
+    border-color: var(--text-main);
+}
+
+/* INPUTS */
+.fintech-input-group label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.fintech-input {
+    width: 100%;
+    background: var(--bg-header);
+    /* Darker input bg */
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.fintech-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    /* Minimal accent focus */
+}
+
+/* PERSONA GRID */
+.persona-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.persona-card {
+    background: var(--bg-secondary);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.persona-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--text-secondary);
+}
+
+.persona-card h3 {
+    font-size: 1rem;
+    margin: 10px 0 5px 0;
+    color: #fff;
+}
+
+.persona-card p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Hide scrollbar for quiz content */
+.quiz-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* =========================================
+   SPEND-TREK FINTECH STYLES
+   ========================================= */
+
+.fintech-title {
+    font-family: 'Courier New', monospace;
+    font-size: 3rem;
+    letter-spacing: -2px;
+    margin-bottom: 0;
+}
+
+.year-badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 1rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    vertical-align: super;
+}
+
+/* QUIZ GRID */
+.quiz-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.quiz-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    text-align: left;
+    color: var(--text-main);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-ui);
+}
+
+.quiz-btn:hover {
+    background: var(--accent);
+    color: #000;
+    transform: translateY(-2px);
+}
+
+.emoji {
+    font-size: 1.5rem;
+}
+
+/* INPUT FORM GRID */
+.input-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin: 30px 0;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    font-family: var(--font-ui);
+}
+
+.input-group input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-size: 1.2rem;
+    padding: 5px 0;
+    font-family: 'Courier New', monospace;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-bottom-color: var(--accent);
+}
+
+#btn-analyze {
+    width: 100%;
+    background: var(--text-main);
+    color: #000;
+    font-weight: bold;
+    padding: 20px;
+    border: none;
+    margin-top: 10px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+#btn-analyze:hover {
+    background: #fff;
+    box-shadow: 0 0 20px var(--accent);
+}
+
+/* Hide Utility */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+
+    .quiz-grid,
+    .input-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* SPEND-TREK 2.0 TERMINAL STYLES (Added for Fix) */
+.quiz-container {
+    background: rgba(15, 15, 20, 0.95) !important;
+    border: 1px solid var(--border-color);
+    border-top: 3px solid var(--accent);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+
+    /* CRITICAL FIXES FOR INTERACTIVITY */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000 !important;
+    /* === UI SCREEN 2: INPUT TERMINAL === */
+}
+
+#ui-input {
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.terminal-window {
+    width: 95%;
+    /* Wider for split view */
+    max-width: 900px;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--neon-green);
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    /* Prevent scrolling issues on small screens */
+}
+
+.terminal-header {
+    background: #111;
+    border-bottom: 1px solid var(--neon-green);
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.terminal-body {
+    padding: 20px;
+    overflow-y: auto;
+    color: var(--text-color);
+    font-family: 'Rajdhani', sans-serif;
+}
+
+/* Split View for Form */
+.split-view {
+    display: flex;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.left-inputs {
+    flex: 1;
+    min-width: 300px;
+    /* Ensure inputs don't get too squashed */
+}
+
+.right-vis {
+    flex: 0.8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 20px;
+}
+
+.chart-container {
+    width: 100%;
+    max-width: 300px;
+    height: 300px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .split-view {
+        flex-direction: column;
+    }
+
+    .right-vis {
+        order: 1;
+    }
+}
+
+
+.console-log {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+    opacity: 0.8;
+}
+
+.form-group-row {
+    display: flex;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    flex: 1;
+}
+
+label {
+    display: block;
+    font-size: 0.8em;
+    color: var(--neon-green);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Calculator Amount Display */
+.calc-amt {
+    float: right;
+    color: var(--neon-blue);
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+    width: 100%;
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1em;
+    border-radius: 4px;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--neon-green);
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+}
+
+.divider {
+    height: 1px;
+    background: #333;
+    margin: 20px 0;
+}
+
+.section-title {
+    color: var(--neon-blue);
+    font-size: 1.1em;
+    margin-bottom: 5px;
+    border-left: 3px solid var(--neon-blue);
+    padding-left: 10px;
+}
+
+.section-subtitle {
+    color: #888;
+    font-size: 0.85em;
+    margin-bottom: 15px;
+    padding-left: 13px;
+}
+
+.slider-group {
+    margin-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    padding: 10px 0;
+}
+
+/* Base Slider Reset */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+    margin: 0;
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+/* === Webkit (Chrome/Safari) === */
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    /* Base rail color */
+    border-radius: 4px;
+    cursor: pointer;
+    /* transition: background 0.2s; - Removing transition for instant JS updates to avoid lag feel */
+}
+
+/* The Thumb */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--neon-green);
+    cursor: pointer;
+    margin-top: -7px;
+    /* Center thumb on track (6px track height / 2 - 20px thumb height / 2) */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 15px var(--neon-green);
+    transform: scale(1.1);
+}
+
+/* === Firefox === */
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border: 2px solid var(--neon-green);
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Savings Specific Colors override via JS or specialized class if needed, 
+   but for now we use the dynamic styling in JS to change track color. */
+
+.slider-val {
+    min-width: 45px;
+    text-align: right;
+    font-weight: bold;
+    color: var(--neon-green);
+    font-family: 'Fira Code', monospace;
+    font-size: 1.1em;
+}
+
+.total-status {
+    text-align: right;
+    font-weight: bold;
+    margin-top: 10px;
+    font-size: 1.1em;
+    padding: 10px;
+    background: #000;
+    border: 1px dashed #555;
+    border-radius: 4px;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-process {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--neon-green);
+    color: #000;
+    border: none;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    font-size: 1.2em;
+    letter-spacing: 2px;
+    cursor: pointer;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    transition: all 0.3s ease;
+}
+
+.btn-process:hover {
+    background: #fff;
+    box-shadow: 0 0 20px var(--neon-green);
+}
+
+.terminal-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot.red {
+    background: #ff5f56;
+}
+
+.dot.yellow {
+    background: #ffbd2e;
+}
+
+.dot.green {
+    background: #27c93f;
+}
+
+.title {
+    margin-left: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.input-group input {
+    width: 100%;
+    background: #111;
+    border: 1px solid #444;
+    color: var(--accent);
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    border-radius: 4px;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(255, 205, 0, 0.2);
+}
+
+.primary-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 15px;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 205, 0, 0.4);
+}
+
+/* 3D CANVAS LAYER */
+#canvas-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    /* Low Z-index to sit behind UI */
+    pointer-events: auto !important;
+    /* Enable interactions (OrbitControls) */
+}
+
+/* UI LAYER INTERACTION FIXES */
+#ui-result {
+    pointer-events: none !important;
+    /* Allow clicks to pass through empty space */
+}
+
+#ui-result .result-card {
+    pointer-events: auto !important;
+    /* Capture clicks on the card itself */
+}
+
+/* SIMPLIFIED 3-SCREEN FLOW STYLES */
+
+.ui-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Center */
+    z-index: 100;
+    pointer-events: none;
+    overflow: hidden;
+    /* Prevent container scroll, force child scroll */
+}
+
+/* Allow pass-through for BG interaction if needed */
+/* Allow pass-through for BG interaction if needed */
+
+/* Enable pointer events on the content windows */
+.splash-content,
+.terminal-window {
+    pointer-events: auto !important;
+}
+
+/* SPLASH SCREEN */
+.splash-content {
+    text-align: center;
+    backdrop-filter: blur(10px);
+    padding: 50px;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glitch-title {
+    font-family: 'Fira Code', monospace;
+    font-size: 4rem;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.badge {
+    background: var(--accent);
+    color: #000;
+    padding: 0 10px;
+    border-radius: 5px;
+    font-size: 0.5em;
+    vertical-align: middle;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    margin-top: 10px;
+}
+
+.pulse-btn {
+    margin-top: 30px;
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    cursor: pointer;
+    font-family: 'Fira Code', monospace;
+    font-weight: bold;
+    box-shadow: 0 0 20px rgba(255, 205, 0, 0.4);
+    transition: transform 0.2s;
+}
+
+.pulse-btn:hover {
+    transform: scale(1.05);
+}
+
+/* TERMINAL & RESULT WINDOWS */
+.terminal-window {
+    background: rgba(20, 20, 25, 0.95);
+    border: 1px solid var(--border-color);
+    border-top: 4px solid var(--accent);
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* RESULT STYLES */
+.result-window {
+    max-width: 600px;
+    /* Slightly wider */
+}
+
+.result-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.result-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.stat-box {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 120px;
+}
+
+.stat-box span {
+    font-size: 0.8rem;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.stat-box h3 {
+    margin: 5px 0 0;
+    font-size: 1.4rem;
+}
+
+.nuska-box {
+    background: rgba(255, 205, 0, 0.1);
+    border: 1px solid var(--accent);
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+}
+
+.action-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    padding: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.restart-btn {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #666;
+    margin-top: 20px;
+    cursor: pointer;
+}
+
+.restart-btn:hover {
+    color: #fff;
+}
+
+
+/* V6 STYLES FOR TRANSPARENT LOGIC */
+
+.terminal-select {
+    width: 100%;
+    background: #111;
+    border: 1px solid #444;
+    color: var(--accent);
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    border-radius: 4px;
+}
+
+.processing-window {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 30px;
+    border-radius: 10px;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 30px rgba(255, 205, 0, 0.2);
+    min-width: 300px;
+}
+
+.loader-circle {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
+}
+
+.console-log {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-align: left;
+    height: 60px;
+    overflow: hidden;
+}
+
+/* V6 RESULT CARD */
+.result-window-v6 {
+    background: rgba(20, 20, 25, 0.95);
+    border: 1px solid var(--border-color);
+    border-top: 4px solid var(--accent);
+    padding: 20px;
+    border-radius: 10px;
+    width: 95%;
+    max-width: 900px;
+    /* Wider for 3 columns */
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    /* Persona | Logic | Solution */
+    gap: 20px;
+    color: #fff;
+}
+
+.col-persona {
+    text-align: center;
+    border-right: 1px solid var(--border-color);
+    padding-right: 20px;
+}
+
+.col-logic {
+    border-right: 1px solid var(--border-color);
+    padding-right: 20px;
+}
+
+.col-solution {
+    text-align: center;
+}
+
+.logic-item {
+    margin-bottom: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.logic-label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.logic-value {
+    font-size: 0.9rem;
+    color: #ddd;
+}
+
+.logic-highlight {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 800px) {
+    .result-window-v6 {
+        grid-template-columns: 1fr;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .col-persona,
+    .col-logic {
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 20px;
+    }
+}
+
+/* Highlight Animation for Chart Interaction */
+@keyframes highlightPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.7);
+        border-color: var(--neon-green);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 255, 65, 0);
+        border-color: var(--neon-green);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 255, 65, 0);
+        border-color: transparent;
+    }
+}
+
+.highlight-pulse {
+    animation: highlightPulse 1s ease-out;
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+
+/* === Mobile Responsiveness === */
+@media screen and (max-width: 768px) {
+
+    /* 1. Reset Container Widths */
+    .terminal-window {
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        margin: 0;
+        border-radius: 0;
+        padding: 15px;
+        overflow-y: auto;
+    }
+
+    /* 2. Stack the Split View */
+    .split-view {
+        flex-direction: column-reverse;
+        /* Inputs first, Chart follows */
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
+
+    /* 3. Adjust Sections */
+    .left-inputs,
+    .right-vis {
+        flex: none;
+        width: 100%;
+        padding: 0;
+        border: none;
+        overflow: visible;
+    }
+
+    .left-inputs {
+        margin-bottom: 30px;
+    }
+
+    /* 4. Optimize Chart Container for Mobile */
+    .right-vis {
+        height: 300px;
+        border-top: 2px dashed var(--border-color);
+        padding-top: 20px;
+        margin-top: 20px;
+    }
+
+    .chart-container {
+        height: 250px;
+    }
+
+    /* 5. Typography & Touch Targets */
+    .glitch-title {
+        font-size: 2.0rem;
+        line-height: 1.2;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+        margin-top: -9px;
+    }
+
+    .btn-process {
+        padding: 20px;
+        font-size: 1.1rem;
+        margin-bottom: 40px;
+    }
 }

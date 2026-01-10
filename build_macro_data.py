@@ -1,0 +1,130 @@
+import pandas as pd
+import json
+import math
+import sys
+
+FILE_PATH = "/Users/rudresh/project-31/50 Macroeconomic Indicators.xlsx"
+OUTPUT_PATH = "/Users/rudresh/project-31/macro_data.js"
+
+def extract_macro_data():
+    try:
+        print("Loading Excel Data...", flush=True)
+        # 1. Inflation (CPI) - Monthly Sheet
+        # Based on inspection: Col 1 = Date, Col 2 = CPI (General)
+        df_monthly = pd.read_excel(FILE_PATH, sheet_name="Monthly", engine='openpyxl')
+        
+        # Renaissance cleaning: Find the header row
+        # We know "consumer price index" is in the header. Let's find relative row.
+        header_row_idx = -1
+        for idx, row in df_monthly.head(10).iterrows():
+            row_str = row.astype(str).str.lower().tolist()
+            if any("consumer price index" in x for x in row_str):
+                header_row_idx = idx
+                break
+        
+        if header_row_idx == -1:
+            print("ERROR: Could not find CPI header.", flush=True)
+            return
+
+        # Reload with correct header
+        df_monthly = pd.read_excel(FILE_PATH, sheet_name="Monthly", header=header_row_idx+1, engine='openpyxl')
+        
+        # Identify Columns (Dynamic Search)
+        date_col = None
+        cpi_col = None
+        
+        for col in df_monthly.columns:
+            c_lower = str(col).lower()
+            if "period" in c_lower or "unnamed: 1" in c_lower: # 'Period' often used
+                 if date_col is None: date_col = col
+            if "consumer price index" in c_lower and "(2012=100)" in c_lower:
+                # Prefer the first one (General) or explicit General
+                if cpi_col is None: cpi_col = col
+
+        # Fallback if standard headers failed (often Unnamed in raw read)
+        if date_col is None: date_col = df_monthly.columns[1] # Assume Col B
+        if cpi_col is None: cpi_col = df_monthly.columns[2]   # Assume Col C
+
+        print(f"Using Monthly Cols -> Date: {date_col}, CPI: {cpi_col}", flush=True)
+
+        # Process
+        df_monthly = df_monthly[[date_col, cpi_col]].dropna()
+        # Clean Date
+        df_monthly[date_col] = pd.to_datetime(df_monthly[date_col], errors='coerce')
+        df_monthly = df_monthly.sort_values(by=date_col, ascending=False).reset_index(drop=True)
+        
+        latest_cpi = df_monthly.iloc[0][cpi_col]
+        prev_year_cpi = df_monthly.iloc[12][cpi_col] if len(df_monthly) > 12 else df_monthly.iloc[-1][cpi_col]
+        
+        inflation_rate = ((latest_cpi - prev_year_cpi) / prev_year_cpi) * 100
+        print(f"Inflation: {latest_cpi} / {prev_year_cpi} -> {inflation_rate:.2f}%", flush=True)
+
+        # 2. Risk Free Rate (G-Sec) - Weekly Sheet
+        df_weekly = pd.read_excel(FILE_PATH, sheet_name="Weekly", engine='openpyxl')
+        
+        # Find 10Y Yield Column
+        header_row_idx = -1
+        for idx, row in df_weekly.head(10).iterrows():
+            row_str = row.astype(str).str.lower().tolist()
+            if any("10-year g-sec" in x for x in row_str):
+                header_row_idx = idx
+                break
+                
+        df_weekly = pd.read_excel(FILE_PATH, sheet_name="Weekly", header=header_row_idx+1, engine='openpyxl')
+        
+        yield_col = None
+        for col in df_weekly.columns:
+            if "10-year g-sec" in str(col).lower():
+                yield_col = col
+                break
+        
+        if yield_col is None:
+            print("ERROR: Could not find G-Sec Yield column", flush=True)
+            yield_val = 6.8 # Fallback
+        else:
+            print(f"Using Weekly Col -> Yield: {yield_col}", flush=True)
+            yield_series = df_weekly[yield_col].dropna()
+            yield_val = yield_series.iloc[0] # Assume loaded descending or bottom is latest?
+            # Usually excel is time ascending (old -> new). So we might want the LAST row.
+            # But the 'Monthly' sheet scan showed 'May-2025' at the top? Wait.
+            # Analyze macro output: Row 9 was May-2025. Rows 0-8 were header/NaN. 
+            # This implies the data is likely CHRONOLOGICAL (top down).
+            # BUT my logic used sort_values(ascending=False).
+            
+            # Let's verify 'Period' logic for Weekly too.
+            date_col_w = None
+            for col in df_weekly.columns:
+                 if "period" in str(col).lower(): 
+                     date_col_w = col
+                     break
+            
+            if date_col_w:
+                df_weekly[date_col_w] = pd.to_datetime(df_weekly[date_col_w], errors='coerce')
+                df_weekly = df_weekly.sort_values(by=date_col_w, ascending=False)
+                yield_val = df_weekly.iloc[0][yield_col]
+            else:
+                 # If no date, assume last valid row is latest
+                yield_val = yield_series.iloc[-1]
+
+        print(f"10Y Yield: {yield_val}%", flush=True)
+
+        # 3. Generate JS File
+        js_content = f"""// AUTO-GENERATED BY build_macro_data.py
+const MACRO_DATA = {{
+    inflation: {round(inflation_rate / 100, 4)}, // {inflation_rate:.2f}%
+    riskFree: {round(yield_val, 2)}, // {yield_val}%
+    lastUpdated: "{pd.Timestamp.now().strftime('%Y-%m-%d')}"
+}};
+"""
+        with open(OUTPUT_PATH, "w") as f:
+            f.write(js_content)
+            
+        print(f"Successfully generated {OUTPUT_PATH}", flush=True)
+
+    except Exception as e:
+        print(f"FAILED: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+
+if __name__ == "__main__":
+    extract_macro_data()

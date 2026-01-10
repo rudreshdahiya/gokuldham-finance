@@ -1,0 +1,703 @@
+{
+  "metadata": {
+    "title": "Comprehensive Financial Goals for Modern Indian Retail Investors (2024-2025)",
+    "target_demographics": [
+      "Gen Z (18-25)",
+      "Millennials (26-42)",
+      "Gen X (43-58)"
+    ],
+    "currency": "INR",
+    "last_updated": "December 2024",
+    "total_goals": 35
+  },
+  "financial_goals": [
+    {
+      "goal_id": "FG001",
+      "display_name": "Emergency Fund (6-12 months expenses)",
+      "category": "Essential",
+      "typical_horizon_years": "Short",
+      "estimated_cost_inr": "₹3-12 lakhs",
+      "description": "Build liquid cash reserves for unexpected job loss or health emergencies",
+      "ideal_target_months": 6,
+      "priority": "Critical"
+    },
+    {
+      "goal_id": "FG002",
+      "display_name": "Health Insurance Coverage",
+      "category": "Essential",
+      "typical_horizon_years": "Short",
+      "estimated_cost_inr": "₹20,000-60,000 annually",
+      "description": "Comprehensive health insurance for self and dependents with ₹10-25 lakh coverage",
+      "coverage_amount": "₹10-25 lakhs",
+      "tax_benefit": "₹75,000 deduction under Section 80D",
+      "priority": "Critical"
+    },
+    {
+      "goal_id": "FG003",
+      "display_name": "Term Life Insurance (₹1 Crore Cover)",
+      "category": "Essential",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹465-1,200 monthly",
+      "description": "10-20 year term insurance to protect family's financial future",
+      "typical_premium": "₹465-1,500/month for ₹1 crore cover",
+      "tax_benefit": "₹1.5 lakh deduction under Section 80C",
+      "priority": "Critical"
+    },
+    {
+      "goal_id": "FG004",
+      "display_name": "Student Loan/Education Loan Repayment",
+      "category": "Essential",
+      "typical_horizon_years": "Medium",
+      "estimated_cost_inr": "₹4-10 lakhs total",
+      "description": "Systematic repayment of education loans within 10-15 years",
+      "typical_interest_rate": "8-12% p.a.",
+      "grace_period_months": 12,
+      "priority": "High"
+    },
+    {
+      "goal_id": "FG005",
+      "display_name": "First Home Purchase",
+      "category": "Wealth",
+      "typical_horizon_years": "Medium",
+      "estimated_cost_inr": "₹50-300 lakhs",
+      "description": "Primary residence purchase with down payment and registration costs",
+      "down_payment_percentage": "10-25%",
+      "typical_property_value": "₹50-150 lakhs (metro), ₹30-80 lakhs (tier 2)",
+      "government_schemes": "PMAY, NHB concessions",
+      "priority": "High"
+    },
+    {
+      "goal_id": "FG006",
+      "display_name": "FIRE - Financial Independence, Retire Early (Age 40-45)",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹3.75-5 crores",
+      "description": "Build corpus to live on 4% annual withdrawal rule (25× annual expenses)",
+      "fire_calculation": "Annual expenses × 25",
+      "required_savings_rate": "50%+",
+      "example_scenario": "₹15 lakh annual expenses = ₹3.75 crore corpus",
+      "priority": "High"
+    },
+    {
+      "goal_id": "FG007",
+      "display_name": "Destination Wedding (Personal or Child)",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Short-Medium",
+      "estimated_cost_inr": "₹12-70 lakhs",
+      "description": "Destination wedding at premium locations (Goa, Udaipur, Rajasthan, Kerala)",
+      "budget_tiers": {
+        "budget": "₹12-18 lakhs (50-80 guests)",
+        "mid_range": "₹25-40 lakhs (100-150 guests)",
+        "luxury": "₹50-70 lakhs (150-200 guests)",
+        "ultra_luxury": "₹80+ lakhs (200+ guests)"
+      },
+      "popular_locations": [
+        "Goa",
+        "Udaipur",
+        "Jaipur",
+        "Jodhpur",
+        "Kerala"
+      ],
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG008",
+      "display_name": "Second Home in Hill Stations",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Medium-Long",
+      "estimated_cost_inr": "₹50-300 lakhs",
+      "description": "Investment property in popular hill stations for holiday rental and appreciation",
+      "popular_locations": [
+        "Kasauli",
+        "Shimla",
+        "Nainital",
+        "Mussoorie",
+        "Manali",
+        "Ooty"
+      ],
+      "price_per_sqft": "₹3,500-8,000",
+      "rental_yield": "3-6% annually",
+      "appreciation_rate": "5-10% yearly in prime locations",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG009",
+      "display_name": "Global Education for Kids (Overseas University)",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹80-200 lakhs",
+      "description": "4-year undergraduate degree at international university (USA, UK, Canada, Australia)",
+      "cost_breakdown": {
+        "usa_annual": "₹40-60 lakhs",
+        "uk_annual": "₹25-35 lakhs",
+        "canada_annual": "₹20-30 lakhs",
+        "australia_annual": "₹20-45 lakhs",
+        "germany_annual": "₹0.4-1.6 lakhs"
+      },
+      "includes": [
+        "Tuition",
+        "Accommodation",
+        "Living expenses",
+        "Visa"
+      ],
+      "priority": "High"
+    },
+    {
+      "goal_id": "FG010",
+      "display_name": "Angel Investing (Startup Ecosystem)",
+      "category": "Wealth",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹25-100 lakhs",
+      "description": "Diversified investments in 3-5 early-stage startups with 8-10 year horizon",
+      "minimum_per_startup": "₹25 lakhs (SEBI regulated)",
+      "syndicate_minimum": "₹1-2 lakhs",
+      "lock_in_period_years": 1,
+      "eligibility": "Net tangible assets ≥ ₹2 crore (excluding home)",
+      "typical_return": "20-100x potential (high risk)",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG011",
+      "display_name": "Parental Medical Care Corpus",
+      "category": "Essential",
+      "typical_horizon_years": "Medium-Long",
+      "estimated_cost_inr": "₹20-50 lakhs",
+      "description": "Dedicated fund for parents' healthcare, retirement, and lifestyle support",
+      "components": [
+        "Senior health insurance (₹50,000-₹2 lakhs annually)",
+        "Critical illness cover",
+        "Long-term care",
+        "Regular medical expenses"
+      ],
+      "tax_benefit": "₹50,000 deduction under Section 80D for parents >60",
+      "priority": "Critical"
+    },
+    {
+      "goal_id": "FG012",
+      "display_name": "Home Renovation & Modernization",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Short-Medium",
+      "estimated_cost_inr": "₹15-60 lakhs",
+      "description": "Complete home makeover including flooring, electrical, plumbing, and interiors",
+      "cost_per_sqft": "₹1,500-4,000",
+      "size_breakdown": {
+        "1000_sqft": "₹15-30 lakhs",
+        "1500_sqft": "₹22-60 lakhs",
+        "2000_sqft": "₹30-80 lakhs"
+      },
+      "renovation_types": [
+        "Basic",
+        "Mid-range",
+        "Premium/Luxury"
+      ],
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG013",
+      "display_name": "Sabbatical (3-12 Month Career Break)",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Short",
+      "estimated_cost_inr": "₹1.8-5 lakhs",
+      "description": "Unpaid career break for travel, upskilling, or personal growth",
+      "duration_months": "3-12",
+      "calculation": "6-12 months of living expenses + 20% buffer",
+      "example": "₹30,000/month lifestyle = ₹1.8-3.6 lakh minimum",
+      "emerging_trend": "53% of Indian professionals see value in career breaks",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG014",
+      "display_name": "Luxury Car Purchase (Premium Segment)",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Short-Medium",
+      "estimated_cost_inr": "₹50-150 lakhs",
+      "description": "Premium sedan or luxury SUV purchase (BMW, Audi, Mercedes, Volvo segment)",
+      "price_tiers": {
+        "premium_sedan": "₹50-80 lakhs",
+        "luxury_suv": "₹80-150 lakhs",
+        "ultra_luxury": "₹150+ lakhs"
+      },
+      "finance_option": "EMI available at 7-9% interest",
+      "priority": "Low-Medium"
+    },
+    {
+      "goal_id": "FG015",
+      "display_name": "International Family Vacation (Annual/Biennial)",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Short",
+      "estimated_cost_inr": "₹3-8 lakhs",
+      "description": "Annual international family trip to trending destinations",
+      "destination_costs": {
+        "maldives_4d": "₹1.5-3.5 lakhs",
+        "dubai_5d": "₹1.8-2.5 lakhs",
+        "bangkok_5d": "₹1.5-2.5 lakhs",
+        "europe_7d": "₹3-6 lakhs",
+        "singapore_4d": "₹2-3.5 lakhs"
+      },
+      "per_person_daily": "₹4,500-13,500 (mid-range to luxury)",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG016",
+      "display_name": "SIP-Based Mutual Fund Portfolio (₹50,000+ Monthly)",
+      "category": "Wealth",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "Variable (₹50,000-₹5 lakhs monthly)",
+      "description": "Diversified mutual fund portfolio via SIPs in equity, debt, and hybrid funds",
+      "sip_amount": "₹500-₹5 lakhs per month",
+      "fund_allocation": {
+        "equity_mf": "60-80% (long-term growth)",
+        "debt_mf": "15-30% (stability)",
+        "hybrid_mf": "5-15% (balance)"
+      },
+      "expected_returns": "8-12% annually",
+      "tax_advantage": "LTCG at 10% if >1 year (no indexation)",
+      "priority": "Critical"
+    },
+    {
+      "goal_id": "FG017",
+      "display_name": "Stock Market Investing (Direct Equity)",
+      "category": "Wealth",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹50,000-₹50 lakhs",
+      "description": "Blue-chip dividend stocks and growth stocks for long-term wealth creation",
+      "investment_style": [
+        "Value investing (established companies)",
+        "Dividend portfolio (₹1-5 lakh+ annual dividend)",
+        "Growth stocks (small/midcap potential)"
+      ],
+      "expected_returns": "12-15% annually",
+      "minimum_holding": "2-5 years",
+      "tax_benefit": "LTCG at 10% after 1 year",
+      "priority": "High"
+    },
+    {
+      "goal_id": "FG018",
+      "display_name": "Real Estate Investment Trust (REIT) Portfolio",
+      "category": "Wealth",
+      "typical_horizon_years": "Medium-Long",
+      "estimated_cost_inr": "₹10,000-₹50 lakhs",
+      "description": "Diversified real estate exposure via REIT mutual funds or direct REIT units",
+      "typical_yield": "5-7% annually",
+      "minimum_investment": "₹10,000-₹25,000",
+      "property_types": [
+        "Office",
+        "Retail",
+        "Warehousing",
+        "Hospitality"
+      ],
+      "tax_advantage": "Dividend income taxable as per slab",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG019",
+      "display_name": "Peer-to-Peer (P2P) Lending Portfolio",
+      "category": "Wealth",
+      "typical_horizon_years": "Short-Medium",
+      "estimated_cost_inr": "₹1-10 lakhs",
+      "description": "Diversified P2P lending across 10-20 borrowers for regular interest income",
+      "typical_returns": "10-15% annually",
+      "minimum_investment": "₹1,000-₹10,000",
+      "loan_duration": "12-36 months",
+      "platforms": [
+        "Faircent",
+        "Lendbox",
+        "P2P platforms"
+      ],
+      "risk_level": "Moderate (default risk exists)",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG020",
+      "display_name": "Fixed Deposit (FD) Ladder & High-Yield Savings",
+      "category": "Wealth",
+      "typical_horizon_years": "Short-Long",
+      "estimated_cost_inr": "₹1-50 lakhs",
+      "description": "Staggered FDs maturing at intervals for regular income + emergency access",
+      "typical_returns": "6-7% annually",
+      "maturity_pattern": "Quarterly or yearly staggered maturities",
+      "tax_treatment": "Interest taxable as per income slab",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG021",
+      "display_name": "Tax-Efficient Investing (PPF + NPS)",
+      "category": "Wealth",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹1.5-15 lakhs annually",
+      "description": "Maximize tax savings through Public Provident Fund (PPF) and National Pension System (NPS)",
+      "ppf_details": {
+        "annual_investment": "₹500-₹1.5 lakhs",
+        "tenure": "15 years",
+        "returns": "7-8% guaranteed",
+        "tax_benefit": "₹1.5 lakh deduction under Section 80C"
+      },
+      "nps_details": {
+        "contribution": "₹50,000-₹2 lakhs annually",
+        "tax_benefit": "₹1.5 lakh under 80C + ₹50,000 under 80CCD(1B)",
+        "expected_returns": "8-10%"
+      },
+      "priority": "Critical"
+    },
+    {
+      "goal_id": "FG022",
+      "display_name": "Startup Funding (Bootstrap Own Business)",
+      "category": "Wealth",
+      "typical_horizon_years": "Medium-Long",
+      "estimated_cost_inr": "₹50-200 lakhs",
+      "description": "Capital to launch personal startup or business venture with 3-5 year break-even",
+      "pre_seed_requirement": "₹50-100 lakhs",
+      "seed_requirement": "₹50-200 lakhs",
+      "government_grants": "₹20 lakh + ₹50 lakh via Startup India Seed Fund Scheme",
+      "break_even_timeline": "18-36 months",
+      "priority": "Low-Medium"
+    },
+    {
+      "goal_id": "FG023",
+      "display_name": "Digital Products & Online Business Setup",
+      "category": "Wealth",
+      "typical_horizon_years": "Short-Medium",
+      "estimated_cost_inr": "₹1-20 lakhs",
+      "description": "Create online courses, eBooks, or SaaS products for scalable passive income",
+      "investment_range": "₹0-20 lakhs (depending on product)",
+      "payoff_timeline": "6-18 months to profitability",
+      "revenue_potential": "₹5-50 lakhs annually",
+      "platforms": [
+        "Udemy",
+        "Gumroad",
+        "Teachable",
+        "Coursera"
+      ],
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG024",
+      "display_name": "YouTube Channel or Blog Monetization",
+      "category": "Wealth",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹0-5 lakhs",
+      "description": "Build content platform for ad revenue, sponsorships, and affiliate income",
+      "monetization_timeline": "6-12 months (1K subscribers + 4K watch hours for YouTube)",
+      "revenue_potential": "₹10,000-₹5 lakhs monthly (at scale)",
+      "initial_investment": "Minimal (camera, editing software, hosting)",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG025",
+      "display_name": "Rental Property Portfolio (2+ Properties)",
+      "category": "Wealth",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹100-500 lakhs",
+      "description": "Build portfolio of 2-3 rental properties in growth-focused tier-2 cities",
+      "rental_yield": "3-5% net yield annually",
+      "appreciation_potential": "5-7% yearly",
+      "property_types": [
+        "Residential flats",
+        "Commercial shops",
+        "Plots in emerging areas"
+      ],
+      "financing": "Mortgage at 7-8% for 15-20 years",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG026",
+      "display_name": "Dividend Stock Portfolio (₹10+ Lakh Value)",
+      "category": "Wealth",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹10-50 lakhs",
+      "description": "Build dividend-paying stock portfolio for quarterly/annual passive income",
+      "target_annual_dividend": "₹1-5 lakhs (₹50-100+ monthly income)",
+      "dividend_yield": "3-5% on invested capital",
+      "stock_examples": "Blue-chip companies like HDFC Bank, TCS, NTPC, Coal India",
+      "reinvestment": "Reinvest dividends for compounding",
+      "priority": "High"
+    },
+    {
+      "goal_id": "FG027",
+      "display_name": "Freelancing/Side Hustle Income (₹20,000-₹2 Lakh Monthly)",
+      "category": "Wealth",
+      "typical_horizon_years": "Short-Medium",
+      "estimated_cost_inr": "₹0-5 lakhs (setup)",
+      "description": "Build consulting, freelance, or service-based side business for additional income",
+      "income_potential": "₹20,000-₹2 lakhs monthly",
+      "platforms": [
+        "Upwork",
+        "Fiverr",
+        "Toptal",
+        "LinkedIn",
+        "Direct clients"
+      ],
+      "skills_in_demand": [
+        "Writing",
+        "Coding",
+        "Design",
+        "Consulting",
+        "Virtual assistance"
+      ],
+      "tax_implication": "Taxable as business income with deductions",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG028",
+      "display_name": "Wellness & Longevity Investment (Health Optimization)",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹50,000-₹3 lakhs annually",
+      "description": "Annual investment in gym, nutrition, preventive health checkups, and wellness programs",
+      "components": [
+        "Annual health checkup (₹10,000-₹25,000)",
+        "Gym membership (₹10,000-₹25,000 yearly)",
+        "Nutrition counseling (₹20,000-₹50,000)",
+        "Mental health (₹25,000-₹50,000)",
+        "Preventive treatments (₹50,000+)"
+      ],
+      "roi": "Reduced medical costs, increased productivity",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG029",
+      "display_name": "Children's Higher Education Fund (India)",
+      "category": "Essential",
+      "typical_horizon_years": "Medium-Long",
+      "estimated_cost_inr": "₹20-60 lakhs",
+      "description": "Corpus for children's graduation (4 years) from top Indian institute",
+      "cost_breakdown": {
+        "iit_nit_annual": "₹4-10 lakhs",
+        "private_college_annual": "₹8-15 lakhs",
+        "professional_course_annual": "₹10-20 lakhs"
+      },
+      "total_4_year_cost": "₹20-60 lakhs",
+      "government_schemes": "Section 80E deduction on education loan interest",
+      "priority": "High"
+    },
+    {
+      "goal_id": "FG030",
+      "display_name": "Wedding Expenses Fund (Self or Spouse)",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Short-Medium",
+      "estimated_cost_inr": "₹15-50 lakhs",
+      "description": "Traditional wedding or court marriage with minimal to moderate expenses",
+      "cost_scenarios": {
+        "court_marriage": "₹50,000-₹2 lakhs",
+        "local_wedding": "₹10-25 lakhs",
+        "conventional_wedding": "₹25-50 lakhs"
+      },
+      "components": [
+        "Venue",
+        "Catering",
+        "Decor",
+        "Attire",
+        "Jewelry",
+        "Travel"
+      ],
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG031",
+      "display_name": "Vehicle Upgrade (Premium or Electric Car)",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Short-Medium",
+      "estimated_cost_inr": "₹20-80 lakhs",
+      "description": "Upgrade to mid-premium sedan, SUV, or EV with modern features",
+      "price_segments": {
+        "mid_sedan": "₹20-35 lakhs",
+        "premium_sedan": "₹35-50 lakhs",
+        "suv": "₹40-80 lakhs",
+        "electric_vehicle": "₹20-60 lakhs"
+      },
+      "finance_option": "7-8% car loan for 5 years",
+      "tax_incentive": "EV subsidy schemes available in select states",
+      "priority": "Low"
+    },
+    {
+      "goal_id": "FG032",
+      "display_name": "Skill Upgrade & Professional Certification",
+      "category": "Wealth",
+      "typical_horizon_years": "Short",
+      "estimated_cost_inr": "₹1-10 lakhs",
+      "description": "Investment in CFA, MBA, PMP, TOGAF, AWS certifications for career advancement",
+      "certification_costs": {
+        "cfa_level_1": "₹80,000",
+        "mba_online": "₹5-15 lakhs",
+        "pmp_certification": "₹50,000-₹2 lakhs",
+        "aws_certifications": "₹20,000-₹50,000",
+        "ca_or_cs": "₹1-3 lakhs"
+      },
+      "roi": "20-50% salary increase typically",
+      "priority": "High"
+    },
+    {
+      "goal_id": "FG033",
+      "display_name": "Legacy & Estate Planning (Will, Trust Setup)",
+      "category": "Essential",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹50,000-₹5 lakhs",
+      "description": "Legal setup for will, succession planning, and tax-efficient wealth transfer",
+      "components": [
+        "Will drafting (₹10,000-₹50,000)",
+        "Trust setup (₹50,000-₹2 lakhs)",
+        "Insurance beneficiary updates",
+        "Asset documentation"
+      ],
+      "tax_benefit": "Can reduce estate taxes via proper planning",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG034",
+      "display_name": "Charitable Giving & Philanthropic Fund",
+      "category": "Lifestyle",
+      "typical_horizon_years": "Long",
+      "estimated_cost_inr": "₹1-50 lakhs annually",
+      "description": "Structured charitable giving with 50% tax deduction eligibility (Section 80G)",
+      "allocation": "1-5% of annual income typically",
+      "causes": [
+        "Education",
+        "Healthcare",
+        "Environment",
+        "Social welfare"
+      ],
+      "tax_benefit": "50% deduction on donations to eligible NGOs",
+      "priority": "Medium"
+    },
+    {
+      "goal_id": "FG035",
+      "display_name": "Business Loan Repayment (MSMEs & Startups)",
+      "category": "Essential",
+      "typical_horizon_years": "Medium",
+      "estimated_cost_inr": "₹10-100 lakhs",
+      "description": "Structured repayment of MSME loans, working capital advances, or business credit",
+      "typical_interest_rate": "9-15% p.a.",
+      "repayment_period": "3-7 years",
+      "tax_deduction": "Interest on business loans fully deductible",
+      "priority": "High"
+    }
+  ],
+  "category_summary": {
+    "Essential": {
+      "count": 8,
+      "goals": [
+        "Emergency Fund",
+        "Health Insurance",
+        "Term Insurance",
+        "Student Loan Repayment",
+        "Parental Medical Care",
+        "Children's Education",
+        "Legacy Planning",
+        "Business Loan Repayment"
+      ],
+      "total_indicative_value": "₹10-100 lakhs"
+    },
+    "Wealth": {
+      "count": 14,
+      "goals": [
+        "FIRE",
+        "Home Purchase",
+        "Angel Investing",
+        "SIP Mutual Funds",
+        "Stock Market",
+        "REITs",
+        "P2P Lending",
+        "FD Ladder",
+        "Tax-Efficient Investing",
+        "Startup Funding",
+        "Digital Products",
+        "Rental Property",
+        "Dividend Portfolio",
+        "Freelance Income"
+      ],
+      "total_indicative_value": "₹50-500+ lakhs"
+    },
+    "Lifestyle": {
+      "count": 13,
+      "goals": [
+        "Destination Wedding",
+        "Second Home",
+        "Global Education",
+        "Home Renovation",
+        "Sabbatical",
+        "Luxury Car",
+        "International Vacation",
+        "YouTube/Blog",
+        "Children's Education",
+        "Wedding",
+        "Vehicle Upgrade",
+        "Wellness",
+        "Charitable Giving"
+      ],
+      "total_indicative_value": "₹5-150 lakhs"
+    }
+  },
+  "demographic_priorities": {
+    "gen_z_18_25": {
+      "primary_goals": [
+        "Emergency Fund",
+        "Health Insurance",
+        "FIRE Preparation",
+        "Skill Upgrade",
+        "SIP Mutual Funds",
+        "Student Loan Repayment"
+      ],
+      "investment_style": "Aggressive equity-heavy (60-80%), long horizon (25-40 years)"
+    },
+    "millennials_26_42": {
+      "primary_goals": [
+        "First Home",
+        "Child Education",
+        "Parental Care",
+        "FIRE Planning",
+        "Second Home",
+        "Freelance Income",
+        "Dividend Portfolio"
+      ],
+      "investment_style": "Balanced (60% equity, 40% debt), medium-to-long horizon (15-25 years)"
+    },
+    "gen_x_43_58": {
+      "primary_goals": [
+        "Retirement Planning",
+        "Parental Care",
+        "Child Higher Education",
+        "Legacy Planning",
+        "Sabbatical",
+        "Dividend Income",
+        "Estate Planning"
+      ],
+      "investment_style": "Conservative (40% equity, 60% debt/fixed income), short-to-medium horizon (5-15 years)"
+    }
+  },
+  "horizon_distribution": {
+    "short_1_to_3_years": [
+      "Emergency Fund",
+      "Sabbatical",
+      "Wedding",
+      "Home Renovation",
+      "International Vacation",
+      "Skill Upgrade",
+      "Startup Loan Repayment"
+    ],
+    "medium_3_to_7_years": [
+      "First Home Purchase",
+      "Second Home",
+      "Destination Wedding",
+      "Car Purchase",
+      "Children's Education (India)",
+      "Luxury Car",
+      "Health Optimization"
+    ],
+    "long_7_plus_years": [
+      "FIRE",
+      "Global Education",
+      "Angel Investing",
+      "Parental Care",
+      "Rental Property",
+      "Dividend Portfolio",
+      "Legacy Planning",
+      "Retirement Planning"
+    ]
+  },
+  "notes": {
+    "inflation_adjustment": "All estimates as of December 2024; apply 6-8% annual inflation for future planning",
+    "tax_implications": "Consult CA for section 80C, 80D, 80E, 80G deductions and LTCG tax planning",
+    "investment_timeline": "Start SIPs 2-3 years before goal achievement for compound returns",
+    "diversification": "Combine Essential + Wealth + Lifestyle goals for holistic financial health"
+  }
+}

@@ -1,1692 +1,1353 @@
 // ==========================================
-// 1. SETUP SCENE
-// ==========================================
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-// Load OrbitControls (So she can drag the earth)
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableZoom = false; // Disable zoom (we control zoom via code)
-controls.enablePan = false;
-controls.enabled = false; // Disabled initially (in Solar System mode)
-
-// Textures
-const loader = new THREE.TextureLoader();
-
-// ==========================================
-// 2. CREATE OBJECTS
+// SPEND-TREK 2.0: LOGIC ENGINE (V10.1 - THE GOLDEN SPLIT)
 // ==========================================
 
-// SUN
-const sunGeometry = new THREE.SphereGeometry(2, 64, 64);
-const sunMaterial = new THREE.MeshBasicMaterial({ map: loader.load('assets/images/sun_texture.jpg') });
-const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-scene.add(sun);
+const FALLBACK_STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
+    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+    "Uttarakhand", "West Bengal", "Delhi", "Jammu & Kashmir", "Ladakh", "Puducherry"
+];
 
-// EARTH GROUP (Earth + Cloud/Pins will rotate together)
-const earthGroup = new THREE.Group();
-scene.add(earthGroup);
+let scene, camera, renderer, solarSystemGroup, controls;
+let planets = {}; // Store planet meshes by ID
+let raycaster = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
 
-// EARTH
-const earthGeometry = new THREE.SphereGeometry(0.5, 64, 64);
-const earthMaterial = new THREE.MeshStandardMaterial({
-    map: loader.load('assets/images/earth_texture.jpg'),
-    roughness: 1, metalness: 0
-});
-const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-earthGroup.add(earth); // Add Earth to the Group
-
-// STARS
-const starGeometry = new THREE.SphereGeometry(50, 64, 64);
-const starMaterial = new THREE.MeshBasicMaterial({
-    map: loader.load('assets/images/stars.jpg'), side: THREE.BackSide
-});
-const starBackground = new THREE.Mesh(starGeometry, starMaterial);
-scene.add(starBackground);
-
-// LIGHTS
-const pointLight = new THREE.PointLight(0xffffff, 2, 100);
-scene.add(pointLight);
-const ambientLight = new THREE.AmbientLight(0x333333);
-scene.add(ambientLight);
+// USER STATE
+let userInputs = {
+    income: 0,
+    food: 0,
+    transport: 0,
+    rent: 0,
+    shopping: 0,
+    savings: 0
+};
+let calculatedPersona = null;
 
 // ==========================================
-// 3. VARIABLES & COORDINATE MATH
-// ==========================================
-let viewState = "SOLAR_SYSTEM"; // Options: SOLAR_SYSTEM, TRAVELING, EARTH_VIEW
-let angle = 0;
-const orbitRadius = 7;
-const earthRadius = 0.5;
-
-// LEAFLET MAP VARIABLES
-let map = null; // Country View Map
-let cityMap = null; // City Gallery Map
-let currentLayer = null;
-let currentPerson = null; // Global reference for current person context
-
-// Raycaster for interactions (declared early so animate() can use it)
-const raycaster = new THREE.Raycaster();
-raycaster.params.Sprite = { threshold: 0.1 };
-const mouse = new THREE.Vector2();
-
-// Camera Start Position
-camera.position.z = 12;
-camera.position.y = 3;
-
-// Helper: Convert Lat/Lon to 3D Position
-function latLonToVector3(lat, lon, radius) {
-    const phi = (90 - lat) * (Math.PI / 180);
-    const theta = (lon + 180) * (Math.PI / 180);
-    const x = -(radius * Math.sin(phi) * Math.cos(theta));
-    const z = (radius * Math.sin(phi) * Math.sin(theta));
-    const y = (radius * Math.cos(phi));
-    return new THREE.Vector3(x, y, z);
-}
-
-// ==========================================
-// 4. ADD CITY MARKERS (The "Pins")
-// ==========================================
-const markers = []; // Keep track of markers to detect clicks later
-
-function createMarkers() {
-    // Load the pin texture
-    const pinTexture = loader.load('assets/images/pin.png');
-
-    // Read from the global 'database' variable in data.js (NOW COUNTRIES)
-    database.countries.forEach(country => {
-        // 1. Create the Pin Sprite for the COUNTRY
-        const pinMaterial = new THREE.SpriteMaterial({ map: pinTexture });
-        const pin = new THREE.Sprite(pinMaterial);
-
-        // Adjust scale (larger for easier clicking)
-        pin.scale.set(0.35, 0.35, 1);
-
-        // Anchor bottom center (0.5, 0)
-        pin.center.set(0.5, 0);
-
-        // Calculate position
-        const pos = latLonToVector3(country.lat, country.lng, earthRadius);
-        pin.position.copy(pos);
-
-        // Store COUNTRY data inside the marker object
-        pin.userData = {
-            type: 'country',
-            countryData: country
-        };
-
-        // Add to Earth Group so it rotates WITH the earth
-        earthGroup.add(pin);
-        markers.push(pin);
-
-        // 2. Create the Text Label
-        const textSprite = createTextLabel(country.name);
-        const labelPos = pos.clone().multiplyScalar(1.4);
-        textSprite.position.copy(labelPos);
-        earthGroup.add(textSprite);
-    });
-}
-
-function createTextLabel(text) {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-
-    // Set canvas dimensions
-    canvas.width = 256;
-    canvas.height = 64;
-
-    // Style text
-    context.font = 'Bold 24px Arial';
-    context.fillStyle = 'white';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-
-    // Add text shadow/glow for visibility
-    context.shadowColor = 'rgba(0,0,0,0.8)';
-    context.shadowBlur = 4;
-    context.lineWidth = 2; // for stroke if needed
-
-    // Draw text
-    context.fillText(text, canvas.width / 2, canvas.height / 2);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const material = new THREE.SpriteMaterial({ map: texture });
-    const sprite = new THREE.Sprite(material);
-
-    sprite.scale.set(0.5, 0.125, 1); // Adjust scale to match canvas aspect ratio
-    return sprite;
-}
-createMarkers(); // Run this immediately
-
-// ==========================================
-// 4b. ADD EXTRA PLANETS (For "Nudge" Delight)
-// ==========================================
-const planets = [];
-function createExtraPlanets() {
-    const planetData = [
-        { color: 0xff4444, size: 0.3, orbit: 4, speed: 0.008, name: 'Mars' },
-        { color: 0xffaa00, size: 0.8, orbit: 9, speed: 0.004, name: 'Jupiter' },
-        { color: 0x4444ff, size: 0.7, orbit: 11, speed: 0.003, name: 'Neptune' }
-    ];
-
-    planetData.forEach(p => {
-        const geo = new THREE.SphereGeometry(p.size, 32, 32);
-        const mat = new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.8 });
-        const mesh = new THREE.Mesh(geo, mat);
-
-        // Random starting angle
-        const startAngle = Math.random() * Math.PI * 2;
-
-        mesh.userData = {
-            orbitRadius: p.orbit,
-            orbitSpeed: p.speed,
-            angle: startAngle,
-            baseRotationSpeed: 0.01,
-            hoverRotationSpeed: 0.1, // Fast spin on nudge
-            isHovered: false
-        };
-
-        // Initial Pos
-        mesh.position.x = p.orbit * Math.cos(startAngle);
-        mesh.position.z = p.orbit * Math.sin(startAngle);
-
-        scene.add(mesh);
-        planets.push(mesh);
-    });
-}
-createExtraPlanets();
-
-createExtraPlanets();
-
-// ==========================================
-// 4c. INTERACTIVE STAR PARTICLES ("Gravity" Delight)
-// ==========================================
-const starParticlesGeometry = new THREE.BufferGeometry();
-const starCount = 1500;
-const starPositions = new Float32Array(starCount * 3);
-const starInitialPositions = new Float32Array(starCount * 3);
-const starVelocities = new Float32Array(starCount * 3);
-
-for (let i = 0; i < starCount * 3; i++) {
-    const val = (Math.random() - 0.5) * 100; // Spread wide
-    starPositions[i] = val;
-    starInitialPositions[i] = val;
-    starVelocities[i] = 0;
-}
-
-starParticlesGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-const starParticlesMaterial = new THREE.PointsMaterial({
-    color: 0xffffff,
-    size: 0.15,
-    transparent: true,
-    opacity: 0.8
-});
-const starField = new THREE.Points(starParticlesGeometry, starParticlesMaterial);
-scene.add(starField);
-
-
-// ==========================================
-// 4d. "YOU ARE HERE" PULSE (Delight)
-// ==========================================
-let pulseMarker = null;
-function createPulseMarker() {
-    // Create soft glow texture
-    const canvas = document.createElement('canvas');
-    canvas.width = 64; canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-
-    // Draw Gradient Circle
-    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0, 'rgba(0, 255, 255, 1)');   // Cyan Center
-    grad.addColorStop(0.4, 'rgba(0, 255, 255, 0.5)');
-    grad.addColorStop(1, 'rgba(0, 255, 255, 0)');   // Fade out
-
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 64, 64);
-
-    const tex = new THREE.CanvasTexture(canvas);
-    const mat = new THREE.SpriteMaterial({
-        map: tex,
-        transparent: true,
-        depthTest: false, // Always visible on top (optional, maybe keep true for realism)
-        depthWrite: false,
-        blending: THREE.AdditiveBlending
-    });
-
-    pulseMarker = new THREE.Sprite(mat);
-
-    // Position at "Home" (e.g., New York: 40.7128° N, 74.0060° W)
-    // Or just an arbitrary point that looks good in initial view
-    const homePos = latLonToVector3(40.7128, -74.0060, earthRadius * 1.01); // Slightly above surface
-    pulseMarker.position.copy(homePos);
-    pulseMarker.scale.set(0.1, 0.1, 1);
-
-    earthGroup.add(pulseMarker);
-}
-createPulseMarker();
-
-// ==========================================
-// 4e. STAR DUST BURST (Interaction Delight)
-// ==========================================
-let dustParticles = [];
-function createDustBurst(position) {
-    const particleCount = 20;
-    const canvas = document.createElement('canvas');
-    canvas.width = 32; canvas.height = 32;
-    const ctx = canvas.getContext('2d');
-
-    // Simple glowing dot
-    const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-    grad.addColorStop(0, 'white');
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 32, 32);
-
-    const tex = new THREE.CanvasTexture(canvas);
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending });
-
-    for (let i = 0; i < particleCount; i++) {
-        const sprite = new THREE.Sprite(mat.clone());
-        sprite.position.copy(position);
-
-        // Random velocity roughly upwards/outwards
-        const vx = (Math.random() - 0.5) * 0.05;
-        const vy = (Math.random() * 0.05) + 0.02; // Up
-        const vz = (Math.random() - 0.5) * 0.05;
-
-        sprite.userData = { velocity: new THREE.Vector3(vx, vy, vz), life: 1.0 };
-        sprite.scale.set(0.2, 0.2, 1);
-
-        scene.add(sprite);
-        dustParticles.push(sprite);
-    }
-}
-
-// ==========================================
-// 4f. JANVI ORBITS (Revolving Images)
-// ==========================================
-const janviImages = [];
-function createJanviOrbits() {
-    const janviData = [
-        { img: 'assets/images/jahnavi_1.jpg', orbit: 5.5, speed: 0.007, size: 2.0 }, // Between Mars (4) and Earth (7)
-        { img: 'assets/images/jahnavi_3.jpg', orbit: 8.5, speed: 0.005, size: 2.5 }, // Between Earth (7) and Jupiter (9)
-        { img: 'assets/images/jahnavi_4.jpg', orbit: 13, speed: 0.003, size: 3.0 }, // Beyond Neptune (11)
-        { img: 'assets/images/jahnavi_5.jpg', orbit: 15, speed: 0.002, size: 3.5 }  // Far orbit
-    ];
-
-    janviData.forEach(d => {
-        const tex = loader.load(d.img);
-        // Use SpriteMaterial so it always faces camera
-        const mat = new THREE.SpriteMaterial({ map: tex });
-        const sprite = new THREE.Sprite(mat);
-
-        sprite.scale.set(d.size, d.size, 1);
-
-        // Random starting angle
-        const startAngle = Math.random() * Math.PI * 2;
-
-        sprite.userData = {
-            orbitRadius: d.orbit,
-            orbitSpeed: d.speed,
-            angle: startAngle
-        };
-
-        // Initial Pos
-        sprite.position.x = d.orbit * Math.cos(startAngle);
-        sprite.position.z = d.orbit * Math.sin(startAngle);
-        // Add a slight Y variation so they aren't all on the exact same plane
-        sprite.position.y = (Math.random() - 0.5) * 2;
-
-        scene.add(sprite);
-        janviImages.push(sprite);
-    });
-}
-createJanviOrbits();
-
-// ==========================================
-// 5. ANIMATION LOOP
-// ==========================================
-function animate() {
-    requestAnimationFrame(animate);
-
-    // BACKGROUND MOVEMENT
-    sun.rotation.y += 0.002;
-    starBackground.rotation.y += 0.0005;
-
-    // GRAVITY EFFECT (Stars pull to mouse)
-    if (viewState === "SOLAR_SYSTEM") {
-        // Unproject mouse to get a world point roughly in front of camera
-        const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
-        vector.unproject(camera);
-        const dir = vector.sub(camera.position).normalize();
-        const distance = -camera.position.z / dir.z; // Project to Z=0 plane (approx)
-        const targetPos = camera.position.clone().add(dir.multiplyScalar(10)); // Arbitrary look-at point
-
-        const positions = starField.geometry.attributes.position.array;
-
-        for (let i = 0; i < starCount; i++) {
-            const ix = i * 3;
-            const iy = i * 3 + 1;
-            const iz = i * 3 + 2;
-
-            const px = positions[ix];
-            const py = positions[iy];
-            const pz = positions[iz];
-
-            // 1. Calculate distance to "Mouse Target"
-            const dx = targetPos.x - px;
-            const dy = targetPos.y - py;
-            const dz = targetPos.z - pz;
-            const distSq = dx * dx + dy * dy + dz * dz;
-
-            // 2. Apply Force if close (Gravitational Pull)
-            // Range 10 units. Force falls off with distance.
-            if (distSq < 100) {
-                const force = 0.05 * (1 - distSq / 100);
-                positions[ix] += dx * force;
-                positions[iy] += dy * force;
-                positions[iz] += dz * force;
-            } else {
-                // 3. Return to initial position (Elasticity)
-                positions[ix] += (starInitialPositions[ix] - px) * 0.02;
-                positions[iy] += (starInitialPositions[iy] - py) * 0.02;
-                positions[iz] += (starInitialPositions[iz] - pz) * 0.02;
-            }
-        }
-        starField.geometry.attributes.position.needsUpdate = true;
-    }
-
-    if (viewState === "SOLAR_SYSTEM") {
-        // Orbit Logic (Earth)
-        earthGroup.rotation.y += 0.02; // Spin
-        angle += 0.005; // Orbit
-        earthGroup.position.x = orbitRadius * Math.cos(angle);
-        earthGroup.position.z = orbitRadius * Math.sin(angle);
-
-        // Orbit Logic (Extra Planets)
-        planets.forEach(p => {
-            const data = p.userData;
-            data.angle += data.orbitSpeed;
-            p.position.x = data.orbitRadius * Math.cos(data.angle);
-            p.position.z = data.orbitRadius * Math.sin(data.angle);
-
-            // Spin: Normal vs Hover
-            const spinSpeed = data.isHovered ? data.hoverRotationSpeed : data.baseRotationSpeed;
-            p.rotation.y += spinSpeed;
-
-            // Interaction Decay (Stop spinning fast if not hovered)
-            if (!data.isHovered && p.rotation.y > 0) {
-                // Simple physics-ish decay could go here, but instant switch is fine for "nudge"
-            }
-        });
-
-        // Orbit Logic (Janvi Images)
-        janviImages.forEach(sprite => {
-            sprite.visible = true; // Ensure visible in solar system
-            const data = sprite.userData;
-            data.angle += data.orbitSpeed;
-            sprite.position.x = data.orbitRadius * Math.cos(data.angle);
-            sprite.position.z = data.orbitRadius * Math.sin(data.angle);
-
-            // Optional: Slight Bobbing
-            // sprite.position.y += Math.sin(Date.now() * 0.001) * 0.005;
-        });
-
-        // Make sure camera is far
-        controls.enabled = false;
-    } else {
-        // HIDE ORBITS when not in solar system to prevent interference
-        janviImages.forEach(sprite => {
-            sprite.visible = false;
-        });
-    }
-
-    if (viewState === "TRAVELING") {
-        // Zoom Logic (Lerp)
-        const targetPos = earthGroup.position.clone();
-        targetPos.z += 2; // Stop slightly in front
-
-        camera.position.lerp(targetPos, 0.05);
-        camera.lookAt(earthGroup.position);
-
-        // Check if we have arrived (distance is small)
-        if (camera.position.distanceTo(targetPos) < 0.1) {
-            viewState = "EARTH_VIEW";
-            document.getElementById('btn-back').classList.remove('hidden');
-            controls.enabled = true; // Allow dragging now!
-            controls.target.copy(earthGroup.position); // Pivot around Earth
-        }
-    }
-    else if (viewState === "EARTH_VIEW") {
-        // User controls the rotation now with mouse (OrbitControls)
-        controls.update();
-
-        // PULSE ANIMATION
-        if (pulseMarker) {
-            pulseMarker.visible = true;
-            const time = Date.now() * 0.002;
-            const scale = 0.12 + Math.sin(time) * 0.04; // Oscillate size
-            pulseMarker.scale.set(scale, scale, 1);
-            pulseMarker.material.opacity = 0.6 + Math.sin(time) * 0.3; // Oscillate opacity
-        }
-    }
-
-    renderer.render(scene, camera);
-}
-animate();
-
-// ==========================================
-// 6. UI FUNCTIONS
+// 1. INITIALIZATION
 // ==========================================
 
-function showFakePopup() {
-    document.getElementById('custom-modal').classList.remove('hidden');
-}
+function init() {
+    // 1. Scene Setup
+    const container = document.getElementById('ui-layer');
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(getComputedStyle(document.body).getPropertyValue('--bg-color').trim() || '#111');
 
-function closePopupAndStart() {
-    document.getElementById('custom-modal').classList.add('hidden');
-    startJourney();
-}
-
-function startJourney() {
-    const intro = document.getElementById('intro-screen');
-    intro.style.opacity = "0";
-    setTimeout(() => intro.style.display = "none", 1000);
-
-    // Trigger Atmosphere Effect
-    const atmos = document.getElementById('atmosphere-overlay');
-    atmos.classList.remove('hidden');
-    atmos.classList.add('active');
-
-    // Cleanup after animation
-    setTimeout(() => {
-        atmos.classList.remove('active');
-        atmos.classList.add('hidden');
-    }, 2500);
-
-    viewState = "TRAVELING";
-}
-
-function goBackToSpace() {
-    viewState = "SOLAR_SYSTEM";
-
-    // Reset Camera
-    camera.position.set(0, 3, 12);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 25;
+    camera.position.y = 10;
     camera.lookAt(0, 0, 0);
 
-    // Show Intro Again
-    const intro = document.getElementById('intro-screen');
-    intro.style.display = "block";
-    // Small delay to allow display:block to apply before changing opacity
-    setTimeout(() => intro.style.opacity = "1", 100);
-
-    // Hide Back Button
-    document.getElementById('btn-back').classList.add('hidden');
-}
-
-// Handle Window Resize
-window.addEventListener('resize', () => {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-});
 
-// ==========================================
-// 7. CLICKING PINS & PLANET INTERACTION
-// ==========================================
-// (raycaster and mouse declared at top of file)
+    // Check if canvas exists, if so remove it (cleanup old)
+    const oldCanvas = document.querySelector('canvas');
+    if (oldCanvas) oldCanvas.remove();
 
-
-// Planet Interaction (Hover/Nudge) - Desktop
-window.addEventListener('mousemove', (event) => {
-    if (viewState !== "SOLAR_SYSTEM") return;
-
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    // Reset all
-    planets.forEach(p => p.userData.isHovered = false);
-
-    const intersects = raycaster.intersectObjects(planets);
-    if (intersects.length > 0) {
-        const p = intersects[0].object;
-        p.userData.isHovered = true;
-        document.body.style.cursor = 'pointer'; // Feedback
+    // MOUNT TO CONTAINER (Fix for Interaction)
+    const canvasContainer = document.getElementById('canvas-container');
+    if (canvasContainer) {
+        canvasContainer.appendChild(renderer.domElement);
     } else {
-        document.body.style.cursor = 'default';
+        document.body.appendChild(renderer.domElement); // Fallback
     }
-});
 
-// Planet Interaction (Touch) - Mobile Nudge
-window.addEventListener('touchstart', (event) => {
-    if (viewState !== "SOLAR_SYSTEM") return;
-    // ... Simplified touch logic can map to mouse for this demo
-    const touch = event.touches[0];
-    mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableZoom = true;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.5;
+    controls.enabled = true; // Explicitly enable controls
 
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(planets);
-    if (intersects.length > 0) {
-        const p = intersects[0].object;
-        p.userData.isHovered = true;
-        // Reset after a second for mobile "nudge" feel
-        setTimeout(() => p.userData.isHovered = false, 1000);
-    }
-}, { passive: false });
-
-
-
-window.addEventListener('click', (event) => {
-    if (viewState !== "EARTH_VIEW") return;
-
-    // Calculate mouse position
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    // Check intersection with ALL objects in earthGroup (recursive)
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects([earthGroup], true);
-
-    // Find first intersection that has COUNTRY data
-    for (let i = 0; i < intersects.length; i++) {
-        const obj = intersects[i].object;
-        if (obj.userData && obj.userData.type === 'country') {
-
-
-            // Open Country View instead of City Gallery directly
-            setTimeout(() => openCountryView(obj.userData.countryData), 150);
-            return;
-        }
-    }
-});
-
-// ==========================================
-// 8a. COUNTRY VIEW LOGIC (2D Overlay)
-// ==========================================
-
-// ==========================================
-// 8a. COUNTRY VIEW LOGIC (LEAFLET MAP)
-// ==========================================
-
-function openCountryView(country) {
-    const countryView = document.getElementById('country-view');
-    const nameTitle = document.getElementById('country-name-title');
-    const mapContainer = document.getElementById('country-map-container');
-
-    // 1. Show View
-    countryView.classList.remove('hidden');
-    nameTitle.innerText = country.name;
-
-    // HIDE GLOBAL BACK BUTTON (To prevent duplicate/overlap)
-    document.getElementById('btn-back').classList.add('hidden');
-
-    // 2. Initialize Leaflet Map (if not already done)
-    if (!map) {
-        map = L.map('country-map-container', {
-            zoomControl: false, // We can add custom if needed
-            attributionControl: false
+    // EVENT BINDINGS
+    // Explicitly bind the init button to bypass potential HTML inline issues
+    const initBtn = document.getElementById('btn-splash-init');
+    if (initBtn) {
+        initBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent falling through to canvas
+            console.log("Button Clicked via Listener");
+            goToInput();
         });
-
-        // Add Bhuvan Satellite WMS Layer
-        // URL: https://bhuvan-vec2.nrsc.gov.in/bhuvan/wms
-        // Layer: mostly 'lulc:BR_LULC50K_1112' or similar, but for base satellite we can try standard OGC or Esri as fallback.
-        // Primary: Esri World Imagery (High Res Satellite)
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri'
-        }).addTo(map);
-
-        // Optional: Add Labels
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}').addTo(map);
+        // Force pointer events style for robustness
+        initBtn.style.pointerEvents = "auto";
+        initBtn.style.cursor = "pointer";
     }
 
-    // 3. Set View to Country
-    // Leaflet uses [Lat, Lng]
-    map.setView([country.lat, country.lng], 5); // Zoom 5 is good for country level
+    // 2. Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffcd00, 2, 100);
+    pointLight.position.set(0, 0, 0);
+    scene.add(pointLight);
 
-    // 4. Clear Loop Markers
-    map.eachLayer((layer) => {
-        if (layer instanceof L.Marker) {
-            map.removeLayer(layer);
-        }
-    });
+    // 3. Create Visuals
+    createNavagrahaSystem();
 
-    // 5. Add City Markers (Real Lat/Lon!)
-    if (country.cities) {
-        country.cities.forEach(city => {
-            // Create Custom Icon
-            const neonIcon = L.divIcon({
-                className: 'neon-pin-icon',
-                html: `<div class="pin-dot"></div><div class="pin-label">${city.name}</div>`,
-                iconSize: [40, 40],
-                iconAnchor: [20, 20] // Center it
-            });
+    // 4. Events
+    window.addEventListener('resize', onWindowResize, false);
 
-            const marker = L.marker([city.lat, city.lng], { icon: neonIcon }).addTo(map);
+    // 5. Dynamic Data
+    populateStates();
 
-            marker.on('click', () => {
-                const galleryData = {
-                    cityName: city.name,
-                    people: city.people,
-                    mapImage: city.mapImage
-                };
-                openCityGallery(galleryData);
-            });
-        });
+    // 6. Explicit Event Binding (Fix for Splash Button)
+    const splashBtn = document.getElementById('btn-splash-init');
+    if (splashBtn) {
+        splashBtn.addEventListener('click', goToInput);
     }
 }
 
-function backToEarth() {
-    const countryView = document.getElementById('country-view');
-    countryView.classList.add('hidden');
-    // State is still EARTH_VIEW, so controls work immediately
+function populateStates() {
+    let statesSource = [];
 
-    // SHOW GLOBAL BACK BUTTON (Restore access to Space)
-    document.getElementById('btn-back').classList.remove('hidden');
-}
-
-/* OLD CODE COMMENTED OUT
-function openCountryView_OLD(country) {
-    const countryView = document.getElementById('country-view');
-    const nameTitle = document.getElementById('country-name-title');
-    const mapImg = document.getElementById('country-map-img');
-    const pinsLayer = document.getElementById('country-pins-layer');
-
-    // 1. Set Content
-    nameTitle.innerText = country.name;
-    mapImg.src = country.mapImage || "assets/images/map_placeholder.jpg";
-
-    // 2. Clear Old Pins
-    pinsLayer.innerHTML = '';
-
-    // 3. Generate City Pins
-    if (country.cities) {
-        country.cities.forEach(city => {
-            const pin = document.createElement('div');
-            pin.className = 'city-pin-2d';
-            pin.style.top = city.top + '%';
-            pin.style.left = city.left + '%';
-
-            pin.innerHTML = `
-                <div class="pin-dot"></div>
-                <div class="pin-label">${city.name}</div>
-            `;
-
-            pin.onclick = (e) => {
-                e.stopPropagation(); // Prevent bubbling if map has events
-                // Open the existing gallery using the CITY data
-                // Ensure city object has what openCityGallery needs
-                // openCityGallery expects: { cityName: "...", people: [...], mapImage: "..." }
-                // checking usage below...
-                // It accesses cityData.cityName, cityData.people, cityData.mapImage
-
-                // Let's normalize it
-                const galleryData = {
-                    cityName: city.name,
-                    people: city.people,
-                    mapImage: city.mapImage || country.mapImage // Fallback to country map if city specific missing
-                };
-
-                openCityGallery(galleryData);
-            };
-
-            pinsLayer.appendChild(pin);
-        });
-    }
-
-    // 4. Show View
-    countryView.classList.remove('hidden');
-
-    // OPTIONAL: Hide Earth canvas to save performance? 
-    // Or just overlay it. Keeping it visible behind is cool context but might distract.
-    // Let's keep it running but blurred or covered by opaque bg. 
-    // css #country-view is background: #111 so it covers it.
-}
-
-function backToEarth() {
-    const countryView = document.getElementById('country-view');
-    countryView.classList.add('hidden');
-    // State is still EARTH_VIEW, so controls work immediately
-}
-*/
-
-// ==========================================
-// 8. CITY GALLERY LOGIC
-// ==========================================
-
-
-function openCityGallery(cityData) {
-    const gallery = document.getElementById('city-gallery');
-    const title = document.getElementById('gallery-city-name');
-    const miniGallery = document.getElementById('neon-mini-gallery');
-    const bg = document.getElementById('neon-background');
-    const mapBg = document.getElementById('city-map-background');
-
-    // 1. Set City Name
-    title.innerText = cityData.cityName;
-
-    // 1b. Update Connections Badge
-    const badge = document.getElementById('connections-badge');
-    if (badge) {
-        badge.innerText = `${cityData.people.length} Connections Found`;
-    }
-
-    // 2. Hide Static Background & Show Map Background
-    bg.classList.add('hidden');
-
-    // Hide Country View to prevent button overlap
-    document.getElementById('country-view').classList.add('hidden');
-
-    // 3. Initialize City Map (Leaflet)
-    // We need to look up the city's lat/lng from the database since cityData passed here might be partial
-    // Iterate through countries to find the city
-    let targetCity = null;
-    database.countries.forEach(c => {
-        c.cities.forEach(city => {
-            if (city.name === cityData.cityName) {
-                targetCity = city;
-            }
-        });
-    });
-
-    if (targetCity && targetCity.lat && targetCity.lng) {
-        if (!cityMap) {
-            cityMap = L.map('city-map-background', {
-                zoomControl: false,
-                attributionControl: false,
-                zoomAnimation: true
-            });
-
-            // Use Esri Satellite only (Clean, cinematic look)
-            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri'
-            }).addTo(cityMap);
-        }
-
-        // Slight timeout to ensure div is visible before setting view
-        setTimeout(() => {
-            cityMap.invalidateSize();
-            // Zoom level 13 for "Deep into city" view
-            cityMap.setView([targetCity.lat, targetCity.lng], 13);
-        }, 100);
+    // 1. Try Data Engine
+    if (window.DATA_ENGINE && window.DATA_ENGINE.ALL_STATES) {
+        statesSource = window.DATA_ENGINE.ALL_STATES;
     } else {
-        // Fallback if no coordinates found (shouldn't happen now)
-        bg.classList.remove('hidden');
-        const mapImg = cityData.mapImage || 'assets/images/map_placeholder.jpg';
-        bg.style.backgroundImage = `url('${mapImg}')`;
+        console.warn("⚠️ DATA_ENGINE Missing. Switching to FALLBACK_STATES.");
+        statesSource = FALLBACK_STATES;
     }
 
-    // 4. Clear Mini Gallery
-    miniGallery.innerHTML = '';
-
-    // 5. Create Thumbnails
-    cityData.people.forEach((person, index) => {
-        const thumb = document.createElement('img');
-        thumb.src = person.thumbnailImage || 'assets/images/placeholder_thumb.jpg';
-        thumb.className = 'mini-thumb';
-        thumb.alt = person.name;
-
-        // Click Event
-        thumb.onclick = () => {
-            updateNeonCard(person, thumb);
-        };
-
-        miniGallery.appendChild(thumb);
-    });
-
-    // 6. Initialize with first person
-    if (cityData.people.length > 0) {
-        // Find the first thumb we just added
-        const firstThumb = miniGallery.children[0];
-        updateNeonCard(cityData.people[0], firstThumb);
-    }
-
-    // Show Gallery
-    gallery.classList.remove('hidden');
-}
-
-function updateNeonCard(person, activeThumb) {
-    // Update global state
-    currentPerson = person;
-
-    // Update UI Elements
-    document.getElementById('neon-person-name').innerText = person.name;
-    // We can keep the static description or update if later data has it
-
-    const mainImg = document.getElementById('neon-main-img');
-    mainImg.src = person.thumbnailImage || 'assets/images/placeholder_thumb.jpg';
-
-    // Update Enter Button
-    const btn = document.getElementById('btn-enter-memory');
-    btn.onclick = () => {
-        startPuzzle(person);
-    };
-
-    // Highlight Active Thumbnail
-    const allThumbs = document.querySelectorAll('.mini-thumb');
-    allThumbs.forEach(t => t.classList.remove('active'));
-    if (activeThumb) {
-        activeThumb.classList.add('active');
-    }
-}
-
-function closeCityGallery() {
-    document.getElementById('city-gallery').classList.add('hidden');
-    document.getElementById('country-view').classList.remove('hidden');
-    // NOTE: Country View is restored, so Global Back Button stays HIDDEN
-    // (It will be shown only when 'backToEarth' is clicked from Country View)
-}
-
-// ==========================================
-// 9. CUSTOM JIGSAW PUZZLE LOGIC (CANVAS)
-// ==========================================
-
-let puzzleInstance = null;
-let puzzleTimer;
-let seconds = 0;
-
-
-
-class JigsawPuzzle {
-    constructor(canvasId, imageUrl, rows, cols, onComplete) {
-        this.canvas = document.getElementById(canvasId);
-        this.ctx = this.canvas.getContext('2d');
-        this.imageUrl = imageUrl;
-        this.rows = rows;
-        this.cols = cols;
-        this.onComplete = onComplete;
-
-        this.pieces = [];
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
-        this.pieceWidth = 0;
-        this.pieceHeight = 0;
-
-        this.selectedPiece = null;
-        this.offsetX = 0;
-        this.offsetY = 0;
-        this.isComplete = false;
-
-        // Image
-        this.img = new Image();
-        this.img.onload = () => {
-            this.init();
-        };
-        this.img.src = this.imageUrl;
-
-        // Handle cached image immediately
-        if (this.img.complete) {
-            this.init();
-        }
-
-        // Event Listeners
-        this.handleMouseDown = this.handleMouseDown.bind(this);
-        this.handleMouseMove = this.handleMouseMove.bind(this);
-        this.handleMouseUp = this.handleMouseUp.bind(this);
-
-        // Touch Listeners
-        this.handleTouchStart = this.handleTouchStart.bind(this);
-        this.handleTouchMove = this.handleTouchMove.bind(this);
-        this.handleTouchEnd = this.handleTouchEnd.bind(this);
-
-        this.canvas.addEventListener('mousedown', this.handleMouseDown);
-        this.canvas.addEventListener('mousemove', this.handleMouseMove);
-        this.canvas.addEventListener('mouseup', this.handleMouseUp);
-
-        this.canvas.addEventListener('touchstart', this.handleTouchStart, { passive: false });
-        this.canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-        this.canvas.addEventListener('touchend', this.handleTouchEnd);
-    }
-
-    init() {
-        console.log("Jigsaw: Init called");
-        // dynamic resizing
-        const optimalPieceSize = 130;
-        this.pieceWidth = optimalPieceSize;
-        this.pieceHeight = optimalPieceSize;
-
-        // Canvas Size
-        const padding = 50;
-        this.width = (this.cols * this.pieceWidth) + padding;
-        this.height = (this.rows * this.pieceHeight) + padding;
-
-        // Resize Canvas
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
-        this.canvas.style.width = this.width + "px";
-        this.canvas.style.height = this.height + "px";
-
-        // Center the "solved" grid
-        this.startX = (this.width - (this.cols * this.pieceWidth)) / 2;
-        this.startY = (this.height - (this.rows * this.pieceHeight)) / 2;
-
-        this.generatePieces();
-        this.shufflePieces();
-        this.draw();
-
-        console.log("Jigsaw: pieces generated", this.pieces.length);
-    }
-
-    generatePieces() {
-        this.pieces = [];
-        this.slots = [];
-
-        for (let r = 0; r < this.rows; r++) {
-            for (let c = 0; c < this.cols; c++) {
-                const solvedX = this.startX + c * this.pieceWidth;
-                const solvedY = this.startY + r * this.pieceHeight;
-
-                // Define the Target Slot
-                this.slots.push({
-                    r: r,
-                    c: c,
-                    x: solvedX,
-                    y: solvedY
-                });
-
-                const piece = {
-                    id: `${r}-${c}`,
-                    r: r,
-                    c: c,
-                    currentX: 0,
-                    currentY: 0,
-                    solvedX: solvedX,
-                    solvedY: solvedY,
-                    top: r === 0 ? 0 : -this.pieces[(r - 1) * this.cols + c].bottom,
-                    right: c === this.cols - 1 ? 0 : (Math.random() > 0.5 ? 1 : -1),
-                    bottom: r === this.rows - 1 ? 0 : (Math.random() > 0.5 ? 1 : -1),
-                    left: c === 0 ? 0 : -this.pieces[this.pieces.length - 1].right,
-                    isCorrect: false,
-                    isSnapped: false
-                };
-                this.pieces.push(piece);
-            }
-        }
-    }
-
-    shufflePieces() {
-        this.pieces.forEach(p => {
-            // Avoid placing on top of slots initially?
-            // Or just random.
-            p.currentX = Math.random() * (this.width - this.pieceWidth);
-            p.currentY = Math.random() * (this.height - this.pieceHeight);
-            p.isSnapped = false;
-            p.isCorrect = false;
-        });
-    }
-
-    // SCATTER FUNCTION
-    scatter() {
-        this.shufflePieces();
-        this.draw();
-    }
-
-    draw() {
-        try {
-            this.ctx.clearRect(0, 0, this.width, this.height);
-
-            // Guide (Faint Grid)
-            this.ctx.strokeStyle = 'rgba(0, 210, 255, 0.1)';
-            this.ctx.lineWidth = 1;
-            if (this.slots) {
-                this.slots.forEach(slot => {
-                    this.ctx.strokeRect(slot.x, slot.y, this.pieceWidth, this.pieceHeight);
-                });
-            }
-
-            // Sort: Non-snapped high, Snapped low, Selected Top
-            const sorted = [...this.pieces].sort((a, b) => {
-                if (a === this.selectedPiece) return 1;
-                if (b === this.selectedPiece) return -1;
-                // Draw snapped pieces below loose ones
-                if (a.isSnapped && !b.isSnapped) return -1;
-                if (!a.isSnapped && b.isSnapped) return 1;
-                return 0;
-            });
-
-            sorted.forEach(p => this.drawPiece(p));
-        } catch (e) {
-            console.error("Jigsaw Draw Error:", e);
-        }
-    }
-
-    drawPiece(p) {
-        this.ctx.save();
-        this.ctx.translate(p.currentX, p.currentY);
-
-        this.createPiecePath(p);
-        this.ctx.clip();
-
-        // Draw Image
-        this.ctx.drawImage(
-            this.img,
-            0, 0, this.img.width, this.img.height,
-            -p.c * this.pieceWidth, -p.r * this.pieceHeight,
-            this.cols * this.pieceWidth, this.rows * this.pieceHeight
-        );
-
-        // Stroke
-        this.ctx.strokeStyle = '#333';
-        this.ctx.lineWidth = 1;
-        this.ctx.stroke();
-
-        // Visual Feedback: Correct Placement
-        if (p.isCorrect) {
-            this.ctx.shadowColor = '#00ff00';
-            this.ctx.shadowBlur = 20;
-            this.ctx.strokeStyle = '#00ff00';
-            this.ctx.lineWidth = 2;
-            this.ctx.stroke();
-        }
-        // Highlight Selected
-        else if (p === this.selectedPiece) {
-            this.ctx.shadowColor = '#fff';
-            this.ctx.shadowBlur = 15;
-            this.ctx.strokeStyle = '#fff';
-            this.ctx.stroke();
-        }
-
-        this.ctx.restore();
-    }
-
-    createPiecePath(p) {
-        // ... (Same Bezier Logic as before)
-        const w = this.pieceWidth;
-        const h = this.pieceHeight;
-        const x = 0; const y = 0;
-        const tabSize = w * 0.2;
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, y);
-        if (p.top !== 0) this.drawTab(x, y, x + w, y, p.top, tabSize);
-        else this.ctx.lineTo(x + w, y);
-        if (p.right !== 0) this.drawTab(x + w, y, x + w, y + h, p.right, tabSize);
-        else this.ctx.lineTo(x + w, y + h);
-        if (p.bottom !== 0) this.drawTab(x + w, y + h, x, y + h, p.bottom, tabSize);
-        else this.ctx.lineTo(x, y + h);
-        if (p.left !== 0) this.drawTab(x, y + h, x, y, p.left, tabSize);
-        else this.ctx.lineTo(x, y);
-        this.ctx.closePath();
-    }
-
-    drawTab(x1, y1, x2, y2, type, sz) {
-        if (type === 0) { this.ctx.lineTo(x2, y2); return; }
-        const dx = x2 - x1; const dy = y2 - y1;
-        const len = Math.sqrt(dx * dx + dy * dy);
-        const h = sz * type;
-        this.ctx.save();
-        this.ctx.translate(x1, y1);
-        this.ctx.rotate(Math.atan2(dy, dx));
-        // Symmetric shape
-        this.ctx.lineTo(len * 0.35, 0);
-        this.ctx.bezierCurveTo(len * 0.35, h * 0.5, len * 0.42, h, len * 0.42, h);
-        this.ctx.bezierCurveTo(len * 0.42, h * 1.3, len * 0.58, h * 1.3, len * 0.58, h);
-        this.ctx.bezierCurveTo(len * 0.58, h, len * 0.65, h * 0.5, len * 0.65, 0);
-        this.ctx.lineTo(len, 0);
-        this.ctx.restore();
-    }
-
-    handleStart(clientX, clientY) {
-        if (this.isComplete) return;
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = clientX - rect.left;
-        const mouseY = clientY - rect.top;
-
-        console.log("Click at:", mouseX, mouseY);
-
-        // Find piece
-        for (let i = this.pieces.length - 1; i >= 0; i--) {
-            const p = this.pieces[i];
-            if (mouseX >= p.currentX && mouseX <= p.currentX + this.pieceWidth &&
-                mouseY >= p.currentY && mouseY <= p.currentY + this.pieceHeight) {
-
-                console.log("Selected Piece:", p.id);
-                this.selectedPiece = p;
-                this.offsetX = mouseX - p.currentX;
-                this.offsetY = mouseY - p.currentY;
-
-                // Allow moving even if snapped
-                p.isSnapped = false;
-                p.isCorrect = false;
-
-                this.draw();
-                return;
-            }
-        }
-        console.log("No piece selected");
-    }
-
-    handleMove(clientX, clientY) {
-        if (!this.selectedPiece) return;
-
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = clientX - rect.left;
-        const mouseY = clientY - rect.top;
-
-        this.selectedPiece.currentX = mouseX - this.offsetX;
-        this.selectedPiece.currentY = mouseY - this.offsetY;
-
-        this.draw();
-    }
-
-    handleEnd() {
-        if (!this.selectedPiece) return;
-
-        const p = this.selectedPiece;
-        console.log("Dropped piece:", p.id, "at", p.currentX, p.currentY);
-
-        // Snap to Slot
-        let snapped = false;
-
-        for (const slot of this.slots) {
-            // Check center distance
-            const centerX = slot.x; // actually slot.x is top-left
-            // So check simple distance of top-lefts
-            const dist = Math.hypot(p.currentX - slot.x, p.currentY - slot.y);
-
-            if (dist < 60) { // Increased tolerance
-                console.log("Snapped to slot:", slot.r, slot.c);
-                p.currentX = slot.x;
-                p.currentY = slot.y;
-                p.isSnapped = true;
-
-                if (p.r === slot.r && p.c === slot.c) {
-                    p.isCorrect = true;
-                    console.log("Correct Slot!");
-                } else {
-                    p.isCorrect = false;
-                    console.log("Wrong Slot");
-                }
-                snapped = true;
-                break;
-            }
-        }
-
-        this.selectedPiece = null;
-        this.draw();
-
-        if (this.checkWin()) {
-            console.log("WINNER!");
-            this.isComplete = true; // Block further input
-            if (this.onComplete) this.onComplete();
-        }
-    }
-
-    checkWin() {
-        // Win if ALL pieces are in their CORRECT slots
-        return this.pieces.every(p => p.isCorrect);
-    }
-
-    // MOUSE
-    handleMouseDown(e) { this.handleStart(e.clientX, e.clientY); }
-    handleMouseMove(e) { this.handleMove(e.clientX, e.clientY); }
-    handleMouseUp(e) { this.handleEnd(); }
-
-    // TOUCH
-    handleTouchStart(e) {
-        if (e.touches.length > 0) {
-            e.preventDefault();
-            this.handleStart(e.touches[0].clientX, e.touches[0].clientY);
-        }
-    }
-    handleTouchMove(e) {
-        if (e.touches.length > 0) {
-            e.preventDefault();
-            this.handleMove(e.touches[0].clientX, e.touches[0].clientY);
-        }
-    }
-    handleTouchEnd(e) { this.handleEnd(); }
-
-    cleanup() {
-        this.canvas.removeEventListener('mousedown', this.handleMouseDown);
-        this.canvas.removeEventListener('mousemove', this.handleMouseMove);
-        this.canvas.removeEventListener('mouseup', this.handleMouseUp);
-        this.canvas.removeEventListener('touchstart', this.handleTouchStart);
-        this.canvas.removeEventListener('touchmove', this.handleTouchMove);
-        this.canvas.removeEventListener('touchend', this.handleTouchEnd);
-    }
-}
-
-function startPuzzle(person) {
-    window.currentPerson = person;
-    currentPerson = person; // Sync both just in case
-    const puzzleContainer = document.getElementById('puzzle-container');
-    const personDetail = document.getElementById('person-detail');
-    const successPopup = document.getElementById('success-popup');
-
-    // Check for Skip Logic
-    if (person.skipPuzzle) {
-        proceedToDetail();
+    // 2. Safety Check: DOM Element
+    const select = document.getElementById('input-state');
+    if (!select) {
+        console.warn("DOM not ready (input-state missing). Retrying in 100ms...");
+        setTimeout(populateStates, 100);
         return;
     }
 
-    // Reset State
-    seconds = 0;
-    document.getElementById('puzzle-timer').innerText = "00:00";
-    personDetail.classList.add('hidden');
-    successPopup.classList.add('hidden');
-    puzzleContainer.classList.remove('hidden');
+    // 3. Populate
+    select.innerHTML = ''; // Clear placeholder
 
-    // Setup Canvas
-    const container = document.getElementById('puzzle-board');
-    container.innerHTML = '<canvas id="game-canvas" width="600" height="600"></canvas>';
+    // Default Option
+    const defaultOpt = document.createElement("option");
+    defaultOpt.text = "Select State...";
+    defaultOpt.disabled = true;
+    defaultOpt.selected = true;
+    select.appendChild(defaultOpt);
 
-    // Cleanup old instance
-    if (puzzleInstance) {
-        puzzleInstance.cleanup();
-    }
+    statesSource.forEach(state => {
+        const option = document.createElement("option");
+        // Format: "andhra-pradesh" -> "Andhra Pradesh"
+        // If fallback, it's already formatted. If data engine, it might be slug.
+        // Simple check: does it contain '-'?
+        let label = state;
+        if (state.includes('-')) {
+            label = state.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        }
 
-    // Start New
-    puzzleInstance = new JigsawPuzzle('game-canvas', person.puzzleImage, 3, 3, () => {
-        handlePuzzleSolved();
+        option.value = state;
+        option.innerText = label;
+        select.appendChild(option);
     });
 
-    // Start Timer
-    if (puzzleTimer) clearInterval(puzzleTimer);
-    puzzleTimer = setInterval(updateTimer, 1000);
+    console.log(`States populated: ${statesSource.length} (Source: ${window.DATA_ENGINE && window.DATA_ENGINE.ALL_STATES ? 'Engine' : 'Fallback'})`);
 }
 
-function updateTimer() {
-    seconds++;
-    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    document.getElementById('puzzle-timer').innerText = `${m}:${s}`;
+// Reuse Navagraha Visuals but powered by DATA_ENGINE keys if needed
+// For now, we stick to the standard 9 planets visual for the "Cosmic Backdrop"
+function createNavagrahaSystem() {
+    solarSystemGroup = new THREE.Group();
+    scene.add(solarSystemGroup);
+    addStarField();
+
+    const planetConfig = [
+        { id: "sun", color: "#FFD700", radius: 1.8, dist: 0 },
+        { id: "mercury", color: "#4FC3F7", radius: 0.5, dist: 4 }, // Shiksha
+        { id: "venus", color: "#F48FB1", radius: 0.9, dist: 7 }, // Lifestyle
+        { id: "earth", color: "#2E7D32", radius: 1.0, dist: 10 }, // Self (Earth/Moon)
+        { id: "mars", color: "#FF5252", radius: 0.7, dist: 13 }, // Rent
+        { id: "jupiter", color: "#FFA726", radius: 1.4, dist: 17 }, // Savings
+        { id: "saturn", color: "#90A4AE", radius: 1.2, dist: 21, ring: true }, // Transport
+        { id: "rahu", color: "#7E57C2", radius: 0.8, dist: 25 }, // Tech
+        { id: "ketu", color: "#A1887F", radius: 0.8, dist: 28 } // Health
+    ];
+
+    planetConfig.forEach((config, i) => {
+        // Orbit Group
+        const orbitGroup = new THREE.Group();
+
+        // Planet Mesh
+        const geometry = new THREE.SphereGeometry(config.radius, 32, 32);
+        const material = new THREE.MeshStandardMaterial({ color: config.color });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.x = config.dist;
+
+        orbitGroup.add(mesh);
+
+        // Ring
+        if (config.ring) {
+            const ringGeo = new THREE.RingGeometry(config.radius + 0.5, config.radius + 1.5, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xcccccc, side: THREE.DoubleSide, opacity: 0.5, transparent: true });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            ring.position.x = config.dist;
+            orbitGroup.add(ring);
+        }
+
+        // Orbit Line
+        if (config.dist > 0) {
+            const curve = new THREE.EllipseCurve(0, 0, config.dist, config.dist, 0, 2 * Math.PI, false, 0);
+            const points = curve.getPoints(100);
+            const orbitGeo = new THREE.BufferGeometry().setFromPoints(points);
+            const orbitMat = new THREE.LineBasicMaterial({ color: 0x444444, opacity: 0.2, transparent: true });
+            const orbit = new THREE.Line(orbitGeo, orbitMat);
+            orbit.rotation.x = Math.PI / 2;
+            scene.add(orbit);
+        }
+
+        // Store
+        orbitGroup.userData = { speed: 0.01 + (i * 0.002) };
+        solarSystemGroup.add(orbitGroup);
+        planets[config.id] = mesh;
+    });
 }
 
-function handlePuzzleSolved() {
-    clearInterval(puzzleTimer);
-
-    // Show Success Popup
-    const timeText = document.getElementById('puzzle-timer').innerText;
-    document.getElementById('success-time').innerText = timeText;
-    document.getElementById('success-popup').classList.remove('hidden');
+function addStarField() {
+    const geometry = new THREE.BufferGeometry();
+    const vertices = [];
+    for (let i = 0; i < 5000; i++) {
+        vertices.push(THREE.MathUtils.randFloatSpread(400));
+        vertices.push(THREE.MathUtils.randFloatSpread(400));
+        vertices.push(THREE.MathUtils.randFloatSpread(400));
+    }
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.8 });
+    const stars = new THREE.Points(geometry, material);
+    scene.add(stars);
 }
 
-function proceedToDetail() {
-    // Hide Puzzle & Popup
-    document.getElementById('success-popup').classList.add('hidden');
-    document.getElementById('puzzle-container').classList.add('hidden');
 
-    showPersonDetail();
+// ==========================================
+// 2. CORE LOGIC (Analyze Persona)
+// ==========================================
+
+// NAVIGATION (Screen Switching)
+
+function goToInput() {
+    console.log("Initializing Rewind... Switch to Input Terminal.");
+
+    // UI Transitions
+    const splash = document.getElementById('ui-splash');
+    const input = document.getElementById('ui-input');
+
+    if (splash) splash.classList.add('hidden');
+    if (input) input.classList.remove('hidden');
+
+    // Camera Animation (Zoom into "Control Deck")
+    new TWEEN.Tween(camera.position)
+        .to({ z: 18, y: 7 }, 1200)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start();
+
+    // Init Default Goals
+    setTimeout(updateGoals, 100);
 }
 
-function closeSuccessPopup() {
-    document.getElementById('success-popup').classList.add('hidden');
-    // User stays on puzzle screen (which is complete)
+// ==========================================================
+// 1. INPUT HANDLING (V4 UPGRADE: AGE & MCCs)
+// ==========================================================
+
+// A. Dynamic Goal Population (Based on Age)
+
+// B. Real-time Slider Sum Validation & Chart Update
+let spendChart = null;
+
+const CATEGORY_COLORS = {
+    groceries: '#4FC3F7',
+    utilities: '#4dd0e1',
+    rent: '#FF5252',
+    emi: '#D32F2F', // Fixed: Added EMI color
+    health: '#7E57C2',
+    dining: '#F1948A',
+    travel: '#FFA726',
+    shopping: '#DAF7A6',
+    entertainment: '#AB47BC',
+    debt: '#C0392B', // Dark Red for Debt
+    savings: '#FFD700'
+};
+
+// =====================================
+// 1. DYNAMIC DROPDOWNS & UI
+// =====================================
+const MAX_GOALS = 3;
+
+function updateGoals() {
+    const age = document.getElementById("input-age").value;
+    const container = document.getElementById("goal-pills-container");
+    container.innerHTML = ""; // Clear existing
+
+    // Map user Age Range to Data Engine Keys (Approximate mapping)
+    let ageKey = "18-25"; // Default Gen Z
+    if (DATA_ENGINE.GOALS_BY_AGE[age]) {
+        ageKey = age;
+    } else {
+        if (["23-28", "29-39"].includes(age)) ageKey = "26-42"; // Millennials
+        if (["40-60"].includes(age)) ageKey = "43-58"; // Gen X
+    }
+
+    // Fallback if specific key is still missing
+    const goalIds = DATA_ENGINE.GOALS_BY_AGE[ageKey] || DATA_ENGINE.GOALS_BY_AGE["18-25"];
+
+    goalIds.forEach(id => {
+        const goal = DATA_ENGINE.ALL_GOALS[id];
+        if (goal) {
+            const pill = document.createElement("div");
+            pill.className = "goal-pill";
+            pill.setAttribute("data-id", goal.id);
+            pill.innerText = goal.label;
+
+            // Interaction
+            pill.onclick = () => toggleGoal(pill, goal);
+            pill.onmouseenter = () => showGoalPrimer(goal);
+            pill.onmouseleave = hideGoalPrimer;
+
+            container.appendChild(pill);
+        }
+    });
+
+    // Auto-select first goal as default? No, let user choose.
 }
 
-function showPersonDetail() {
-    // Ensure we have reference
-    const person = window.currentPerson || currentPerson;
+window.toggleGoal = function (el, goal) {
+    const isSelected = el.classList.contains("selected");
+    const currentSelected = document.querySelectorAll(".goal-pill.selected").length;
 
-    console.log('Opening Person Detail for:', person);
-    try {
-        if (!person) {
-            console.error('No current person selected!');
-            alert("Error: No person selected. Please try again from map.");
+    if (!isSelected) {
+        if (currentSelected >= MAX_GOALS) {
+            // Shake visual feedback? Alert?
+            alert(`You can select up to ${MAX_GOALS} goals.`);
             return;
         }
+        el.classList.add("selected");
+    } else {
+        el.classList.remove("selected");
+    }
+};
 
-        // Debug confirmation
-        // alert('Success! Opening detail for ' + person.name);
+window.showGoalPrimer = function (goal) {
+    const primerBox = document.getElementById("goal-primers");
+    if (primerBox) primerBox.innerText = `${goal.label}: ${goal.primer || "No details."} (Cost: ${goal.cost})`;
+}
 
-        // Populate Detail
-        const detailOverlay = document.getElementById('person-detail');
-        if (!detailOverlay) {
-            console.error('Detail overlay element not found!');
-            return;
-        }
-        detailOverlay.classList.remove('hidden');
+window.hideGoalPrimer = function () {
+    const primerBox = document.getElementById("goal-primers");
+    if (primerBox) primerBox.innerText = "Hover over a goal to see details.";
+}
 
-        // View Switching (Normal vs Audio vs Video)
-        const detailBody = document.querySelector('.detail-body');
-        const audioFocusView = document.getElementById('audio-focus-view');
-        const videoFocusView = document.getElementById('video-focus-view');
+function initChart() {
+    const ctx = document.getElementById('spendChart').getContext('2d');
 
-        if (person.videoFocus) {
-            if (detailBody) detailBody.classList.add('hidden');
-            if (audioFocusView) audioFocusView.classList.add('hidden');
-            if (videoFocusView) {
-                videoFocusView.classList.remove('hidden');
-                initVideoFocus(person);
-            }
-            return;
-        }
+    spendChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(CATEGORY_COLORS).map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+            datasets: [{
+                data: [15, 5, 30, 5, 10, 10, 10, 5, 0, 10], // Added 0 for debt default
+                backgroundColor: Object.values(CATEGORY_COLORS),
+                borderWidth: 0,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            onClick: (e, elements) => {
+                if (elements && elements.length > 0) {
+                    const index = elements[0].index;
+                    const keys = Object.keys(CATEGORY_COLORS);
+                    const targetId = keys[index];
 
-        if (person.audioFocus) {
-            if (detailBody) detailBody.classList.add('hidden');
-            if (videoFocusView) videoFocusView.classList.add('hidden');
-            if (audioFocusView) {
-                audioFocusView.classList.remove('hidden');
-                initAudioFocus(person);
-            }
-            return; // Skip standard carousel/letter logic
-        } else {
-            if (detailBody) detailBody.classList.remove('hidden');
-            if (audioFocusView) audioFocusView.classList.add('hidden');
-            if (videoFocusView) videoFocusView.classList.add('hidden');
-        }
-
-        // CAROUSEL LOGIC
-        const carouselImg = document.getElementById('carousel-img');
-        const prevBtn = document.getElementById('carousel-prev');
-        const nextBtn = document.getElementById('carousel-next');
-
-        if (carouselImg) {
-            // 1. Collect all images (Solved Puzzle + Extra Gallery)
-            const images = [person.solvedImage];
-            if (person.galleryImages && person.galleryImages.length > 0) {
-                images.push(...person.galleryImages);
-            }
-
-            // 2. State
-            let currentIndex = 0;
-
-            // 3. Render
-            const showImage = (index) => {
-                carouselImg.style.opacity = '0';
-                setTimeout(() => {
-                    carouselImg.src = images[index];
-                    carouselImg.style.opacity = '1';
-                }, 150);
-
-                // Toggle buttons visibility if only 1 image
-                if (images.length <= 1) {
-                    if (prevBtn) prevBtn.style.display = 'none';
-                    if (nextBtn) nextBtn.style.display = 'none';
-                } else {
-                    if (prevBtn) prevBtn.style.display = 'block';
-                    if (nextBtn) nextBtn.style.display = 'block';
-                }
-            };
-
-            // 4. Initial Show
-            showImage(0);
-
-            // 5. Handlers (Remove old listeners first if possible, or use one-time setup)
-            // Since showPersonDetail is called multiple times, we should stick to onclick assignment
-            if (prevBtn) {
-                prevBtn.onclick = () => {
-                    currentIndex = (currentIndex - 1 + images.length) % images.length;
-                    showImage(currentIndex);
-                };
-            }
-            if (nextBtn) {
-                nextBtn.onclick = () => {
-                    currentIndex = (currentIndex + 1) % images.length;
-                    showImage(currentIndex);
-                };
-            }
-        }
-
-        // IMAGE VS PDF LOGIC
-        const letterImg = document.getElementById('detail-letter-img');
-        const letterPdf = document.getElementById('detail-letter-pdf');
-        const letterAudioRight = document.getElementById('detail-audio-right');
-        const downloadBtn = document.getElementById('pdf-download-btn');
-
-        if (letterImg && letterPdf && letterAudioRight) {
-
-            if (person.rightSideAudio) {
-                // Right Side Audio Mode
-                letterImg.classList.add('hidden');
-                letterPdf.classList.add('hidden');
-                letterAudioRight.classList.remove('hidden');
-
-                if (downloadBtn) downloadBtn.classList.add('hidden');
-                initRightSideAudio(person);
-
-            } else if (person.letterPdf) {
-                // Show PDF, Hide Image/Audio
-                letterImg.classList.add('hidden');
-                letterAudioRight.classList.add('hidden');
-                letterPdf.classList.remove('hidden');
-                letterPdf.src = person.letterPdf;
-
-                // Show Download Button
-                if (downloadBtn) {
-                    downloadBtn.classList.remove('hidden');
-                    downloadBtn.href = person.letterPdf;
-                }
-            } else {
-                // Show Image, Hide PDF/Audio
-                letterPdf.src = '';
-                letterPdf.classList.add('hidden');
-                letterAudioRight.classList.add('hidden');
-                letterImg.classList.remove('hidden');
-                letterImg.src = person.letterImage || 'assets/images/letter_placeholder.jpg';
-
-                // Show Download Button for Image too
-                if (downloadBtn) {
-                    if (person.letterImage) {
-                        downloadBtn.classList.remove('hidden');
-                        downloadBtn.href = person.letterImage;
-                        downloadBtn.download = person.name + "_Letter.jpg";
-                    } else {
-                        downloadBtn.classList.add('hidden');
+                    const sliderGroup = document.getElementById(`slider-${targetId}`).closest('.slider-group');
+                    if (sliderGroup) {
+                        sliderGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Trigger highlight animation
+                        sliderGroup.classList.remove('highlight-pulse');
+                        void sliderGroup.offsetWidth; // Trigger reflow
+                        sliderGroup.classList.add('highlight-pulse');
                     }
                 }
+            },
+            onHover: (event, chartElement) => {
+                event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return ` ${context.label}: ${context.raw}%`;
+                        }
+                    },
+                    backgroundColor: 'rgba(0,0,0,0.9)',
+                    titleFont: { family: 'Orbitron' },
+                    bodyFont: { family: 'Rajdhani', size: 14 }
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
             }
         }
-
-
-        // AUDIO LOGIC
-        const voiceCard = document.querySelector('.voice-note-card');
-        const audio = document.getElementById('detail-audio');
-
-        if (voiceCard && audio) {
-            if (person.hideAudio) {
-                voiceCard.classList.add('hidden');
-                audio.pause();
-                audio.currentTime = 0; // Reset
-            } else {
-                voiceCard.classList.remove('hidden');
-                audio.src = person.audioFile;
-                // audio.play(); 
-            }
-        }
-
-        // WHATSAPP LOGIC
-        const whatsapp = document.getElementById('whatsapp-btn');
-        if (whatsapp) {
-            if (person.hideWhatsapp) {
-                whatsapp.classList.add('hidden');
-            } else {
-                whatsapp.classList.remove('hidden');
-                const phone = (person.phoneNumber || '').replace(/[^0-9]/g, '');
-                whatsapp.href = `https://wa.me/${phone}`;
-            }
-        }
-    } catch (e) {
-        console.error('Error in showPersonDetail:', e);
-        alert('Something went wrong showing the gift! Check console.');
-    }
+    });
 }
 
-function closePersonDetail() {
-    document.getElementById('person-detail').classList.add('hidden');
-    // Go back to city gallery
-    document.getElementById('city-gallery').classList.remove('hidden');
+// Helper to update slider visual track
+function updateSliderVisual(slider, color) {
+    const val = slider.value;
+    const min = slider.min ? slider.min : 0;
+    const max = slider.max ? slider.max : 100;
+    const percentage = ((val - min) * 100) / (max - min);
 
-    const audio = document.getElementById('detail-audio');
-    if (audio) { audio.pause(); audio.currentTime = 0; }
-
-    const afAudio = document.getElementById('af-audio-element');
-    if (afAudio) { afAudio.pause(); afAudio.currentTime = 0; }
-
-    const raAudio = document.getElementById('ra-audio-element');
-    if (raAudio) { raAudio.pause(); raAudio.currentTime = 0; }
-
-    const vfVideo = document.getElementById('vf-video-element');
-    if (vfVideo) { vfVideo.pause(); vfVideo.currentTime = 0; }
+    // Dynamic Gradient from Color -> Dark Grey
+    slider.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${percentage}%, #333 ${percentage}%, #333 100%)`;
 }
 
-function quitPuzzle() {
-    document.getElementById('puzzle-container').classList.add('hidden');
-    document.getElementById('success-popup').classList.add('hidden');
-    clearInterval(puzzleTimer);
-    if (puzzleInstance) puzzleInstance.cleanup();
-}
+// Modified to handle "Smart Clamping"
+// We pass the 'event' to know which slider controls the flow
+window.updateTotal = function (event) {
+    const income = parseFloat(document.getElementById("input-monthly-income").value) || 0;
+    const ids = Object.keys(CATEGORY_COLORS);
 
-function skipPuzzle() {
-    clearInterval(puzzleTimer);
-    if (puzzleInstance) puzzleInstance.cleanup();
-
-    if (!window.currentPerson) {
-        // Try fall back to global let if window prop missing (though they should be same)
-        window.currentPerson = currentPerson;
+    // Identify the active slider (source of change)
+    let activeId = null;
+    if (event && event.target) {
+        activeId = event.target.id.replace('slider-', '');
     }
 
-    // Skip directly to detail (bypass success popup)
-    document.getElementById('puzzle-container').classList.add('hidden');
-    document.getElementById('success-popup').classList.add('hidden');
+    // 1. Calculate Sum of *Others*
+    let otherSum = 0;
+    let currentSlider = null;
+    let currentVal = 0;
 
-    // Explicitly hide city gallery too (fail-safe)
-    document.getElementById('city-gallery').classList.add('hidden');
+    ids.forEach(id => {
+        const slider = document.getElementById(`slider-${id}`);
+        const val = parseInt(slider.value) || 0;
 
-    showPersonDetail();
-}
-
-// Global functions
-window.quitPuzzle = quitPuzzle;
-window.skipPuzzle = skipPuzzle;
-window.closePersonDetail = closePersonDetail;
-window.proceedToDetail = proceedToDetail;
-window.closeSuccessPopup = closeSuccessPopup;
-// Audio Focus Logic (Jai)
-function initAudioFocus(person) {
-    const audio = document.getElementById('af-audio-element');
-    const playBtn = document.getElementById('af-play-btn');
-    const progress = document.getElementById('af-progress');
-    const timeDisplay = document.getElementById('af-time');
-    const transcriptionText = document.getElementById('af-transcription-text');
-
-    if (!audio) return;
-
-    // Set Content
-    audio.src = person.audioFile || '';
-    transcriptionText.innerText = person.transcription || "No transcription available.";
-
-    // Reset UI
-    playBtn.innerText = "▶";
-    progress.value = 0;
-    timeDisplay.innerText = "00:00";
-
-    // Play/Pause
-    playBtn.onclick = () => {
-        if (audio.paused) {
-            audio.play().catch(e => console.error("Play error:", e));
-            playBtn.innerText = "⏸";
+        if (id === activeId) {
+            currentSlider = slider;
+            currentVal = val;
         } else {
-            audio.pause();
-            playBtn.innerText = "▶";
+            otherSum += val;
         }
-    };
+    });
 
-    // Update Progress
-    audio.ontimeupdate = () => {
-        if (audio.duration) {
-            const percent = (audio.currentTime / audio.duration) * 100;
-            progress.value = percent || 0;
-
-            // Time Display
-            const mins = Math.floor(audio.currentTime / 60);
-            const secs = Math.floor(audio.currentTime % 60).toString().padStart(2, '0');
-            timeDisplay.innerText = `${mins}:${secs}`;
+    // 2. Apply Clamping Logic (Only if user is interacting)
+    if (currentSlider) {
+        const maxAllowed = 100 - otherSum;
+        if (currentVal > maxAllowed) {
+            currentVal = maxAllowed;
+            currentSlider.value = currentVal; // Snap back
         }
-    };
-
-    // Seek
-    progress.oninput = () => {
-        if (audio.duration) {
-            const time = (progress.value / 100) * audio.duration;
-            audio.currentTime = time;
-        }
-    };
-
-    // On End
-    audio.onended = () => {
-        playBtn.innerText = "▶";
-        progress.value = 0;
-    };
-}
-
-// Right Side Audio Logic (Dennis)
-function initRightSideAudio(person) {
-    const audio = document.getElementById('ra-audio-element');
-    const playBtn = document.getElementById('ra-play-btn');
-    const progress = document.getElementById('ra-progress');
-    const timeDisplay = document.getElementById('ra-time');
-    const transcriptionText = document.getElementById('ra-transcription-text');
-
-    if (!audio) return;
-
-    // Set Content
-    audio.src = person.audioFile || '';
-    transcriptionText.innerText = person.transcription || "No transcription available.";
-
-    // Reset UI
-    playBtn.innerText = "▶";
-    progress.value = 0;
-    timeDisplay.innerText = "00:00";
-
-    // Play/Pause
-    playBtn.onclick = () => {
-        if (audio.paused) {
-            audio.play().catch(e => console.error("Play error:", e));
-            playBtn.innerText = "⏸";
-        } else {
-            audio.pause();
-            playBtn.innerText = "▶";
-        }
-    };
-
-    // Update Progress
-    audio.ontimeupdate = () => {
-        if (audio.duration) {
-            const percent = (audio.currentTime / audio.duration) * 100;
-            progress.value = percent || 0;
-            const mins = Math.floor(audio.currentTime / 60);
-            const secs = Math.floor(audio.currentTime % 60).toString().padStart(2, '0');
-            timeDisplay.innerText = `${mins}:${secs}`;
-        }
-    };
-
-    // Seek
-    progress.oninput = () => {
-        if (audio.duration) {
-            const time = (progress.value / 100) * audio.duration;
-            audio.currentTime = time;
-        }
-    };
-
-    // On End
-    audio.onended = () => {
-        playBtn.innerText = "▶";
-        progress.value = 0;
-    };
-}
-
-// Video Focus Logic (Pronil)
-function initVideoFocus(person) {
-    const video = document.getElementById('vf-video-element');
-    const closeBtn = document.getElementById('vf-close-btn');
-
-    if (!video) return;
-
-    if (person.videoFile) {
-        video.src = person.videoFile;
-        // Attempt autoplay
-        video.play().catch(e => console.log("Autoplay blocked:", e));
     }
-    
-    if (closeBtn) {
-        closeBtn.onclick = () => {
-             closePersonDetail();
+
+    // 3. Update UI & Gather Final Data for Chart
+    let total = 0;
+    let chartValues = [];
+
+    ids.forEach(id => {
+        const slider = document.getElementById(`slider-${id}`);
+        const valSpan = document.getElementById(`val-${id}`);
+        const amtSpan = document.getElementById(`amt-${id}`);
+        const color = CATEGORY_COLORS[id];
+
+        const pct = parseInt(slider.value) || 0;
+        total += pct;
+        chartValues.push(pct);
+
+        // Update Text
+        valSpan.innerText = pct + "%";
+        valSpan.style.color = color;
+
+        // Update Amount
+        if (income > 0) {
+            const amt = (income * pct) / 100;
+            amtSpan.innerText = "₹" + amt.toLocaleString('en-IN');
+        } else {
+            amtSpan.innerText = "₹0";
+        }
+
+        // Update Visual Track
+        updateSliderVisual(slider, color);
+    });
+
+    // 4. Update Total Display
+    const display = document.getElementById("total-display");
+    if (display) {
+        // With clamping, total should never exceed 100.
+        // It might be LESS than 100, which is allowed but prompts user to allocate more.
+        if (total === 100) {
+            display.innerHTML = `TOTAL: <span style="color:#2ecc71">100%</span> (LOCKED)`;
+            display.style.borderColor = "#2ecc71";
+            display.style.boxShadow = "0 0 10px rgba(46, 204, 113, 0.2)";
+        } else {
+            const remaining = 100 - total;
+            display.innerHTML = `TOTAL: <span style="color:#FFD700">${total}%</span> (${remaining}% REMAINING)`;
+            display.style.borderColor = "#FFD700";
+            display.style.boxShadow = "none";
+        }
+    }
+
+    // 5. Update Chart
+    if (!spendChart) {
+        initChart();
+    } else {
+        spendChart.data.datasets[0].data = chartValues;
+        spendChart.update('none'); // 'none' mode for performance optimization during drag
+    }
+}
+
+// C. The V4 Analysis Trigger
+window.analyzeProfile = function () {
+    // 1. Gather Inputs
+    const ageGroup = document.getElementById("input-age").value;
+
+    // V10.1 Multi-Goal Collection
+    const goalPills = document.querySelectorAll(".goal-pill.selected");
+    const goalIds = Array.from(goalPills).map(p => p.getAttribute("data-id"));
+
+    if (goalIds.length === 0) {
+        alert("ACCESS DENIED: Please select at least one Financial Goal.");
+        return;
+    }
+
+    // Legacy "goal" string for simple logic checks (use the first one)
+    const goal = goalIds[0];
+    const income = parseInt(document.getElementById("input-monthly-income").value);
+
+    // Sliders
+    const s_groc = parseInt(document.getElementById("slider-groceries").value);
+    const s_util = parseInt(document.getElementById("slider-utilities").value);
+    const s_rent = parseInt(document.getElementById("slider-rent").value);
+    const s_emi = parseInt(document.getElementById("slider-emi").value) || 0; // Fix: Added EMI
+    const s_health = parseInt(document.getElementById("slider-health").value);
+    const s_dine = parseInt(document.getElementById("slider-dining").value);
+    const s_trav = parseInt(document.getElementById("slider-travel").value);
+    const s_shop = parseInt(document.getElementById("slider-shopping").value);
+    const s_ent = parseInt(document.getElementById("slider-entertainment").value);
+    const s_debt = parseInt(document.getElementById("slider-debt").value);
+    const s_save = parseInt(document.getElementById("slider-savings").value);
+
+    const total = s_groc + s_util + s_rent + s_emi + s_health + s_dine + s_trav + s_shop + s_ent + s_debt + s_save;
+
+    if (total !== 100) {
+        alert(`Validation Error: Total allocation is ${total}%. Please adjust to exactly 100%.`);
+        return;
+    }
+
+    // 2. AGGREGATE TO "NWS"
+    const needs = s_groc + s_util + s_rent + s_emi + s_health;
+    const wants = s_dine + s_trav + s_shop + s_ent;
+    const savings = s_save;
+    // Debt is separate but we track it. In older logic debt might be part of needs/wants, but here it's its own vector for Jethalal check.
+
+    // 3. Switch Screen
+    document.getElementById("ui-input").classList.add("hidden");
+    document.getElementById("ui-processing").classList.remove("hidden");
+
+    // 4. Processing Animation (Gokuldham Style)
+    const logs = document.getElementById("console-output");
+    if (logs) {
+        logs.innerHTML = '';
+        const constructionMsgs = [
+            `> [Abdul's Shop]: Stock Check: ${document.getElementById("input-state").value}...`,
+            `> [Bhide]: Tuition Fees Analyzed...`,
+            `> [Jethalal]: Gada Electronics Profit Index: Calculated...`,
+            `> [Popatlal]: "Duniya hila dunga!" (Risk Profile Adjusted)...`,
+            `> [Tapu Sena]: Cricket Fund Allocation...`,
+            `> [Madhavi]: Aachar & Papad Returns projected...`,
+            `> [Sodhi]: "Party Sharty" Fund reserved...`,
+            `> [Taarak]: Mehta Sahab's Wisdom applied...`,
+            `> [Iyer]: Rocket 🚀 Science applied to Portfolio...`,
+            `> [Dr. Hathi]: "Sahi Baat Hai" (Validation Complete)...`,
+            `> [Bagha]: "Jaisi jiski soch" (Persona Mapped)...`,
+            `> [Nattu Kaka]: Salary Increment Predicted...`
+        ];
+
+        let i = 0;
+        const progressBar = document.getElementById("proc-bar");
+        if (progressBar) progressBar.style.width = "0%";
+
+        const interval = setInterval(() => {
+            if (i >= constructionMsgs.length) {
+                clearInterval(interval);
+
+                // Final Success Message
+                logs.innerHTML += `<div style="color:#2ecc71; margin-top:10px;">> SOCIETY MEETING ADJOURNED. RESULT APPROVED.</div>`;
+                const consoleDiv = document.getElementById("console-output");
+                if (consoleDiv) consoleDiv.scrollTop = consoleDiv.scrollHeight;
+
+                setTimeout(() => {
+                    try {
+                        // Pass ALL granular inputs + Prescription + Goal IDs
+                        // NOTE: Prescription is NULL here because we calculate it inside calculateAndShowResult (or it calls backend)
+                        // Actually, calculateAndShowResult calls the backend which returns the prescription.
+                        calculateAndShowResult(needs, wants, savings, goalIds, income, ageGroup, {
+                            shop: s_shop, dine: s_dine, trav: s_trav, ent: s_ent, health: s_health, debt: s_debt
+                        }, null);
+                    } catch (e) {
+                        if (window.CrashReporter) window.CrashReporter.logError("LOGIC_FAIL", { message: e.message });
+                        alert("Logic Failed: " + e.message);
+                    }
+                }, 800);
+            } else {
+                logs.innerHTML += `<div>${constructionMsgs[i]}</div>`;
+                const consoleDiv = document.getElementById("console-output");
+                if (consoleDiv) consoleDiv.scrollTop = consoleDiv.scrollHeight;
+
+                if (progressBar) {
+                    const pct = ((i + 1) / constructionMsgs.length) * 100;
+                    progressBar.style.width = pct + "%";
+                }
+                i++;
+            }
+        }, 300); // Faster animation (300ms) for better UX
+    } else {
+        // Fallback if no log div
+        calculateAndShowResult(needs, wants, savings, goalIds, income, ageGroup, {
+            shop: s_shop, dine: s_dine, trav: s_trav, ent: s_ent, health: s_health, debt: s_debt
+        }, null);
+    }
+}
+
+// ==========================================================
+// 2. THE LOGIC BRAIN (V10.1: THE GOLDEN SPLIT)
+// ==========================================================
+// ==========================================================
+// 2. THE LOGIC BRAIN (V10.1: THE GOLDEN SPLIT)
+// ==========================================================
+function calculateAndShowResult(needs, wants, savings, goals, income, ageGroup, granular, prescription) {
+
+    // 1. Rule-Based Logic (Fallback & Baseline)
+    const state = document.getElementById("input-state").value;
+    const personaRes = FORENSICS_ENGINE.determinePersona(DATA_ENGINE, state, ageGroup, needs, wants, savings, goals, granular, granular.debt || 0);
+
+    let personaKey = personaRes.key;
+    let logicLog = personaRes.log;
+    let isAI = false;
+
+    // 2. AI OVERRIDE (Try Python Backend)
+    // We wrap this in an IIFE or similar, but since we are inside a function, let's try a quick fetch if we can.
+    // However, fetch is async. We need to handle the UI update AFTER fetch.
+
+    const runUIUpdate = (finalPersona, aiSource = false) => {
+        // SAVE STATE
+        window.latestAnalysisResult = {
+            personaKey: finalPersona,
+            goals: goals,
+            income: income,
+            age: ageGroup
+        };
+        // Continue rendering...
+        // Continue rendering...
+        renderResultScreen(finalPersona, aiSource, logicLog, prescription, needs, wants, savings, granular, ageGroup, state);
+    };
+
+    // Construct Payload
+    const aiPayload = {
+        age_group: ageGroup,
+        state: state,
+        income: income,
+        needs_pct: needs,
+        wants_pct: wants,
+        savings_pct: savings
+    };
+
+    fetch("http://127.0.0.1:8000/analyze/persona", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(aiPayload)
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log("🧠 AI Brain Response:", data);
+            if (data.persona && data.persona !== "unknown") {
+                const aiPersona = data.persona.toLowerCase();
+
+                // --- CHAIN REACTION: FETCH PRESCRIPTION ---
+                // We need to calculate inputs for the Prescription Model
+                // 1. Risk Tolerance (Heuristic Mapping)
+                let riskScore = 2; // Moderate
+                if (["jethalal", "babita", "roshan", "daya", "tapu"].includes(aiPersona)) riskScore = 3;
+                if (["bhide", "popatlal", "champaklal", "abdul"].includes(aiPersona)) riskScore = 1;
+
+                // 2. Horizon (Average of selected goals)
+                let totalYears = 0;
+                let validGoals = 0;
+                goals.forEach(gid => {
+                    const g = DATA_ENGINE.ALL_GOALS[gid];
+                    if (g) {
+                        if (g.horizon.includes("Short")) totalYears += 2;
+                        else if (g.horizon.includes("Long")) totalYears += 15;
+                        else totalYears += 5;
+                        validGoals++;
+                    }
+                });
+                const avgHorizon = validGoals > 0 ? Math.round(totalYears / validGoals) : 5;
+
+                const presPayload = {
+                    age: parseInt(ageGroup.split("-")[0]) || 30, // Approx start age
+                    income: income,
+                    horizon_years: avgHorizon,
+                    risk_tolerance: riskScore
+                };
+
+                fetch("http://127.0.0.1:8000/analyze/prescription", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(presPayload)
+                })
+                    .then(res => res.json())
+                    .then(presData => {
+                        console.log("💊 AI Prescription Response:", presData);
+
+                        // OVERRIDE ALLOCATION IN EXISTING PRESCRIPTION OBJECT
+                        // We modify the 'prescription' object passed from strict mode rules
+                        if (prescription) {
+                            prescription.allocation.equity = presData.equity;
+                            prescription.allocation.debt = presData.debt;
+                            prescription.allocation.gold = presData.gold;
+                            prescription.allocation.cash = 0; // Model didn't predict cash
+                            prescription.allocation.reco = `AI Generated Strategy (${presData.confidence})`;
+
+                            // Recalculate Projections with new Equity?
+                            // (Optional, simpler to just update allocation for now)
+                        }
+
+                        runUIUpdate(aiPersona, true);
+                    })
+                    .catch(e => {
+                        console.warn("⚠️ AI Prescription Failed. Using Matrix.", e);
+                        runUIUpdate(aiPersona, true); // Still use AI Persona
+                    });
+
+            } else {
+                runUIUpdate(personaKey, false);
+            }
+        })
+        .catch(err => {
+            console.warn("⚠️ AI Brain Offline. Using Rule Engine.", err);
+            runUIUpdate(personaKey, false);
+        });
+}
+
+// 3. UI RENDERER (Separated for clarity)
+function renderResultScreen(personaKey, aiSource, logicLog, prescription, needs, wants, savings, granular, ageGroup, userState) {
+    if (!personaKey || personaKey === "unknown") personaKey = "mehta";
+
+    // FETCH REAL INFLATION
+    const stateInflation = (window.STATE_INFLATION && userState && window.STATE_INFLATION[userState])
+        ? window.STATE_INFLATION[userState]
+        : (window.MACRO_DATA ? window.MACRO_DATA.inflation_national : 6.2);
+
+    const REAL_INFLATION_RATE = stateInflation;
+
+    // --- A. PERSONA CONTENT ---
+    let personaData = DATA_ENGINE.PERSONAS[personaKey];
+    if (!personaData) {
+        personaKey = 'mehta';
+        personaData = DATA_ENGINE.PERSONAS['mehta'];
+    }
+
+
+    // Note: engineResult.effectiveSavings could be used, but UI mostly uses original savings for display.
+    // The engine already handled the logic determination.
+
+    if (!DATA_ENGINE.PERSONAS[personaKey]) personaKey = "bagha"; // Global Safety
+
+    // --- B. FETCH DATA ---
+    const persona = DATA_ENGINE.PERSONAS[personaKey];
+    const astroTx = DATA_ENGINE.ASTRO_TRANSLATIONS[persona.ruler.split(" ")[0]] || "Stars align.";
+
+    // --- C. NISM COMPLIANCE CHECK ---
+    let nismKey = "mid_career";
+
+    if (ageGroup === "18-22" || ageGroup === "22-28") {
+        nismKey = "young_earner";
+    }
+    if (ageGroup === "40-60" || ageGroup === "60+") {
+        nismKey = "pre_retirement"; // Fix: was empty block in old code
+    }
+
+    // REAL-TIME INFLATION DATA (Dynamic from State)
+    // const REAL_INFLATION_RATE = 6.3; // Old hardcoded value replaced by dynamic variable above
+
+    const rule = DATA_ENGINE.NISM_RULES[nismKey];
+    let hasGap = true;
+    let gapMessage = "";
+    let categoryAdvice = null; // Initialize categoryAdvice here
+
+    // ... [Rest of rendering Logic mostly stays the same, but we need to ensure variables are defined] 
+    // Wait, the block I am replacing ends at 792. It covers the ENTIRE logic block. 
+    // So I need to reimplement the GAP logic here or in Forensics. 
+    // Forensics only did Persona and Prescription. 
+    // The "Gap Analysis" (NISM check) was in script.js and Forensics Engine doesn't seem to return it?
+    // Checking Forensics Engine... it returns {key, log, effectiveSavings}.
+    // It DOES NOT return advice/gap messages. 
+    // So I must KEEP the Gap Analysis logic here in script.js, BUT use the persona derived from engine.
+
+    // Re-implementing the Gap Logic (it was relatively short):
+
+    // Determine initial advice based on NISM rule
+    let advice = rule.advice;
+    const equityPct = (needs < 50 && wants < 30) ? 60 : 20; // Simplified estimation
+
+    // INFLATION CHECK
+    if (savings < 20 && ageGroup !== "60+") {
+        advice = {
+            title: `Inflation Alert (${REAL_INFLATION_RATE}%)`,
+            category: "Index Funds / Equity",
+            metric: `Beat ${REAL_INFLATION_RATE}%`,
+            reason: `With inflation in ${userState || 'India'} at ${REAL_INFLATION_RATE}%, your cash is burning. Invest to beat it.`
+        };
+    } else if (nismKey === "young_earner" && equityPct < 50) {
+        advice = {
+            title: "Boost Your Equity Exposure!",
+            category: "Equity Mutual Funds",
+            metric: `Target ${equityPct}% Equity`,
+            reason: "At your age, aggressive growth in equity can significantly boost long-term wealth."
         };
     }
+
+    // Apply NISM specific gaps and messages
+    const RISK_FREE_RATE = 6.67;
+    const REPO_RATE = 5.25;
+
+    // Opportunity Cost Logic
+    if (savings >= 10 && savings < 30 && nismKey === "young_earner") {
+        advice = {
+            title: `Opportunity Cost Alert`,
+            category: "Fixed Income Benchmarking",
+            metric: `Beat ${RISK_FREE_RATE}%`,
+            reason: `Risk-Free Rate is ${RISK_FREE_RATE}%. Ensure your 'Safe' money matches this. Don't let it rot in 3% Savings Accounts.`
+        };
+    } else if (needs > 70) {
+        const estLoanRate = REPO_RATE + 3.5;
+        advice = {
+            title: `Debt Watch (Repo @ ${REPO_RATE}%)`,
+            category: "Debt Management",
+            metric: `Cost > ${estLoanRate}%`,
+            reason: `Repo Rate is ${REPO_RATE}%, so loans cost ~${estLoanRate}%. Paying debt is a guaranteed ${estLoanRate}% return.`
+        };
+    }
+
+    if (nismKey === "young_earner" && savings < 20) {
+        gapMessage = "⚠️ NISM ALERT: You are under-investing. At your age, compound is everything.";
+        categoryAdvice = advice;
+    } else if (nismKey === "pre_retirement" && savings < 30 && goal === "retirement") {
+        gapMessage = "⚠️ CRITICAL SHORTFALL: Your savings rate is too low for retirement.";
+        categoryAdvice = advice;
+    } else {
+        let aligned = false;
+        if (personaKey === "popatlal" && goal === "health_cover") aligned = true;
+        if (personaKey === "bhide" && goal === "safety") aligned = true;
+        if (personaKey === "jethalal" && goal === "wealth") aligned = true;
+
+        if (aligned) {
+            hasGap = false;
+            gapMessage = "You are on track. Your persona matches your goal.";
+        } else {
+            categoryAdvice = getCategoryAdvice(personaKey, goal, savings);
+            const goalLabel = (DATA_ENGINE.ALL_GOALS[goal] && DATA_ENGINE.ALL_GOALS[goal].label) ? DATA_ENGINE.ALL_GOALS[goal].label : goal.toUpperCase();
+            gapMessage = `GAP DETECTED: Behavior (${persona.name}) != Goal (${goalLabel}).`;
+        }
+    }
+
+    // Build Prescription HTML if available
+    let solutionHTML = '';
+
+    if (prescription) {
+        solutionHTML = `
+                <div class="solution-section">
+                    <div class="result-window-v6">
+                        <div class="col-logic" style="width:100%">
+                            <div class="logic-header">FINANCIAL PRESCRIPTION</div>
+                            
+                            <div class="rx-card">
+                                <div class="rx-row">
+                                    <span class="rx-label">GOAL</span>
+                                    <span class="rx-val highlight">${prescription.goal.label}</span>
+                                </div>
+                                <div class="rx-row">
+                                    <span class="rx-label" title="Based on Goal Horizon & Risk Profile">STRATEGY</span>
+                                    <span class="rx-val">${prescription.horizon} TERM / ${prescription.risk} RISK</span>
+                                </div>
+                                
+                                <div class="rx-chart-row">
+                                    <!-- CSS Conic Gradient Pie -->
+                                    <div class="rx-pie" style="background: conic-gradient(
+                                        #2ecc71 0% ${prescription.allocation.equity}%, 
+                                        #3498db ${prescription.allocation.equity}% ${prescription.allocation.equity + prescription.allocation.debt}%,
+                                        #f1c40f ${prescription.allocation.equity + prescription.allocation.debt}% ${prescription.allocation.equity + prescription.allocation.debt + prescription.allocation.gold}%,
+                                        #95a5a6 ${prescription.allocation.equity + prescription.allocation.debt + prescription.allocation.gold}% 100%
+                                    );"></div>
+                                    <div class="rx-legend">
+                                        <div><span class="dot" style="background:#2ecc71"></span> Equity: ${prescription.allocation.equity}%</div>
+                                        <div><span class="dot" style="background:#3498db"></span> Debt: ${prescription.allocation.debt}%</div>
+                                        <div><span class="dot" style="background:#f1c40f"></span> Gold: ${prescription.allocation.gold}%</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="rx-reco-text">"${prescription.allocation.reco}"</div>
+                            </div>
+
+                            <div class="projection-box">
+                                <div class="proj-title">PROJECTED CORPUS (${prescription.projections.years} YRS)</div>
+                                <div class="proj-val">₹${prescription.projections.projected_corpus.toLocaleString('en-IN')}</div>
+                                <div class="proj-sub">
+                                    Based on SIP ₹${prescription.projections.monthly_sip.toLocaleString('en-IN')}/mo <br>
+                                    <span style="color:#e74c3c">Inflation Rate: ${prescription.projections.inflation_rate} (Real-Time)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+    } else if (hasGap && categoryAdvice) {
+        // Fallback to old advice logic if prescription fails
+        solutionHTML = `
+                <div class="solution-section">
+                    <div class="prescription-box">
+                        <label>💊 FINANCIAL PRESCRIPTION</label>
+                        <h3>${categoryAdvice.title}</h3>
+                        <div class="pill">category: ${categoryAdvice.category}</div>
+                        <p class="metric-text">${categoryAdvice.metric}</p>
+                         <p style="font-size:0.9em; margin-top:10px; color:#aaa;">${categoryAdvice.reason}</p>
+                    </div>
+                </div>`;
+    } else {
+        solutionHTML = `
+                <div class="solution-section">
+                    <div class="prescription-box" style="border-color:#2ecc71; background:rgba(46, 204, 113, 0.05);">
+                         <label>✅ STATUS CHECK</label>
+                        <h3>System Aligned</h3>
+                        <p>Your current spending and valid NISM guidelines match your goal.</p>
+                     </div>
+                </div>`;
+    }
+
+    // Inject the solutionHTML
+    const finalHTML = `
+                ${hasGap && categoryAdvice && !prescription ? '' : '' /* Clean spacer */}
+                ${solutionHTML}
+            `;
+
+    // --- D. RENDER UI ---
+    document.getElementById("ui-processing").classList.add("hidden");
+    const resultScreen = document.getElementById("ui-result");
+    resultScreen.classList.remove("hidden");
+
+    let resultContainer = document.getElementById("result-card-container");
+    if (!resultContainer) {
+        const rc = document.createElement('div');
+        rc.id = "result-card-container";
+        resultScreen.appendChild(rc);
+        resultContainer = rc;
+    }
+
+    resultContainer.innerHTML = `
+        <div class="result-card" id="persona-passport" style="border-top: 5px solid ${persona.color}">
+            <div class="card-header">
+                <span class="badge" style="background:${persona.color}">ARCHETYPE: ${persona.name}</span>
+                <h2>${persona.role}</h2>
+                <div class="toggle-container" style="margin-top:10px;" data-html2canvas-ignore="true">
+                    <label class="switch-label">Finance Talk</label>
+                    <label class="switch">
+                        <input type="checkbox" id="mode-toggle" onchange="toggleMode()">
+                        <span class="slider round"></span>
+                    </label>
+                    <label class="switch-label">Astro Talk</label>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Logic Log Hidden by Default for End Users -->
+                <div class="logic-log-box hidden" id="debug-log" style="font-family:monospace; font-size:0.8em; color:#888; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+                    > NISM_RULE: ${nismKey.toUpperCase()} MODE <br>
+                    > LOGIC: ${logicLog[0]}
+                </div>
+
+                <div class="grid-2">
+                    <div class="col-left">
+                        <div class="stat-box" style="text-align:center;">
+                            <!-- VOXEL AVATAR IMPLEMENTATION -->
+                            <img src="assets/${personaKey}.png" class="voxel-avatar" 
+                                 style="width:120px; height:120px; border-radius:10px; margin-bottom:10px;"
+                                 onerror="this.src='https://api.dicebear.com/7.x/pixel-art/svg?seed=${personaKey}'">
+                                 
+                            <label>NATURAL BEHAVIOR</label>
+                            <h3>${persona.traits[0]}</h3>
+                        </div>
+                         <div class="stat-box">
+                            <label>RULING PLANET</label>
+                            <h3 style="color:${persona.color}">${persona.ruler}</h3>
+                        </div>
+                    </div>
+                    <div class="col-right">
+                        <div id="text-finance" class="mode-text">
+                            <h4>📊 Financial Reality</h4>
+                            <p>"${persona.quote}"</p>
+                            <p>${gapMessage}</p>
+                        </div>
+                        <div id="text-astro" class="mode-text hidden">
+                            <h4>🔮 Cosmic Insight</h4>
+                            <p>${astroTx}</p>
+                            <p><strong>Remedy:</strong> ${hasGap && categoryAdvice ? "Focus on " + categoryAdvice.title + " to align your financial stars." : "Your stars are aligned. Keep exploring."}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            ${prescription ? `
+            <div class="solution-section">
+                <!-- V2 PRESCRIPTION UI -->
+                <div class="result-window-v6" style="padding:0; box-shadow:none; border:none; background:transparent;">
+                    <div class="col-logic" style="width:100%">
+                        <div class="logic-header" style="text-align:left; margin-bottom:10px; color:#2ecc71;">FINANCIAL PRESCRIPTION</div>
+                        
+                        <div class="rx-card" style="background:rgba(0,0,0,0.5); padding:15px; border-radius:8px; border:1px solid #333;">
+                            <div class="rx-row" style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span class="rx-label" style="color:#888; font-size:0.8em;">GOAL</span>
+                                <span class="rx-val highlight" style="color:#fff; font-weight:bold;">${prescription.goal.label}</span>
+                            </div>
+                            <div class="rx-row" style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                                <span class="rx-label" style="color:#888; font-size:0.8em;">STRATEGY</span>
+                                <span class="rx-val" style="color:#2ecc71;">${prescription.horizon} TERM / ${prescription.risk} RISK</span>
+                            </div>
+                            
+                            <div class="rx-chart-row" style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
+                                <div class="rx-pie" style="width:60px; height:60px; border-radius:50%; flex-shrink:0; background: conic-gradient(
+                                    #2ecc71 0% ${prescription.allocation.equity}%, 
+                                    #3498db ${prescription.allocation.equity}% ${prescription.allocation.equity + prescription.allocation.debt}%,
+                                    #f1c40f ${prescription.allocation.equity + prescription.allocation.debt}% ${prescription.allocation.equity + prescription.allocation.debt + prescription.allocation.gold}%,
+                                    #95a5a6 ${prescription.allocation.equity + prescription.allocation.debt + prescription.allocation.gold}% 100%
+                                );"></div>
+                                <div class="rx-legend" style="font-size:0.8em; color:#ddd;">
+                                    <div><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2ecc71;margin-right:5px;"></span> Equity: ${prescription.allocation.equity}%</div>
+                                    <div><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3498db;margin-right:5px;"></span> Debt: ${prescription.allocation.debt}%</div>
+                                    <div><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f1c40f;margin-right:5px;"></span> Gold: ${prescription.allocation.gold}%</div>
+                                </div>
+                            </div>
+                            
+                            <div class="rx-reco-text" style="font-style:italic; color:#aaa; font-size:0.9em; border-top:1px solid #444; padding-top:10px;">
+                                "${prescription.allocation.reco}"
+                            </div>
+                        </div>
+
+                        <div class="projection-box" style="margin-top:15px; background:rgba(46, 204, 113, 0.1); padding:10px; border-radius:5px; border-left:3px solid #2ecc71;">
+                            <div class="proj-title" style="font-size:0.75em; color:#2ecc71; letter-spacing:1px;">PROJECTED CORPUS (${prescription.projections.years} YRS)</div>
+                            <div class="proj-val" style="font-size:1.5em; font-weight:bold; color:#fff; margin:5px 0;">₹${prescription.projections.projected_corpus.toLocaleString('en-IN')}</div>
+                            <div class="proj-sub" style="font-size:0.7em; color:#bbb;">
+                                SIP ₹${prescription.projections.monthly_sip.toLocaleString('en-IN')}/mo  •  Inflation: ${prescription.projections.inflation_rate}
+                            </div>
+                        </div>
+                        
+                        <div class="advice-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                            <div class="advice-box" style="background:#222; padding:8px; border-radius:4px;">
+                                <div style="font-size:0.7em; color:#f1c40f;">TAX STRATEGY</div>
+                                <div style="font-size:0.8em; color:#ddd;">${prescription.tax_planning}</div>
+                            </div>
+                            <div class="advice-box" style="background:#222; padding:8px; border-radius:4px;">
+                                <div style="font-size:0.7em; color:#3498db;">REBALANCING</div>
+                                <div style="font-size:0.8em; color:#ddd;">${prescription.rebalancing_advice}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+                <!-- TAX OPTIMIZATION UI -->
+                <div style="margin-top:10px; margin-bottom:10px; padding:10px; background:rgba(255,193,7,0.1); border:1px dashed #ffc107; border-radius:6px; text-align:center;">
+                     <div style="font-size:0.8em; color:#ffc107; margin-bottom:5px;">MATH LAB (EXPERIMENTAL)</div>
+                     <button onclick="optimizePortfolio()" id="btn-optimize" style="background:#ffc107; color:#000; border:none; padding:8px 15px; border-radius:4px; font-weight:bold; cursor:pointer; font-size:0.85em;">
+                        ⚡ CALCULATE MAX TAX RETURNS
+                     </button>
+                     <div id="optimizer-result" style="display:none; margin-top:10px; text-align:left; font-size:0.85em;"></div>
+                </div>
+            </div>
+            ` : (hasGap && categoryAdvice ? `
+            <div class="solution-section">
+                <div class="prescription-box">
+                    <label>💊 FINANCIAL PRESCRIPTION</label>
+                    <h3>${categoryAdvice.title}</h3>
+                    <div class="pill">category: ${categoryAdvice.category}</div>
+                    <p class="metric-text">${categoryAdvice.metric}</p>
+                     <p style="font-size:0.9em; margin-top:10px; color:#aaa;">${categoryAdvice.reason}</p>
+                </div>
+            </div>
+            ` : `
+            <div class="solution-section">
+                <div class="prescription-box" style="border-color:#2ecc71; background:rgba(46, 204, 113, 0.05);">
+                    <label>✅ STATUS CHECK</label>
+                    <h3>System Aligned</h3>
+                    <p>Your current spending and valid NISM guidelines match your goal.</p>
+                </div>
+            </div>
+            `)}
+            
+            <div class="action-footer" style="text-align:center; margin-top:20px; padding-top:15px; border-top:1px dashed #333;" data-html2canvas-ignore="true">
+                <button onclick="toggleInspector()" class="btn-secondary" style="font-size:0.9em; padding:8px 20px; margin-right:10px; background:#ff5722; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+                    👮 Consult Inspector
+                </button>
+                <button onclick="downloadPassport()" class="btn-primary" style="font-size:0.9em; padding:8px 20px;">
+                    📥 Download Passport
+                </button>
+                <div style="margin-top:10px; font-size:0.7em; color:#666; cursor:pointer;" onclick="document.getElementById('debug-log').classList.toggle('hidden')">
+                    [Debug Mode]
+                </div>
+                
+                <!-- INSPECTOR PANEL -->
+                <div id="inspector-panel" style="display:none; text-align:left; margin-top:15px; background:#1a1a1a; padding:15px; border-radius:10px; border-left:4px solid #ff5722; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="color:#ff5722; font-weight:bold; font-family:monospace;">INSPECTOR CHALU PANDEY v2.0</span>
+                        <span style="font-size:0.8em; color:#666; cursor:pointer;" onclick="toggleInspector()">[CLOSE]</span>
+                    </div>
+                    <div id="inspector-history" style="height:200px; overflow-y:auto; font-size:0.9em; color:#ddd; margin-bottom:10px; background:#111; padding:10px; border-radius:6px; border:1px solid #333;">
+                        <div style="color:#ff5722; margin-bottom:8px;"><strong>Inspector:</strong> "Swagat hai! I have analyzed your case. Ask me anything." <br><span style="font-size:0.8em; color:#666;">(e.g., 'How to save tax?', 'Is Jethalal bad?')</span></div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="inspector-input" placeholder="Type your doubt..." style="flex:1; padding:10px; background:#333; border:1px solid #444; color:#fff; border-radius:4px; outline:none;" onkeypress="if(event.key==='Enter') askInspector()">
+                        <button onclick="askInspector()" style="background:#2ecc71; color:#fff; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">ASK</button>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    `;
+
+    // Camera Zoom Effect
+    new TWEEN.Tween(camera.position).to({ z: 12, y: 2 }, 1500).easing(TWEEN.Easing.Quadratic.Out).start();
 }
+
+// DOWNLOAD FUNCTION
+window.downloadPassport = function () {
+    const element = document.getElementById('persona-passport');
+
+    // Visual tweak before capture (force ensure colors are right)
+
+    html2canvas(element, {
+        backgroundColor: '#000000', // Ensure dark background
+        scale: 2, // Retina quality
+        useCORS: true,
+        logging: false
+    }).then(canvas => {
+        // Cloud Save (Auto-save on download)
+        if (window.CloudServices) {
+            window.CloudServices.save({
+                persona: window.latestAnalysisResult ? window.latestAnalysisResult.personaKey : "unknown",
+                income: window.latestAnalysisResult ? window.latestAnalysisResult.income : 0,
+                timestamp: new Date()
+            });
+        }
+
+        // Trigger download
+        const link = document.createElement('a');
+        link.download = `Spending-Passport-${Date.now()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    });
+}
+
+// TOGGLE FUNCTION
+window.toggleMode = function () {
+    const isAstro = document.getElementById("mode-toggle").checked;
+    if (isAstro) {
+        document.getElementById("text-finance").classList.add("hidden");
+        document.getElementById("text-astro").classList.remove("hidden");
+    } else {
+        document.getElementById("text-finance").classList.remove("hidden");
+        document.getElementById("text-astro").classList.add("hidden");
+    }
+}
+
+// STUB: Consult Inspector (Perplexity AI)
+// --- INSPECTOR CHAT LOGIC (AI POWERED) ---
+window.toggleInspector = function () {
+    const panel = document.getElementById("inspector-panel");
+    if (!panel) return;
+
+    if (panel.style.display === "none") {
+        panel.style.display = "block";
+        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } else {
+        panel.style.display = "none";
+    }
+}
+
+window.askInspector = function () {
+    const input = document.getElementById("inspector-input");
+    const question = input.value;
+    if (!question) return;
+
+    const history = document.getElementById("inspector-history");
+    history.innerHTML += `<div style="margin:8px 0;"><strong>You:</strong> ${question}</div>`;
+    input.value = "Investigating...";
+    input.disabled = true;
+
+    // Use window.latestAnalysisResult as Context
+    const payload = {
+        context: window.latestAnalysisResult || {},
+        question: question
+    };
+
+    fetch("http://127.0.0.1:8000/inspector/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+        .then(res => res.json())
+        .then(data => {
+            // Simple Markdown parsing (bolding)
+            let answer = data.answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            history.innerHTML += `<div style="color:#ffcc00; margin:10px 0; line-height:1.4;"><strong>Inspector:</strong> ${answer}</div>`;
+            history.scrollTop = history.scrollHeight;
+            input.value = "";
+            input.disabled = false;
+            input.focus();
+        })
+        .catch(e => {
+            history.innerHTML += `<div style="color:red; margin:8px 0;"><strong>System:</strong> Connection Lost.</div>`;
+            input.value = "";
+            input.disabled = false;
+        });
+}
+
+// --- OPTIMIZER LOGIC ---
+window.optimizePortfolio = function () {
+    const btn = document.getElementById("btn-optimize");
+    const container = document.getElementById("optimizer-result");
+
+    btn.innerText = "📐 Solving Linear Equations...";
+    btn.disabled = true;
+
+    // Context from Global State
+    // Risk: Heuristic based on persona
+    let risk = 2;
+    const persona = window.latestAnalysisResult ? window.latestAnalysisResult.personaKey : "mehta";
+    if (["bhide", "popatlal"].includes(persona)) risk = 1;
+    if (["jethalal", "babita"].includes(persona)) risk = 3;
+
+    // Investment Amount: Derived from Income - Expenses
+    // Approx Monthly Savings * 12 used as 'Pot' for optimization
+    const income = window.latestAnalysisResult ? window.latestAnalysisResult.income : 50000;
+    // Defaulting to 1L lump sum for simulation if savings unknown
+    const investAmount = 100000;
+
+    const payload = {
+        investment_amount: investAmount,
+        risk_profile: risk
+    };
+
+    fetch("http://127.0.0.1:8000/analyze/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+        .then(res => res.json())
+        .then(data => {
+            container.style.display = "block";
+            container.innerHTML = `
+            <div style="border-top:1px solid #555; padding-top:10px; margin-top:5px;">
+                <div style="color:#fff; font-weight:bold; margin-bottom:5px;">MATH SOLVER VS STATUS QUO:</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <div style="color:#aaa; font-size:0.8em;">OPTIMAL SPLIT (₹${investAmount / 1000}k)</div>
+                        <ul style="padding-left:15px; margin:5px 0; color:#ddd;">
+                            <li>ELSS: ${data.allocation["ELSS (Tax Saver Equity)"]}</li>
+                            <li>PPF: ${data.allocation["PPF (Tax Saver Debt)"]}</li>
+                            <li>Nifty: ${data.allocation["Nifty Index (Growth)"]}</li>
+                            <li>FD: ${data.allocation["Fixed Deposit (Liquid)"]}</li>
+                        </ul>
+                    </div>
+                    <div style="border-left:1px solid #444; padding-left:10px;">
+                         <div style="color:#aaa; font-size:0.8em;">PROJECTED YIELD</div>
+                         <div style="font-size:1.2em; color:#2ecc71; font-weight:bold;">₹${data.projected_return_1y.toLocaleString('en-IN')}</div>
+                         <div style="font-size:0.7em; color:#888;">Post-Tax (1 Yr)</div>
+                    </div>
+                </div>
+                <div style="font-size:0.7em; color:#ffc107; margin-top:5px;">
+                    ${data.message}
+                </div>
+            </div>
+        `;
+            btn.innerText = "⚡ RE-CALCULATE";
+            btn.disabled = false;
+        })
+        .catch(e => {
+            alert("Optimizer Error: Check Backend Console");
+            btn.innerText = "❌ ERROR";
+            btn.disabled = false;
+        });
+}
+
+function getPersonaEmoji(risk) {
+    if (risk === 'survival') return '💀';
+    if (risk === 'lifestyle') return '💅';
+    if (risk === 'conservative') return '🐢';
+    return '🚀';
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    solarSystemGroup.children.forEach(child => {
+        if (child.userData && child.userData.speed) {
+            child.rotation.y += child.userData.speed;
+        }
+    });
+
+    controls.update();
+    if (window.TWEEN) window.TWEEN.update();
+    renderer.render(scene, camera);
+}
+
+// Helper: Gap Logic (Merged V3 + V4)
+function getCategoryAdvice(personaKey, goal, savingsRate) {
+    // V4 Goals
+    if (goal === "debt") return DATA_ENGINE.CATEGORY_ADVICE["debt_killing"];
+    if (goal === "health_cover") return DATA_ENGINE.CATEGORY_ADVICE["safety_net"]; // Expanded safety
+    if (goal === "retirement") return DATA_ENGINE.CATEGORY_ADVICE["wealth_creation"];
+
+    // V3 Fallbacks
+    if (goal === "safety") return DATA_ENGINE.CATEGORY_ADVICE["safety_net"];
+
+    // Persona Specific Overrides
+    if (personaKey === "popatlal") return DATA_ENGINE.CATEGORY_ADVICE["inflation_protection"];
+    if (personaKey === "babita" || personaKey === "tapu") return DATA_ENGINE.CATEGORY_ADVICE["gold_hedge"];
+    if (personaKey === "jethalal") return DATA_ENGINE.CATEGORY_ADVICE["wealth_creation"];
+    if (savingsRate < 10) return DATA_ENGINE.CATEGORY_ADVICE["safety_net"]; // Emergency!
+
+    return DATA_ENGINE.CATEGORY_ADVICE["wealth_creation"];
+}
+
+// Start
+window.addEventListener('DOMContentLoaded', () => {
+    // 0. INTEGRATION INIT
+    if (window.CrashReporter) window.CrashReporter.init();
+    if (window.AnalyticsLogger) window.AnalyticsLogger.init();
+    if (window.AnalyticsLogger) window.AnalyticsLogger.logEvent("app_session_start");
+
+    init();
+    animate();
+    // Force populate states again to be sure
+    populateStates();
+    // Force populate goals (Fix for empty dropdown)
+    updateGoals();
+
+    // Cloud Init
+    if (window.CloudServices) window.CloudServices.init();
+
+    // PERFORMANCE WARMUP: Ping Backend to wake it up on load
+    fetch("http://127.0.0.1:8000/")
+        .then(() => console.log("🔥 Backend Warmup Successful"))
+        .catch(e => console.log("❄️ Backend Cold / Offline", e));
+});

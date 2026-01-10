@@ -4,259 +4,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>31 Revolutions</title>
-
+    <title>Gokuldham Society Analysis</title>
+    <!-- SENTRY SDK (CDN) -->
+    <script src="https://browser.sentry-cdn.com/7.100.0/bundle.min.js"
+        integrity="sha384-Hkca5C0d+91e4L4y8l61P9z4y3F5310574768340" crossorigin="anonymous"></script>
+    <script src="https://browser.sentry-cdn.com/7.100.0/rewrites.min.js"></script>
+    <!-- CRASH REPORTER (Must be first) -->
+    <script src="crash_reporter.js"></script>
     <link rel="stylesheet" href="styles.css">
-
+    <link rel="stylesheet" href="styles_v3.css">
+    <!-- THREE.JS Dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
 
-    <div id="ui-layer">
-        <div id="atmosphere-overlay" class="hidden"></div>
-        <div id="intro-screen">
-            <!-- Decorative Intro Constellation -->
-            <div class="intro-constellation">
-                <svg width="120" height="60" viewBox="0 0 120 60">
-                    <path class="constellation-path" d="M10,50 Q40,10 110,30"
-                        style="stroke: var(--accent); opacity: 0.6;" />
-                    <circle class="star-point" cx="10" cy="50" r="2" />
-                    <circle class="star-point" cx="110" cy="30" r="3" />
-                    <circle class="star-point" cx="60" cy="20" r="1" style="animation-delay: 1s;" />
-                </svg>
+    <!-- ==============================================
+         SCREEN 1: SPLASH (THE HOOK)
+         ============================================== -->
+    <div id="ui-splash" class="ui-screen">
+        <div class="splash-content">
+            <div class="logo-area">
+                <div class="logo-box">G</div>
+                <h1>GOKULDHAM<br><span style="font-weight:300; font-size:0.6em; letter-spacing:3px;">FINANCIAL
+                        SOCIETY</span></h1>
+                <p style="font-size:0.8em; color:#888; margin-top:10px;">Managed by A. Bhide (Ekmeva Secretary)</p>
             </div>
 
-            <h1>Congratulations J on completing 31 rounds!</h1>
-            <p class="secondary-text">You have now lived more years than any month has days.</p>
-            <p class="interactive-prompt">There are many "You's" out there... <strong>wanna find out?</strong></p>
-
-            <div class="button-container">
-                <button id="btn-no" onclick="showFakePopup()">NO</button>
-                <button id="btn-yes" onclick="startJourney()" aria-label="Start Journey">YES</button>
-            </div>
-        </div>
-
-        <button id="btn-back" class="universal-back-btn hidden" onclick="goBackToSpace()"
-            aria-label="Back to Universe View">
-            <img src="assets/images/back.jpeg" alt="Back" class="back-icon-img">
-        </button>
-
-        <!-- COUNTRY VIEW (2D Map Layer) -->
-        <div id="country-view" class="hidden">
-            <div class="country-header">
-                <button id="btn-back-earth" class="universal-back-btn" onclick="backToEarth()">
-                    <img src="assets/images/back.jpeg" alt="Back" class="back-icon-img">
-                </button>
-                <h2 id="country-name-title">Country Name</h2>
-            </div>
-
-            <div id="country-map-container">
-                <!-- Map Image injected via CSS or img tag -->
-                <img id="country-map-img" src="" alt="Country Map">
-
-                <!-- City Pins Container (Overlaid) -->
-                <div id="country-pins-layer">
-                    <!-- City Pins injected here -->
+            <div class="splash-status">
+                <div class="status-item">
+                    <span class="status-dot green"></span> Abdul's Shop: OPEN
+                </div>
+                <div class="status-item">
+                    <span class="status-dot orange"></span> Jethalal: LATE
                 </div>
             </div>
+            <p class="desc">Where Tradition Meets Technology. Discover your financial destiny.</p>
+            <button id="btn-splash-init" class="primary-btn pulse-btn" onclick="goToInput()">>
+                OPEN_VAULT.EXE</button>
         </div>
+    </div>
 
-        <div id="city-gallery" class="hidden">
-            <!-- Dynamic Background -->
-            <div id="neon-background"></div>
-            <!-- City Map Background (Leaflet) -->
-            <div id="city-map-background"></div>
-
-            <!-- New Layout Container: Split View -->
-            <!-- New Layout Container: Split View -->
-            <main class="city-layout-main">
-                <!-- 2. Top Left Back Button (Absolute) -->
-                <button id="neon-back-btn" class="neon-back-btn" onclick="closeCityGallery()" aria-label="Back">
-                    <span class="material-icon-back">←</span> <span>Back to Orbit</span>
-                </button>
-
-                <!-- 3. Left Column - City Info -->
-                <div class="city-info-column">
-                    <h1 id="gallery-city-name" class="city-title-large">City Name</h1>
-                    <p class="city-subtitle">Where the journey began...</p>
+    <!-- ==============================================
+         SCREEN 2: DATA TERMINAL (THE INPUT)
+         ============================================== -->
+    <div id="ui-input" class="ui-screen hidden">
+        <div class="terminal-window" id="input-terminal">
+            <div class="terminal-header">
+                <div class="buttons">
+                    <div class="red"></div>
+                    <div class="yellow"></div>
+                    <div class="green"></div>
+                </div>
+                <div class="header-logo">Gokuldham Bank</div>
+                <div style="position:absolute; right:20px; top:20px;">
+                    <button id="auth-btn"
+                        style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-family:'Courier New';">☁️
+                        Sign In</button>
+                </div>
+            </div>
+            <div class="terminal-body">
+                <div class="console-log">
+                    <span class="green">> SYSTEM:</span> Initializing Finance Engine...<br>
+                    <span class="green">> STATE:</span> Waiting for user inputs...<br>
+                    <span class="blue">> INFO:</span> Ideally, this data comes from your AA (Account Aggregator). For
+                    now, tell us your estimates.<br><br>
                 </div>
 
-                <!-- 4. Right Column - Person Command Card (Auto-Fit) -->
-                <div class="command-card-column">
-                    <aside id="command-card" class="glass-card">
-
-                        <!-- A. Top: Connections (Fixed) -->
-                        <div class="card-section-top">
-                            <div id="neon-mini-gallery"></div>
+                <form id="finance-form">
+                    <!-- 1. PERSONAL DETAILS -->
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label>AGE BRACKET</label>
+                            <select id="input-age" onchange="updateGoals()">
+                                <option value="18-22">18 - 22 (Student)</option>
+                                <option value="22-28">22 - 28 (Young Pro)</option>
+                                <option value="29-39" selected>29 - 39 (Mid Career)</option>
+                                <option value="40-60">40 - 60 (Pre-Retire)</option>
+                                <option value="60+">60+ (Retired)</option>
+                            </select>
                         </div>
+                        <div class="form-group">
+                            <label>STATE (For Inflation Index)</label>
+                            <select id="input-state">
+                                <!-- Populated via JS -->
+                            </select>
+                        </div>
+                    </div>
 
-                        <!-- B. Middle: Image (Shrinks) + Overlay Info -->
-                        <div class="card-section-middle">
-                            <!-- Absolute Image filling this flex space -->
-                            <img id="neon-main-img" src="" alt="Person Image">
+                    <div class="form-group">
+                        <label>MONTHLY INCOME (₹)</label>
+                        <input type="number" id="input-monthly-income" placeholder="e.g. 100000"
+                            oninput="updateTotal()">
+                    </div>
 
-                            <!-- Overlay Text at Bottom of Image -->
-                            <div class="neon-card-overlay-text">
-                                <h3 id="neon-person-name">Person Name</h3>
-                                <p id="neon-person-desc">Unlock this memory to see the message.</p>
+                    <div class="form-group">
+                        <label>FINANCIAL GOALS (Select Multiple)</label>
+                        <div id="goal-pills-container" class="goal-pills-wrapper">
+                            <!-- Dynamic Content injected by JS -->
+                        </div>
+                        <div id="goal-primers" class="primer-text">Hover over a goal to see details.</div>
+                    </div>
+
+                    <div class="divider"></div>
+                    <div class="section-title">MONTHLY SPEND BREAKDOWN (%)</div>
+                    <div class="section-subtitle">Allocate your income in percentages. Total must be 100%.</div>
+
+                    <div class="split-view">
+                        <div class="left-inputs">
+                            <!-- Needs -->
+                            <div class="slider-group">
+                                <label>Groceries <span class="calc-amt" id="amt-groceries">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-groceries" min="0" max="100" value="15"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-groceries">15%</span>
+                                </div>
+                            </div>
+                            <div class="slider-group">
+                                <label>Utilities <span class="calc-amt" id="amt-utilities">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-utilities" min="0" max="100" value="5"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-utilities">5%</span>
+                                </div>
+                            </div>
+                            <div class="slider-group">
+                                <label>Rent <span class="calc-amt" id="amt-rent">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-rent" min="0" max="100" value="20"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-rent">20%</span>
+                                </div>
+                            </div>
+                            <div class="slider-group">
+                                <label>Loan EMIs <span class="calc-amt" id="amt-emi">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-emi" min="0" max="100" value="10"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-emi">10%</span>
+                                </div>
+                            </div>
+                            <div class="slider-group">
+                                <label>Health <span class="calc-amt" id="amt-health">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-health" min="0" max="100" value="5"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-health">5%</span>
+                                </div>
+                            </div>
+                            <div class="slider-group">
+                                <label>Credit Card / Debt <span class="calc-amt" id="amt-debt">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-debt" min="0" max="100" value="0"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-debt">0%</span>
+                                </div>
+                            </div>
+
+                            <!-- Wants -->
+                            <div class="slider-group">
+                                <label>Dining Out <span class="calc-amt" id="amt-dining">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-dining" min="0" max="100" value="10"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-dining">10%</span>
+                                </div>
+                            </div>
+                            <div class="slider-group">
+                                <label>Travel <span class="calc-amt" id="amt-travel">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-travel" min="0" max="100" value="10"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-travel">10%</span>
+                                </div>
+                            </div>
+                            <div class="slider-group">
+                                <label>Shopping <span class="calc-amt" id="amt-shopping">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-shopping" min="0" max="100" value="10"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-shopping">10%</span>
+                                </div>
+                            </div>
+                            <div class="slider-group">
+                                <label>Entertainment <span class="calc-amt" id="amt-entertainment">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-entertainment" min="0" max="100" value="5"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-entertainment">5%</span>
+                                </div>
+                            </div>
+
+                            <!-- Savings -->
+                            <div class="slider-group savings-group">
+                                <label>Savings & Investments <span class="calc-amt" id="amt-savings">₹0</span></label>
+                                <div class="slider-row">
+                                    <input type="range" id="slider-savings" min="0" max="100" value="10"
+                                        oninput="updateTotal(event)">
+                                    <span class="slider-val" id="val-savings">10%</span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- C. Bottom: CTA (Fixed) -->
-                        <div class="card-section-bottom">
-                            <button id="btn-enter-memory">UNLOCK MEMORY</button>
-                        </div>
-
-                    </aside>
-                </div>
-            </main>
-
-            <div id="puzzle-container" class="hidden">
-                <div id="puzzle-header">
-                    <div id="puzzle-timer">00:00</div>
-                    <div class="puzzle-controls">
-                        <button id="btn-skip-puzzle" onclick="skipPuzzle()" aria-label="Skip Puzzle">bhak</button>
-                        <button id="btn-quit" class="universal-back-btn" onclick="quitPuzzle()" aria-label="Exit Puzzle"
-                            style="position:static;">
-                            <img src="assets/images/back.jpeg" alt="Quit" class="back-icon-img">
-                        </button>
-                    </div>
-                </div>
-
-                <div id="puzzle-board">
-                    <!-- Canvas injected here -->
-                </div>
-            </div>
-
-            <div id="success-popup" class="hidden">
-                <div class="success-content">
-                    <button class="close-popup-btn" onclick="closeSuccessPopup()" aria-label="Close Popup">×</button>
-                    <!-- Constellation Effect -->
-                    <div class="constellation-wrapper">
-                        <svg id="constellation-svg" width="100" height="50" viewBox="0 0 100 50">
-                            <path class="constellation-path" d="M10,25 Q50,5 90,25" />
-                            <circle class="star-point" cx="10" cy="25" r="3" />
-                            <circle class="star-point" cx="90" cy="25" r="3" />
-                        </svg>
-                    </div>
-
-                    <h2>Amazing Job!</h2>
-                    <p>You solved the puzzle in <span id="success-time">00:00</span></p>
-                    <button onclick="proceedToDetail()" aria-label="Continue to Person Detail">Continue</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
-
-    <div id="person-detail" class="hidden">
-        <div class="detail-container">
-            <div class="detail-header">
-                <!-- Prominent Back Navigation -->
-                <button class="back-nav-btn" onclick="closePersonDetail()" aria-label="Back to City Gallery">
-                    <span class="back-arrow">←</span> Back to Cities
-                </button>
-            </div>
-            <div class="detail-body">
-                <div class="detail-left">
-                    <div class="carousel-wrapper">
-                        <button id="carousel-prev" class="carousel-btn">❮</button>
-                        <img id="carousel-img" src="" alt="Detail Photo">
-                        <button id="carousel-next" class="carousel-btn">❯</button>
-                    </div>
-                </div>
-                <div class="detail-right">
-                    <div class="intro-letter">
-                        <span class="icon-star">✦</span> A Message for You
-                        <a id="pdf-download-btn" href="#" class="download-btn hidden" download target="_blank">Download
-                            PDF</a>
-                    </div>
-                    <div class="letter-container">
-                        <img id="detail-letter-img" class="letter-image" alt="Letter from friend" src="">
-                        <iframe id="detail-letter-pdf" class="letter-pdf hidden" src=""></iframe>
-
-                        <!-- Audio Player (Right Side Mode) -->
-                        <div id="detail-audio-right" class="hidden">
-                            <div class="right-audio-card">
-                                <h3>Voice Note</h3>
-                                <div class="custom-audio-player">
-                                    <button id="ra-play-btn" class="af-btn">▶</button>
-                                    <input type="range" id="ra-progress" value="0" step="0.1" class="af-progress">
-                                    <span id="ra-time">00:00</span>
-                                </div>
-                                <audio id="ra-audio-element" preload="metadata"></audio>
-                                <div class="transcription-feed small">
-                                    <p id="ra-transcription-text">[Transcription...]</p>
-                                </div>
+                        <div class="right-vis">
+                            <div class="chart-container">
+                                <canvas id="spendChart"></canvas>
                             </div>
+                            <div class="total-status" id="total-display">TOTAL: 100%</div>
                         </div>
                     </div>
 
-                    <!-- Additional Gallery (Hidden by default) -->
-                    <div id="detail-gallery-container" class="hidden"></div>
-
-                    <div class="voice-note-card">
-                        <span class="icon-mic">🎙️</span>
-                        <div class="audio-wrapper">
-                            <span class="voice-label">Voice Note</span>
-                            <audio id="detail-audio" controls></audio>
-                        </div>
-                    </div>
-
-                    <a id="whatsapp-btn" href="#" target="_blank" class="whatsapp-btn" aria-label="Chat on WhatsApp">
-                        Chat on WhatsApp
-                    </a>
-                </div>
-            </div>
-
-            <div id="audio-focus-view" class="hidden">
-                <div class="audio-center-card">
-                    <h2>Voice Note</h2>
-                    <div class="custom-audio-player">
-                        <button id="af-play-btn" class="af-btn">▶</button>
-                        <input type="range" id="af-progress" value="0" step="0.1" class="af-progress">
-                        <span id="af-time">00:00</span>
-                    </div>
-                    <audio id="af-audio-element" preload="metadata"></audio>
-
-                    <div class="transcription-feed">
-                        <h3>Transcription</h3>
-                        <p id="af-transcription-text">
-                            [Transcription loading...]
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="video-focus-view" class="hidden">
-                <div class="video-center-container">
-                    <video id="vf-video-element" controls playsinline>
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
+                    <button type="button" class="btn-process" onclick="analyzeProfile()">RUN_DIAGNOSTIC_V10.1</button>
+                </form>
             </div>
         </div>
     </div>
-    </div>
 
-    <div id="custom-modal" class="hidden">
-        <div class="modal-content">
-            <h3>⚠️ Access Denied</h3>
-            <p>Don't be an ass, just click YES.</p>
-            <button onclick="closePopupAndStart()">Okay, fine.</button>
+    <!-- ==============================================
+         SCREEN 3: PROCESSING MATRIX (The Calculation)
+         ============================================== -->
+    <div id="ui-processing" class="ui-screen hidden">
+        <div class="processing-terminal construction-zone">
+            <div class="proc-header">
+                <div>⚠️ SOCIETY MAINTENANCE IN PROGRESS ⚠️</div>
+                <div class="voxel-loader"></div>
+            </div>
+            <div class="voxel-bar-container">
+                <div class="voxel-bar-fill" id="proc-bar"></div>
+            </div>
+            <div class="proc-body" id="console-output" style="margin-top:20px;">
+                <!-- Javascript injects logs here -->
+            </div>
         </div>
     </div>
 
-    <script src="data.js"></script>
+    <!-- ==============================================
+         SCREEN 4: THE PASSPORT (The Result)
+         ============================================== -->
+    <div id="ui-result" class="ui-screen hidden">
+        <!-- Content Injected via JS -->
+    </div>
+
+    <!-- 3D BACKGROUND LAYER -->
+    <div id="canvas-container"></div>
+
+    <div id="canvas-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SUPABASE SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- STACK AUTH SDK (Using global bundle if available, otherwise we might need a workaround or simple fetch) -->
+    <!-- Note: Stack Auth usually requires a bundler. For vanilla JS, we might fallback to basic fetch or assume simple layout -->
+    <script src="https://unpkg.com/@stackframe/js-core"></script>
+
+    <script src="data_engine.js"></script>
+    <script src="data_engine.js"></script>
+    <script src="macro_data.js"></script>
+    <script src="macro_data.js"></script>
+    <script src="services_stub.js"></script>
+    <script src="forensics_engine.js"></script>
+    <script src="cloud_services.js"></script>
     <script src="script.js"></script>
 </body>
 
