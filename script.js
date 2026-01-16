@@ -93,9 +93,6 @@ function populateStates() {
     console.log(`States populated: ${statesSource.length} (Source: ${window.DATA_ENGINE && window.DATA_ENGINE.ALL_STATES ? 'Engine' : 'Fallback'})`);
 }
 
-// [3D Visuals Removed for Gokuldham Theme]
-
-
 // ==========================================
 // 2. CORE LOGIC (Analyze Persona)
 // ==========================================
@@ -1058,6 +1055,9 @@ function renderResultScreen(personaKey, aiSource, logicLog, prescription, needs,
             `)}
             
             <div class="action-footer" style="text-align:center; margin-top:20px; padding-top:15px; border-top:1px dashed #333;" data-html2canvas-ignore="true">
+                <button onclick="goBackToInput()" class="btn-secondary" style="font-size:0.9em; padding:8px 20px; margin-right:10px; background:#555; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+                    ⬅ Modify Inputs
+                </button>
                 <button onclick="toggleInspector()" class="btn-secondary" style="font-size:0.9em; padding:8px 20px; margin-right:10px; background:#ff5722; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
                     👮 Consult Inspector
                 </button>
@@ -1274,8 +1274,6 @@ function getPersonaEmoji(risk) {
     return '🚀';
 }
 
-// [3D Loop Removed]
-
 // Helper: Gap Logic (Merged V3 + V4)
 function getCategoryAdvice(personaKey, goal, savingsRate) {
     // V4 Goals
@@ -1293,6 +1291,21 @@ function getCategoryAdvice(personaKey, goal, savingsRate) {
     if (savingsRate < 10) return DATA_ENGINE.CATEGORY_ADVICE["safety_net"]; // Emergency!
 
     return DATA_ENGINE.CATEGORY_ADVICE["wealth_creation"];
+}
+
+// --- NAVIGATION HELPERS ---
+window.goBackToInput = function () {
+    document.getElementById("ui-result").classList.add("hidden");
+    document.getElementById("ui-input").classList.remove("hidden");
+
+    // Optional: Scroll to top of input
+    const terminal = document.getElementById("input-terminal");
+    if (terminal) terminal.scrollTop = 0;
+}
+
+window.goBackToSplash = function () {
+    document.getElementById("ui-input").classList.add("hidden");
+    document.getElementById("ui-splash").classList.remove("hidden");
 }
 
 // Start
