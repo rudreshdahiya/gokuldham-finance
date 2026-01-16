@@ -324,6 +324,57 @@ const DATA_ENGINE_CORE = {
             reason: "You love tangible assets. Do it digitally.",
             example_funds: ["RBI SGB Series"]
         }
+    },
+
+    // ===================================
+    // 6. ALLOCATION LOGIC MATRIX (NEW)
+    // ===================================
+    GOAL_ALLOCATION_MATRIX: {
+        "SHORT-CONSERVATIVE": {
+            liquid: [35, 40], fixedDeposit: [45, 55], gold: [5, 10], equity: [0, 5],
+            expectedReturn: "5.5-7%", rebalanceFreq: "semi-annual",
+            funds: ["Liquid Funds", "Overnight Funds", "Bank FDs"]
+        },
+        "SHORT-MODERATE": {
+            liquid: [20, 30], fixedDeposit: [40, 50], gold: [10, 15], equity: [10, 15],
+            expectedReturn: "7-8.5%", rebalanceFreq: "quarterly",
+            funds: ["Arbitrage Funds", "Short Duration Debt", "Hybrid Conservative"]
+        },
+        "SHORT-AGGRESSIVE": { // Rule 3 (High Risk)
+            liquid: [10, 20], fixedDeposit: [10, 20], gold: [5, 10], equity: [55, 70],
+            expectedReturn: "10-12%", rebalanceFreq: "monthly",
+            funds: ["Balanced Advantage", "Flexi Cap", "Large Cap"]
+        },
+        "MEDIUM-CONSERVATIVE": {
+            liquid: [10, 20], fixedDeposit: [30, 40], gold: [10, 15], equity: [30, 40],
+            expectedReturn: "8-9.5%", rebalanceFreq: "quarterly",
+            funds: ["Hybrid Conservative", "Corporate Bond Funds"]
+        },
+        "MEDIUM-MODERATE": { // FIRE Prep
+            liquid: [5, 10], fixedDeposit: [15, 25], gold: [5, 10], equity: [55, 70],
+            expectedReturn: "10-11%", rebalanceFreq: "quarterly",
+            funds: ["Nifty 50 Index", "Aggressive Hybrid", "SGB"]
+        },
+        "MEDIUM-AGGRESSIVE": {
+            liquid: [0, 5], fixedDeposit: [10, 15], gold: [5, 10], equity: [65, 85],
+            expectedReturn: "12-14%", rebalanceFreq: "monthly",
+            funds: ["Mid Cap Funds", "Active Small Cap", "Momentum Strategy"]
+        },
+        "LONG-CONSERVATIVE": {
+            liquid: [5, 10], fixedDeposit: [30, 40], gold: [10, 15], equity: [40, 50],
+            expectedReturn: "9-10%", rebalanceFreq: "semi-annual",
+            funds: ["Balanced Advantage", "Large Cap Index"]
+        },
+        "LONG-MODERATE": {
+            liquid: [5, 5], fixedDeposit: [10, 20], gold: [5, 10], equity: [65, 85],
+            expectedReturn: "11-12%", rebalanceFreq: "quarterly",
+            funds: ["Flexi Cap", "Nifty Next 50", "PPF/NPS"]
+        },
+        "LONG-AGGRESSIVE": { // Gen Z Wealth
+            liquid: [0, 5], fixedDeposit: [0, 10], gold: [0, 5], equity: [75, 95],
+            expectedReturn: "13-15%", rebalanceFreq: "quarterly",
+            funds: ["Small Cap Funds", "Mid Cap Funds", "Sectoral Bets"]
+        }
     }
 };
 

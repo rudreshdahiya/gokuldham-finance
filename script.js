@@ -760,6 +760,72 @@ function renderResultScreen(personaKey, aiSource, logicLog, prescription, needs,
         }
     }
 
+    // --- NEW: Client-Side Allocation Logic ---
+    let prescription = null;
+    try {
+        const goalsSelected = selectedGoalPills.length > 0 ? selectedGoalPills : [goal]; // Fallback
+        prescription = calculateBlendedAllocation(goalsSelected, persona);
+    } catch (e) {
+        console.warn("Allocation Logic Failed:", e);
+    }
+
+    // Function to Calculate Allocation Locally
+    function calculateBlendedAllocation(goalIds, persona) {
+        // Simplified Logic: Pick the 'heaviest' goal or just the first one for V2
+        // In V3, we can average them. For now, let's take the first goal.
+        const mainGoalId = goalIds[0];
+        const goalData = DATA_ENGINE.ALL_GOALS[mainGoalId] || DATA_ENGINE.ALL_GOALS["FG006"]; // Default FIRE
+
+        const horizonStr = goalData.horizon; // "Short", "Long", "Medium-Long"
+        let horizon = "MEDIUM";
+        if (horizonStr.includes("Short")) horizon = "SHORT";
+        if (horizonStr.includes("Long")) horizon = "LONG";
+
+        // Infer Risk
+        let risk = "MODERATE";
+        if (persona.traits.includes("High Risk")) risk = "AGGRESSIVE";
+        if (persona.traits.includes("Risk Averse")) risk = "CONSERVATIVE";
+
+        // Criticality Override (Rule 2a)
+        if (goalData.priority === "Critical" && risk === "AGGRESSIVE") {
+            risk = "MODERATE"; // Safety first
+        }
+
+        // Lookup Rule
+        const logicKey = `${horizon}-${risk}`;
+        const rule = DATA_ENGINE.GOAL_ALLOCATION_MATRIX[logicKey] || DATA_ENGINE.GOAL_ALLOCATION_MATRIX["MEDIUM-MODERATE"];
+
+        // Calculate Averages for Display
+        const equity = Math.round((rule.equity[0] + rule.equity[1]) / 2);
+        const debt = Math.round((rule.fixedDeposit[0] + rule.fixedDeposit[1]) / 2); // Map FD to Debt
+        const gold = Math.round((rule.gold[0] + rule.gold[1]) / 2);
+        let liquid = 100 - (equity + debt + gold);
+        if (liquid < 0) liquid = 0; // Clamp
+
+        // SIP Calculation
+        // Assuming corpus is middle of cost range (e.g., "50-100L" -> 75L)
+        // This is a naive parser for now.
+        const sipAmount = (stateAtv * 20); // Placeholder logic: 20x average transaction value
+
+        return {
+            goal: goalData,
+            horizon: horizon,
+            risk: risk,
+            allocation: {
+                equity: equity,
+                debt: debt + liquid, // Combine FD + Liquid for simple Chart
+                gold: gold,
+                reco: `${rule.funds[0]} + ${rule.funds[1]}`
+            },
+            projections: {
+                years: horizon === "SHORT" ? 3 : (horizon === "LONG" ? 15 : 7),
+                projected_corpus: sipAmount * 12 * (horizon === "SHORT" ? 3 : 10) * 1.5, // Rough compounded
+                monthly_sip: sipAmount,
+                inflation_rate: REAL_INFLATION_RATE
+            }
+        };
+    }
+
     // Build Prescription HTML if available
     let solutionHTML = '';
 
@@ -1109,13 +1175,14 @@ window.askInspector = function () {
         question: question
     };
 
-    fetch("https://gokuldham-backend.onrender.com/inspector/ask", {
+    fetch("/api/inspector", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     })
         .then(res => res.json())
         .then(data => {
+            if (data.error) throw new Error(data.error);
             // Simple Markdown parsing (bolding)
             let answer = data.answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             history.innerHTML += `<div style="color:#ffcc00; margin:10px 0; line-height:1.4;"><strong>Inspector:</strong> ${answer}</div>`;
@@ -1125,7 +1192,8 @@ window.askInspector = function () {
             input.focus();
         })
         .catch(e => {
-            history.innerHTML += `<div style="color:red; margin:8px 0;"><strong>System:</strong> Connection Lost.</div>`;
+            console.error(e);
+            history.innerHTML += `<div style="color:red; margin:8px 0;"><strong>System:</strong> Inspector Failed. (${e.message})</div>`;
             input.value = "";
             input.disabled = false;
         });

@@ -1,0 +1,14 @@
+{
+    "name": "gokuldham-finance-v2",
+    "version": "2.0.0",
+    "description": "AI Private Client for Gokuldham Society",
+    "scripts": {
+        "start": "echo 'Static Site'"
+    },
+    "dependencies": {
+        "@google/generative-ai": "^0.1.0"
+    },
+    "engines": {
+        "node": ">=18"
+    }
+}
