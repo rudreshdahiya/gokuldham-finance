@@ -10,11 +10,6 @@ const FALLBACK_STATES = [
     "Uttarakhand", "West Bengal", "Delhi", "Jammu & Kashmir", "Ladakh", "Puducherry"
 ];
 
-let scene, camera, renderer, solarSystemGroup, controls;
-let planets = {}; // Store planet meshes by ID
-let raycaster = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
-
 // USER STATE
 let userInputs = {
     income: 0,
@@ -30,44 +25,12 @@ let calculatedPersona = null;
 // 1. INITIALIZATION
 // ==========================================
 
-function init() {
-    // 1. Scene Setup
-    const container = document.getElementById('ui-layer');
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(getComputedStyle(document.body).getPropertyValue('--bg-color').trim() || '#111');
-
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 25;
-    camera.position.y = 10;
-    camera.lookAt(0, 0, 0);
-
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    // Check if canvas exists, if so remove it (cleanup old)
-    const oldCanvas = document.querySelector('canvas');
-    if (oldCanvas) oldCanvas.remove();
-
-    // MOUNT TO CONTAINER (Fix for Interaction)
-    const canvasContainer = document.getElementById('canvas-container');
-    if (canvasContainer) {
-        canvasContainer.appendChild(renderer.domElement);
-    } else {
-        document.body.appendChild(renderer.domElement); // Fallback
-    }
-
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableZoom = true;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.5;
-    controls.enabled = true; // Explicitly enable controls
-
+function initUI() {
     // EVENT BINDINGS
     // Explicitly bind the init button to bypass potential HTML inline issues
     const initBtn = document.getElementById('btn-splash-init');
     if (initBtn) {
         initBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent falling through to canvas
             console.log("Button Clicked via Listener");
             goToInput();
         });
@@ -76,27 +39,11 @@ function init() {
         initBtn.style.cursor = "pointer";
     }
 
-    // 2. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const pointLight = new THREE.PointLight(0xffcd00, 2, 100);
-    pointLight.position.set(0, 0, 0);
-    scene.add(pointLight);
-
-    // 3. Create Visuals
-    createNavagrahaSystem();
-
-    // 4. Events
-    window.addEventListener('resize', onWindowResize, false);
-
     // 5. Dynamic Data
     populateStates();
 
-    // 6. Explicit Event Binding (Fix for Splash Button)
-    const splashBtn = document.getElementById('btn-splash-init');
-    if (splashBtn) {
-        splashBtn.addEventListener('click', goToInput);
-    }
+    // Default Goals
+    setTimeout(updateGoals, 100);
 }
 
 function populateStates() {
@@ -146,78 +93,7 @@ function populateStates() {
     console.log(`States populated: ${statesSource.length} (Source: ${window.DATA_ENGINE && window.DATA_ENGINE.ALL_STATES ? 'Engine' : 'Fallback'})`);
 }
 
-// Reuse Navagraha Visuals but powered by DATA_ENGINE keys if needed
-// For now, we stick to the standard 9 planets visual for the "Cosmic Backdrop"
-function createNavagrahaSystem() {
-    solarSystemGroup = new THREE.Group();
-    scene.add(solarSystemGroup);
-    addStarField();
-
-    const planetConfig = [
-        { id: "sun", color: "#FFD700", radius: 1.8, dist: 0 },
-        { id: "mercury", color: "#4FC3F7", radius: 0.5, dist: 4 }, // Shiksha
-        { id: "venus", color: "#F48FB1", radius: 0.9, dist: 7 }, // Lifestyle
-        { id: "earth", color: "#2E7D32", radius: 1.0, dist: 10 }, // Self (Earth/Moon)
-        { id: "mars", color: "#FF5252", radius: 0.7, dist: 13 }, // Rent
-        { id: "jupiter", color: "#FFA726", radius: 1.4, dist: 17 }, // Savings
-        { id: "saturn", color: "#90A4AE", radius: 1.2, dist: 21, ring: true }, // Transport
-        { id: "rahu", color: "#7E57C2", radius: 0.8, dist: 25 }, // Tech
-        { id: "ketu", color: "#A1887F", radius: 0.8, dist: 28 } // Health
-    ];
-
-    planetConfig.forEach((config, i) => {
-        // Orbit Group
-        const orbitGroup = new THREE.Group();
-
-        // Planet Mesh
-        const geometry = new THREE.SphereGeometry(config.radius, 32, 32);
-        const material = new THREE.MeshStandardMaterial({ color: config.color });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.x = config.dist;
-
-        orbitGroup.add(mesh);
-
-        // Ring
-        if (config.ring) {
-            const ringGeo = new THREE.RingGeometry(config.radius + 0.5, config.radius + 1.5, 32);
-            const ringMat = new THREE.MeshBasicMaterial({ color: 0xcccccc, side: THREE.DoubleSide, opacity: 0.5, transparent: true });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            ring.rotation.x = Math.PI / 2;
-            ring.position.x = config.dist;
-            orbitGroup.add(ring);
-        }
-
-        // Orbit Line
-        if (config.dist > 0) {
-            const curve = new THREE.EllipseCurve(0, 0, config.dist, config.dist, 0, 2 * Math.PI, false, 0);
-            const points = curve.getPoints(100);
-            const orbitGeo = new THREE.BufferGeometry().setFromPoints(points);
-            const orbitMat = new THREE.LineBasicMaterial({ color: 0x444444, opacity: 0.2, transparent: true });
-            const orbit = new THREE.Line(orbitGeo, orbitMat);
-            orbit.rotation.x = Math.PI / 2;
-            scene.add(orbit);
-        }
-
-        // Store
-        orbitGroup.userData = { speed: 0.01 + (i * 0.002) };
-        solarSystemGroup.add(orbitGroup);
-        planets[config.id] = mesh;
-    });
-}
-
-function addStarField() {
-    const geometry = new THREE.BufferGeometry();
-    const vertices = [];
-    for (let i = 0; i < 5000; i++) {
-        vertices.push(THREE.MathUtils.randFloatSpread(400));
-        vertices.push(THREE.MathUtils.randFloatSpread(400));
-        vertices.push(THREE.MathUtils.randFloatSpread(400));
-    }
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    const material = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.8 });
-    const stars = new THREE.Points(geometry, material);
-    scene.add(stars);
-}
+// [3D Visuals Removed for Gokuldham Theme]
 
 
 // ==========================================
@@ -225,10 +101,7 @@ function addStarField() {
 // ==========================================
 
 // NAVIGATION (Screen Switching)
-
 function goToInput() {
-    console.log("Initializing Rewind... Switch to Input Terminal.");
-
     // UI Transitions
     const splash = document.getElementById('ui-splash');
     const input = document.getElementById('ui-input');
@@ -236,14 +109,11 @@ function goToInput() {
     if (splash) splash.classList.add('hidden');
     if (input) input.classList.remove('hidden');
 
-    // Camera Animation (Zoom into "Control Deck")
-    new TWEEN.Tween(camera.position)
-        .to({ z: 18, y: 7 }, 1200)
-        .easing(TWEEN.Easing.Cubic.InOut)
-        .start();
-
     // Init Default Goals
     setTimeout(updateGoals, 100);
+
+    // Init Ledger (GPay Style)
+    setTimeout(initLedger, 50);
 }
 
 // ==========================================================
@@ -309,6 +179,9 @@ function updateGoals() {
     });
 
     // Auto-select first goal as default? No, let user choose.
+    if (!container.innerHTML) {
+        container.innerHTML = "<div style='color:#666; font-style:italic;'>No goals available for this age group.</div>";
+    }
 }
 
 window.toggleGoal = function (el, goal) {
@@ -395,108 +268,139 @@ function initChart() {
     });
 }
 
-// Helper to update slider visual track
-function updateSliderVisual(slider, color) {
-    const val = slider.value;
-    const min = slider.min ? slider.min : 0;
-    const max = slider.max ? slider.max : 100;
-    const percentage = ((val - min) * 100) / (max - min);
+// =====================================
+// LEDGER LOGIC (GPAY STYLE)
+// =====================================
 
-    // Dynamic Gradient from Color -> Dark Grey
-    slider.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${percentage}%, #333 ${percentage}%, #333 100%)`;
+const EXPENSE_CATEGORIES = [
+    { id: 'groceries', name: 'Groceries', type: 'Needs', val: 15, icon: '🥦' },
+    { id: 'utilities', name: 'Utilities', type: 'Needs', val: 5, icon: '💡' },
+    { id: 'rent', name: 'Rent', type: 'Needs', val: 20, icon: '🏠' },
+    { id: 'emi', name: 'Loan EMIs', type: 'Needs', val: 10, icon: '🏦' },
+    { id: 'health', name: 'Health', type: 'Needs', val: 5, icon: '💊' },
+    { id: 'dining', name: 'Dining Out', type: 'Wants', val: 10, icon: '🍕' },
+    { id: 'travel', name: 'Travel', type: 'Wants', val: 10, icon: '✈️' },
+    { id: 'shopping', name: 'Shopping', type: 'Wants', val: 10, icon: '🛍️' },
+    { id: 'entertainment', name: 'Entertainment', type: 'Wants', val: 5, icon: '🎬' },
+    { id: 'debt', name: 'Credit Card / Debt', type: 'Needs', val: 0, icon: '💳' },
+    { id: 'savings', name: 'Savings & Investments', type: 'Savings', val: 10, icon: '💰' }
+];
+
+window.initLedger = function () {
+    console.log("Initializing Ledger...");
+    const container = document.getElementById('transaction-ledger');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    EXPENSE_CATEGORIES.forEach(cat => {
+        let tagClass = `tag-${cat.type.toLowerCase()}`;
+
+        let row = document.createElement('div');
+        row.className = 'txn-row';
+        row.id = `row-${cat.id}`;
+        // Click to toggle expansion
+        row.onclick = (e) => toggleTxnRow(e, cat.id);
+
+        row.innerHTML = `
+            <div class="txn-header">
+                <div class="txn-left">
+                    <div class="txn-icon">${cat.icon}</div>
+                    <div class="txn-info">
+                        <div class="txn-name">${cat.name}</div>
+                        <div class="txn-tag ${tagClass}">${cat.type}</div>
+                    </div>
+                </div>
+                <div class="txn-right">
+                    <div class="txn-amount" id="amt-${cat.id}">₹0</div>
+                    <div class="txn-pct" id="val-${cat.id}">${cat.val}%</div>
+                </div>
+            </div>
+            <div class="txn-expand" onclick="event.stopPropagation()">
+                <label style="margin-top:10px; display:block; color:#888; font-size:0.8em;">ADJUST ALLOCATION</label>
+                <input type="range" id="slider-${cat.id}" min="0" max="100" value="${cat.val}" 
+                       oninput="updateTotal(event, '${cat.id}')">
+            </div>
+        `;
+        container.appendChild(row);
+    });
+
+    // Perform initial calculation
+    updateTotal(null);
 }
 
-// Modified to handle "Smart Clamping"
-// We pass the 'event' to know which slider controls the flow
-window.updateTotal = function (event) {
+window.toggleTxnRow = function (e, id) {
+    const row = document.getElementById(`row-${id}`);
+    const isActive = row.classList.contains('active');
+
+    // Collapse all others? Yes, for cleaner UI.
+    document.querySelectorAll('.txn-row').forEach(r => r.classList.remove('active'));
+
+    if (!isActive) {
+        row.classList.add('active');
+    }
+}
+
+window.updateTotal = function (event, manualId) {
     const income = parseFloat(document.getElementById("input-monthly-income").value) || 0;
-    const ids = Object.keys(CATEGORY_COLORS);
 
-    // Identify the active slider (source of change)
-    let activeId = null;
-    if (event && event.target) {
-        activeId = event.target.id.replace('slider-', '');
-    }
-
-    // 1. Calculate Sum of *Others*
-    let otherSum = 0;
-    let currentSlider = null;
-    let currentVal = 0;
-
-    ids.forEach(id => {
-        const slider = document.getElementById(`slider-${id}`);
-        const val = parseInt(slider.value) || 0;
-
-        if (id === activeId) {
-            currentSlider = slider;
-            currentVal = val;
-        } else {
-            otherSum += val;
-        }
-    });
-
-    // 2. Apply Clamping Logic (Only if user is interacting)
-    if (currentSlider) {
-        const maxAllowed = 100 - otherSum;
-        if (currentVal > maxAllowed) {
-            currentVal = maxAllowed;
-            currentSlider.value = currentVal; // Snap back
+    // If event comes from manual slider input, update the text immediately
+    if (manualId) {
+        const slider = document.getElementById(`slider-${manualId}`);
+        const valSpan = document.getElementById(`val-${manualId}`);
+        if (slider && valSpan) {
+            valSpan.innerText = slider.value + '%';
         }
     }
 
-    // 3. Update UI & Gather Final Data for Chart
+    // Aggregate Data
     let total = 0;
     let chartValues = [];
+    const ids = EXPENSE_CATEGORIES.map(c => c.id);
 
     ids.forEach(id => {
         const slider = document.getElementById(`slider-${id}`);
-        const valSpan = document.getElementById(`val-${id}`);
+        // If slider doesn't exist (e.g. error), fallback to default
+        const val = slider ? parseInt(slider.value) : 0;
+
+        total += val;
+        chartValues.push(val); // Chart expects array of numbers in specific order
+
+        // Update Calculated Amount
         const amtSpan = document.getElementById(`amt-${id}`);
-        const color = CATEGORY_COLORS[id];
-
-        const pct = parseInt(slider.value) || 0;
-        total += pct;
-        chartValues.push(pct);
-
-        // Update Text
-        valSpan.innerText = pct + "%";
-        valSpan.style.color = color;
-
-        // Update Amount
-        if (income > 0) {
-            const amt = (income * pct) / 100;
+        if (amtSpan) {
+            const amt = (income * val) / 100;
             amtSpan.innerText = "₹" + amt.toLocaleString('en-IN');
-        } else {
-            amtSpan.innerText = "₹0";
         }
 
-        // Update Visual Track
-        updateSliderVisual(slider, color);
+        // Ensure percent text is synced (for init pass)
+        const valSpan = document.getElementById(`val-${id}`);
+        if (valSpan) valSpan.innerText = val + '%';
     });
 
-    // 4. Update Total Display
+    // Update Total Display
     const display = document.getElementById("total-display");
     if (display) {
-        // With clamping, total should never exceed 100.
-        // It might be LESS than 100, which is allowed but prompts user to allocate more.
         if (total === 100) {
             display.innerHTML = `TOTAL: <span style="color:#2ecc71">100%</span> (LOCKED)`;
             display.style.borderColor = "#2ecc71";
             display.style.boxShadow = "0 0 10px rgba(46, 204, 113, 0.2)";
         } else {
             const remaining = 100 - total;
-            display.innerHTML = `TOTAL: <span style="color:#FFD700">${total}%</span> (${remaining}% REMAINING)`;
-            display.style.borderColor = "#FFD700";
+            // Warn if over 100
+            let color = total > 100 ? '#e74c3c' : '#FFD700';
+            display.innerHTML = `TOTAL: <span style="color:${color}">${total}%</span> (${remaining}% REMAINING)`;
+            display.style.borderColor = color;
             display.style.boxShadow = "none";
         }
     }
 
-    // 5. Update Chart
+    // Update Chart
     if (!spendChart) {
         initChart();
     } else {
         spendChart.data.datasets[0].data = chartValues;
-        spendChart.update('none'); // 'none' mode for performance optimization during drag
+        spendChart.update('none');
     }
 }
 
@@ -656,7 +560,7 @@ function calculateAndShowResult(needs, wants, savings, goals, income, ageGroup, 
         savings_pct: savings
     };
 
-    fetch("http://127.0.0.1:8000/analyze/persona", {
+    fetch("https://gokuldham-backend.onrender.com/analyze/persona", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(aiPayload)
@@ -695,7 +599,7 @@ function calculateAndShowResult(needs, wants, savings, goals, income, ageGroup, 
                     risk_tolerance: riskScore
                 };
 
-                fetch("http://127.0.0.1:8000/analyze/prescription", {
+                fetch("https://gokuldham-backend.onrender.com/analyze/prescription", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(presPayload)
@@ -975,8 +879,7 @@ function renderResultScreen(personaKey, aiSource, logicLog, prescription, needs,
                         <div class="stat-box" style="text-align:center;">
                             <!-- VOXEL AVATAR IMPLEMENTATION -->
                             <img src="assets/${personaKey}.png" class="voxel-avatar" 
-                                 style="width:120px; height:120px; border-radius:10px; margin-bottom:10px;"
-                                 onerror="this.src='https://api.dicebear.com/7.x/pixel-art/svg?seed=${personaKey}'">
+                                 style="width:120px; height:120px; border-radius:10px; margin-bottom:10px;">
                                  
                             <label>NATURAL BEHAVIOR</label>
                             <h3>${persona.traits[0]}</h3>
@@ -1118,8 +1021,7 @@ function renderResultScreen(personaKey, aiSource, logicLog, prescription, needs,
         </div>
     `;
 
-    // Camera Zoom Effect
-    new TWEEN.Tween(camera.position).to({ z: 12, y: 2 }, 1500).easing(TWEEN.Easing.Quadratic.Out).start();
+    // Camera Zoom Effect Removed (Voxel Mode)
 }
 
 // DOWNLOAD FUNCTION
@@ -1187,13 +1089,27 @@ window.askInspector = function () {
     input.value = "Investigating...";
     input.disabled = true;
 
-    // Use window.latestAnalysisResult as Context
+    // Use window.latestAnalysisResult as Base, but ENRICH it
+    const ledgerState = EXPENSE_CATEGORIES.map(c => {
+        return `${c.name}: ${c.val}% (${c.type})`;
+    });
+
+    const activeGoals = Array.from(document.querySelectorAll('.goal-pill.selected'))
+        .map(p => p.innerText);
+
+    const enrichContext = {
+        ...window.latestAnalysisResult,
+        ledger: ledgerState,
+        active_goals: activeGoals,
+        current_screen: document.querySelector('.ui-screen:not(.hidden)').id
+    };
+
     const payload = {
-        context: window.latestAnalysisResult || {},
+        context: enrichContext,
         question: question
     };
 
-    fetch("http://127.0.0.1:8000/inspector/ask", {
+    fetch("https://gokuldham-backend.onrender.com/inspector/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -1241,7 +1157,7 @@ window.optimizePortfolio = function () {
         risk_profile: risk
     };
 
-    fetch("http://127.0.0.1:8000/analyze/optimize", {
+    fetch("https://gokuldham-backend.onrender.com/analyze/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -1290,25 +1206,7 @@ function getPersonaEmoji(risk) {
     return '🚀';
 }
 
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-
-    solarSystemGroup.children.forEach(child => {
-        if (child.userData && child.userData.speed) {
-            child.rotation.y += child.userData.speed;
-        }
-    });
-
-    controls.update();
-    if (window.TWEEN) window.TWEEN.update();
-    renderer.render(scene, camera);
-}
+// [3D Loop Removed]
 
 // Helper: Gap Logic (Merged V3 + V4)
 function getCategoryAdvice(personaKey, goal, savingsRate) {
@@ -1336,8 +1234,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.AnalyticsLogger) window.AnalyticsLogger.init();
     if (window.AnalyticsLogger) window.AnalyticsLogger.logEvent("app_session_start");
 
-    init();
-    animate();
+    initUI();
+    // animate(); [Removed]
     // Force populate states again to be sure
     populateStates();
     // Force populate goals (Fix for empty dropdown)
@@ -1347,7 +1245,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.CloudServices) window.CloudServices.init();
 
     // PERFORMANCE WARMUP: Ping Backend to wake it up on load
-    fetch("http://127.0.0.1:8000/")
+    fetch("https://gokuldham-backend.onrender.com")
         .then(() => console.log("🔥 Backend Warmup Successful"))
         .catch(e => console.log("❄️ Backend Cold / Offline", e));
 });
