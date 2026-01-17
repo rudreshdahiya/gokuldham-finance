@@ -196,21 +196,74 @@ function showNeighborPersona(personaKey) {
     const personaData = DATA_ENGINE.PERSONAS[personaKey];
     if (!personaData) return;
 
+    // Get user's persona for comparison
+    const userPersonaKey = GLOBAL_STATE.persona || 'mehta';
+    const userPersona = DATA_ENGINE.PERSONAS[userPersonaKey];
+
+    // Find similarities and differences in traits
+    const clickedTraits = personaData.traits || [];
+    const userTraits = userPersona?.traits || [];
+
+    const similarities = clickedTraits.filter(t => userTraits.includes(t));
+    const differences = clickedTraits.filter(t => !userTraits.includes(t));
+
+    // Generate comparison HTML
+    let comparisonHTML = '';
+    if (similarities.length > 0) {
+        comparisonHTML += `
+            <div style="margin-bottom:12px;">
+                <div style="color:#27ae60; font-weight:600; font-size:0.75rem; margin-bottom:5px;">✓ Similar to You:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                    ${similarities.map(t => `<span style="background:#d5f5e3; color:#27ae60; padding:3px 8px; border-radius:12px; font-size:0.7rem;">${t}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    if (differences.length > 0) {
+        comparisonHTML += `
+            <div>
+                <div style="color:#e74c3c; font-weight:600; font-size:0.75rem; margin-bottom:5px;">✗ Different from You:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                    ${differences.map(t => `<span style="background:#fdedec; color:#e74c3c; padding:3px 8px; border-radius:12px; font-size:0.7rem;">${t}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
     const modal = document.createElement('div');
     modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
 
     modal.innerHTML = `
-        <div style="background:var(--color-bg-card); border-radius:12px; max-width:400px; width:100%; padding:30px; position:relative; max-height:80vh; overflow-y:auto;">
+        <div style="background:var(--color-bg-card); border-radius:12px; max-width:400px; width:100%; padding:25px; position:relative; max-height:85vh; overflow-y:auto;">
             <button onclick="this.closest('div').parentElement.remove()" 
-                    style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--color-text-muted);">×</button>
+                    style="position:absolute; top:12px; right:12px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--color-text-muted);">×</button>
             <div style="text-align:center;">
-                <img src="${personaData.img}" style="width:100px; height:100px; border-radius:50%; margin:0 auto;">
-                <h2 style="color:var(--color-primary); margin:15px 0;">${personaData.name}</h2>
-                <p style="color:var(--color-text-muted); font-size:0.9rem;">${personaData.tagline}</p>
-                <div style="margin-top:20px; padding:15px; background:var(--color-bg); border-radius:8px; text-align:left;">
-                    <strong style="color:var(--color-primary);">Character Traits:</strong>
-                    <p style="font-size:0.85rem; color:var(--color-text-main); margin:10px 0 0 0;">${personaData.desc || 'Classic Gokuldham character'}</p>
+                <img src="${personaData.img}" style="width:90px; height:90px; border-radius:50%; border:3px solid ${personaData.color || '#333'}; margin:0 auto;">
+                <h2 style="color:var(--color-primary); margin:12px 0 5px 0; font-size:1.2rem;">${personaData.name}</h2>
+                <div style="color:${personaData.color || '#666'}; font-size:0.8rem; font-weight:600;">${personaData.role}</div>
+                <p style="color:var(--color-text-muted); font-size:0.8rem; margin:10px 0; font-style:italic;">"${personaData.quote}"</p>
+            </div>
+            
+            <!-- Finance Story (Behavioral Finance Insight) -->
+            ${personaData.finance_story ? `
+            <div style="margin:15px 0; padding:12px; background:linear-gradient(135deg, #667eea22, #764ba222); border-radius:8px; border-left:3px solid ${personaData.color || '#667eea'};">
+                <div style="font-weight:600; font-size:0.8rem; color:var(--color-primary); margin-bottom:6px;">💡 Financial Behavior:</div>
+                <div style="font-size:0.75rem; color:var(--color-text-main); line-height:1.5;">${personaData.finance_story}</div>
+            </div>
+            ` : ''}
+            
+            <!-- Traits -->
+            <div style="margin:12px 0; padding:12px; background:var(--color-bg); border-radius:8px;">
+                <div style="font-weight:600; font-size:0.8rem; color:var(--color-primary); margin-bottom:8px;">Financial Traits:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                    ${clickedTraits.map(t => `<span style="background:var(--color-bg-card); border:1px solid var(--color-border); padding:4px 10px; border-radius:15px; font-size:0.75rem; color:var(--color-text-main);">${t}</span>`).join('')}
                 </div>
+            </div>
+
+            <!-- Comparison with User -->
+            <div style="padding:12px; background:var(--color-bg); border-radius:8px;">
+                <div style="font-weight:600; font-size:0.8rem; color:var(--color-primary); margin-bottom:10px;">Compared to ${userPersona?.name || 'You'}:</div>
+                ${comparisonHTML || '<div style="color:var(--color-text-muted); font-size:0.75rem;">No overlap in traits - completely different approach!</div>'}
             </div>
         </div>
     `;
@@ -334,55 +387,39 @@ function renderPersonaPage(personaKey, clusterId) {
 }
 
 function generateReasoning(personaKey, alloc) {
-    // 1. Extract Highs
+    const pData = DATA_ENGINE.PERSONAS[personaKey];
     const { needs, wants, savings } = alloc;
+
+    // Get persona finance story if available
+    const financeStory = pData?.finance_story;
+
+    // If we have a detailed finance story, use first sentence + user's allocation context
+    if (financeStory) {
+        // Extract key insight from finance_story
+        const firstSentence = financeStory.split('.')[0] + '.';
+
+        // Add user's allocation context
+        let userContext = '';
+        if (savings > 35) {
+            userContext = `Your ${savings}% savings is impressive—you're disciplined like this persona.`;
+        } else if (wants > 40) {
+            userContext = `Your ${wants}% on Wants shows you prioritize lifestyle, just like this character.`;
+        } else if (needs > 55) {
+            userContext = `Your ${needs}% on Needs shows practical priorities similar to this persona.`;
+        } else {
+            userContext = `Your balanced ${needs}/${wants}/${savings} split aligns with this financial personality.`;
+        }
+
+        return `${firstSentence} ${userContext}`;
+    }
+
+    // Fallback for any missing finance_story
     let highCat = "Balanced";
-    if (needs > 60) highCat = "Needs";
-    if (wants > 40) highCat = "Wants";
-    if (savings > 40) highCat = "Savings";
+    if (needs > 60) highCat = "Needs-focused";
+    if (wants > 40) highCat = "Lifestyle-oriented";
+    if (savings > 40) highCat = "Savings-driven";
 
-    // 2. Specific Logic per Persona
-    // JETHALAL (Risk Taker)
-    if (personaKey === 'jethalal') {
-        if (wants > 40) return `You spend ${wants}% on Wants, just like Jethalal spends on Gada Electronics' unnecessary schemes.`;
-        if (savings < 20) return `Your low savings (${savings}%) reflect Jethalal's tendency to constantly run out of cash.`;
-        return `You live life king size, prioritizing business and fun logic over disciplined savings.`;
-    }
-
-    // BHIDE (Saver)
-    if (personaKey === 'bhide') {
-        if (savings > 30) return `Your disciplined ${savings}% savings rate would make Atmaram Bhide proud!`;
-        if (wants < 20) return `You keep your Wants low (${wants}%), acting as the 'Secretary' of your own wallet.`;
-        return `You prioritize financial discipline and 'Hamare Zamaane' ke values over loose spending.`;
-    }
-
-    // POPATLAL (Anxious Saver)
-    if (personaKey === 'popatlal') {
-        return `You are saving aggressively (${savings}%) essentially for a 'future event' (aka Shaadi) that hasn't happened yet.`;
-    }
-
-    // IYER (Scientist / Balanced)
-    if (personaKey === 'iyer') {
-        return `Your allocation (N:${needs}/W:${wants}/S:${savings}) is scientifically balanced, just like Iyer's logic.`;
-    }
-
-    // ROSHAN (Party / Wants)
-    if (personaKey === 'roshan') {
-        return `Your ${wants}% spending on Wants shows you love to party first and worry about accounts later!`;
-    }
-
-    // MEHTA (The Guide / Standard)
-    if (personaKey === 'mehta') {
-        return `You follow the 'Golden Mean'. Not too stingy, not too extravagant. A balanced diet for your wallet.`;
-    }
-
-    // BABITA (Luxury)
-    if (personaKey === 'babita') {
-        return `Your lifestyle demands high maintenance. ${wants}% on Wants aligns with high aesthetic standards.`;
-    }
-
-    // Default Fallback with data
-    return `Your ${highCat}-heavy approach (N:${needs}% / W:${wants}% / S:${savings}%) aligns perfectly with ${personaKey.toUpperCase()}'s psychology.`;
+    return `Your ${highCat} approach (N:${needs}% / W:${wants}% / S:${savings}%) matches ${pData?.name || personaKey}'s financial psychology.`;
 }
 
 // ==========================================

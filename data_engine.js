@@ -127,7 +127,7 @@ const DATA_ENGINE_CORE = {
     },
 
     // ===================================
-    // 3. THE 16 TMKOC PERSONAS (UNCHANGED)
+    // 3. THE 16 TMKOC PERSONAS (WITH FINANCE STORIES)
     // ===================================
     PERSONAS: {
         "jethalal": {
@@ -137,7 +137,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Mars (Power)",
             quote: "Tapu ke papa, business badhana hai!",
             color: "#FF5733",
-            img: "assets/jethalal.png"
+            img: "assets/jethalal.png",
+            finance_story: "Jethalal keeps most money in business, rarely diversifying. He chases high returns, takes risks, but forgets insurance & retirement. High equity works because he has years to recover from losses. But he needs more safety net!"
         },
         "bhide": {
             name: "Aatmaram Bhide",
@@ -146,7 +147,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Jupiter (Wisdom)",
             quote: "Hamare zamane mein savings karte thay!",
             color: "#FFC300",
-            img: "assets/bhide.png"
+            img: "assets/bhide.png",
+            finance_story: "Bhide parks everything in FDs and PPF. Safe? Yes. Growing? Barely beating inflation. He needs more equity exposure to actually grow wealth, but his fear of losses keeps him in 'safe' products that erode purchasing power."
         },
         "popatlal": {
             name: "Popatlal",
@@ -155,7 +157,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Saturn (Delay)",
             quote: "Duniya hil jayegi, par mera paisa nahi hilega!",
             color: "#C70039",
-            img: "assets/popatlal.png"
+            img: "assets/popatlal.png",
+            finance_story: "Fear of losing money keeps Popatlal in savings accounts earning 4%. Inflation at 6% means he's actually LOSING 2% every year! He needs to overcome fear and start with balanced funds to at least beat inflation."
         },
         "babita": {
             name: "Babita Ji",
@@ -164,7 +167,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Venus (Beauty)",
             quote: "Ye dress discount mein mila!",
             color: "#DAF7A6",
-            img: "assets/babita.png"
+            img: "assets/babita.png",
+            finance_story: "Babita spends first, saves later (if anything is left). Her 'wants' category dominates. She needs automated SIPs that deduct BEFORE she can spend. Low savings means she needs higher equity to catch up on lost time."
         },
         "iyer": {
             name: "Krishnan Iyer",
@@ -173,7 +177,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Mercury (Intellect)",
             quote: "Rocket science logic lagaya hai maine.",
             color: "#33FFBD",
-            img: "assets/iyer.png"
+            img: "assets/iyer.png",
+            finance_story: "Iyer loves spreadsheets and tracks every rupee. He diversifies well but overcomplicates with too many funds. His tech/crypto bets are high-risk. Needs more boring, large-cap stability to balance his experimental tendencies."
         },
         "sodhi": {
             name: "Roshan Singh Sodhi",
@@ -182,7 +187,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Mars (Land)",
             quote: "Property ke daam kabhi neeche nahi jaate!",
             color: "#FF9800",
-            img: "assets/sodhi.png"
+            img: "assets/sodhi.png",
+            finance_story: "Sodhi believes only in 'zameen' (land). All his money is in illiquid real estate. He needs financial assets for liquidity—what if he needs ₹5L urgently? Can't sell half a plot! REITs give him real estate exposure with liquidity."
         },
         "daya": {
             name: "Daya Bhabhi",
@@ -191,7 +197,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Jupiter + Venus",
             quote: "Hey Maa Mataji! Sabka bhala karo.",
             color: "#E91E63",
-            img: "assets/daya.png"
+            img: "assets/daya.png",
+            finance_story: "Daya gives generously to family and temple. She needs her own emergency fund FIRST before helping others. Her travel expenses are fine if budgeted. She should automate savings before the 'want to help everyone' kicks in."
         },
         "tapu": {
             name: "Tapu",
@@ -200,7 +207,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Rahu (Chaos)",
             quote: "Crypto is the future, Dadaji!",
             color: "#900C3F",
-            img: "assets/tapu.png"
+            img: "assets/tapu.png",
+            finance_story: "Tapu chases every trending stock and crypto. He has FOMO (Fear Of Missing Out) and no emergency fund. Young age is his advantage—but he needs 80% in boring index funds and only 20% for 'play money' speculation."
         },
         "anjali": {
             name: "Anjali Mehta",
@@ -209,7 +217,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Moon (Care)",
             quote: "Paisa aur Sehat, dono control mein chahiye.",
             color: "#2ECC71",
-            img: "assets/anjali.png"
+            img: "assets/anjali.png",
+            finance_story: "Anjali over-insures everything. She has 3 health policies but no wealth creation plan. Her money is protected, not growing. She needs to redirect some premium to equity SIPs after essential coverage is done."
         },
         "mehta": {
             name: "Taarak Mehta",
@@ -218,7 +227,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Mercury (Writer)",
             quote: "Har pehlu ko sochna padta hai Jethalal.",
             color: "#5DADE2",
-            img: "assets/mehta.png"
+            img: "assets/mehta.png",
+            finance_story: "Mehta researches endlessly but rarely invests. His balanced approach is good, but 'waiting for the right time' costs him years of compounding. He knows what to do—needs to just START with a SIP and course-correct later."
         },
         "komal": {
             name: "Komal Hathi",
@@ -227,7 +237,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Jupiter (Abundance)",
             quote: "Oh c'mon Hans! Thoda khaane do.",
             color: "#9C27B0",
-            img: "assets/komal.png"
+            img: "assets/komal.png",
+            finance_story: "Komal's lifestyle inflation is real—Swiggy, Zomato, OTT subscriptions add up. She prioritizes instant comfort over future goals. Needs a 'Wants Budget Cap' and auto-invest the rest. Small wins today = big corpus tomorrow."
         },
         "madhavi": {
             name: "Madhavi Bhide",
@@ -236,7 +247,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Venus (Business)",
             quote: "Achaar papad se bhi empire banta hai.",
             color: "#F4D03F",
-            img: "assets/madhavi.png"
+            img: "assets/madhavi.png",
+            finance_story: "Madhavi's side income from achaar-papad is smart! She reinvests profits and saves consistently. Her mix of business income + savings works well. A slightly higher equity tilt can accelerate her wealth creation."
         },
         "champaklal": {
             name: "Champak Chacha",
@@ -245,7 +257,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Sun (Authority)",
             quote: "Udhaar maangna paap hai!",
             color: "#D35400",
-            img: "assets/champaklal.png"
+            img: "assets/champaklal.png",
+            finance_story: "Champaklal hates debt—even good debt like home loans. He pays everything in cash. While being debt-free is good, he misses tax benefits of home loan interest (Section 24b). His gold bias is cultural; some is fine, not 30%!"
         },
         "natukaka": {
             name: "Natu Kaka",
@@ -254,7 +267,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Ketu (Routine)",
             quote: "Pagar kab badhegi sethji?",
             color: "#7F8C8D",
-            img: "assets/natukaka.png"
+            img: "assets/natukaka.png",
+            finance_story: "Natukaka's low income means every rupee counts. He needs maximum safety—PPF, Senior Citizen Savings, FDs. High equity is not for him; capital protection is priority. Small consistent savings over decades still build a decent corpus."
         },
         "bagha": {
             name: "Bagha",
@@ -263,7 +277,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Rahu (Confusion)",
             quote: "Jaisi jiski soch!",
             color: "#8E44AD",
-            img: "assets/bagha.png"
+            img: "assets/bagha.png",
+            finance_story: "Bagha follows whoever sounds confident last. He's invested in random schemes, chit funds, and 'tips' from strangers. He needs ONE simple index fund and discipline to NOT touch it. Following crowd = losing money."
         },
         "roshan": {
             name: "Mrs. Roshan",
@@ -272,7 +287,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Venus (Love)",
             quote: "Oh ji, party karte hai!",
             color: "#F1948A",
-            img: "assets/roshan.png"
+            img: "assets/roshan.png",
+            finance_story: "Roshan's social spending is high—parties, gifts, appearances matter. She needs a 'Social Fund' budget so it doesn't eat into savings. Emotions drive her spending; she should decide budgets BEFORE the party invitation comes."
         },
         "abdul": {
             name: "Abdul",
@@ -281,7 +297,8 @@ const DATA_ENGINE_CORE = {
             ruler: "Saturn (Service)",
             quote: "Sabka kaam karta hoon, par apna account khali hai.",
             color: "#2C3E50",
-            img: "assets/abdul.png"
+            img: "assets/abdul.png",
+            finance_story: "Abdul's gig income is irregular—good months and bad months. He needs a bigger emergency fund (6 months expenses) FIRST. Once stable, start small SIPs. Variable income = need extra cash buffer before investing."
         }
     },
 
