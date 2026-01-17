@@ -73,11 +73,11 @@ body {
     justify-content: center;
 }
 
-/* THEME TOGGLE BUTTON - HEADER RIGHT (LOVEIT STYLE) */
+/* THEME TOGGLE BUTTON - TOP LEFT */
 .theme-toggle-btn {
     position: absolute;
     top: 50%;
-    right: 15px;
+    left: 15px;
     transform: translateY(-50%);
     z-index: 100;
     width: 36px;
@@ -162,10 +162,14 @@ body {
     text-transform: uppercase;
 }
 
-/* PAGE COUNTER - VISIBLE IN BOTH MODES */
+/* PAGE COUNTER - RIGHT SIDE TO AVOID TITLE CLASH */
 .page-counter {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--color-text-muted);
     background: var(--color-bg);
