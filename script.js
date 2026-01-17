@@ -1360,18 +1360,54 @@ function updateScenarioAnalysis() {
             }
         }
 
-        // Market scenario advice
+        // === PERSONA & GOAL-AWARE MARKET SCENARIO ADVICE ===
+        const pKey = GLOBAL_STATE.persona || "mehta";
+        const pData = DATA_ENGINE.PERSONAS[pKey] || DATA_ENGINE.PERSONAS['mehta'];
+        const primaryGoal = goals[0] || "wealth creation";
+
         contextHtml += `
                 <li><strong>Bear Case (${(bearRate * 100).toFixed(1)}% CAGR):</strong> Market crash years. Total ₹${bearL}L.</li>
                 <li><strong>Base Case (${(baseRate * 100).toFixed(1)}% CAGR):</strong> Historical avg. Total ₹${baseL}L.</li>
                 <li><strong>Bull Case (${(bullRate * 100).toFixed(1)}% CAGR):</strong> Strong growth cycle. Total ₹${bullL}L.</li>
             </ul>
             <div style="margin-top:15px; padding-top:10px; border-top:1px dashed var(--color-border);">
-                <strong style="color:var(--color-primary);">🌐 Market Scenario Actions:</strong>
-                <ul style="margin:5px 0 0 20px; font-size:0.75rem;">
-                    <li><strong>Bear Market (₹${bearL}L):</strong> If markets crash, <em>increase</em> SIP by 20% (buy the dip). Cut Wants from ${userWants}% → ${Math.max(15, userWants - 10)}%.</li>
-                    <li><strong>Base Case (₹${baseL}L):</strong> Stay disciplined. Maintain current ${(savingsRate * 100).toFixed(0)}% savings rate.</li>
-                    <li><strong>Bull Market (₹${bullL}L):</strong> Don't increase spending! Reinvest windfalls. Keep lifestyle inflation \u003c 5%/year.</li>
+                <strong style="color:var(--color-primary);">🌐 ${pData.name}'s Market Playbook:</strong>
+                <ul style="margin:5px 0 0 20px; font-size:0.75rem; line-height:1.6;">`;
+
+        // Bear Market Strategy (Persona-specific)
+        let bearAdvice = "";
+        if (pKey === "jethalal" || pKey === "roshan") {
+            bearAdvice = `Increase SIP by 30% (buy the dip aggressively). Cut Wants from ${userWants}% → ${Math.max(15, userWants - 15)}% to fund it.`;
+        } else if (pKey === "popatlal" || pKey === "bhide") {
+            bearAdvice = `Stay the course, don't panic sell! Cut Wants from ${userWants}% → ${Math.max(20, userWants - 10)}% if needed for emergency fund.`;
+        } else {
+            bearAdvice = `Increase SIP by 20% (buy the dip). Cut Wants from ${userWants}% → ${Math.max(15, userWants - 10)}%.`;
+        }
+        contextHtml += `<li><strong>🐻 Bear Market:</strong> ${bearAdvice}</li>`;
+
+        // Base Case Strategy (Goal-specific)
+        let baseAdvice = "";
+        if (goals.includes("FIRE (Retire Early)")) {
+            baseAdvice = `Increase SIP by ₹${Math.round(availableMonthlySIP * 0.1 / 1000)}k/year (raises). Keep Wants ≤ ${userWants}% for next ${tenure} years.`;
+        } else if (goals.some(g => g.includes("Wedding") || g.includes("Home"))) {
+            baseAdvice = `Maintain current ${(savingsRate * 100).toFixed(0)}% savings. For "${primaryGoal}", don't touch SIP for ${Math.min(3, tenure)} years.`;
+        } else {
+            baseAdvice = `Stay disciplined. Maintain ${(savingsRate * 100).toFixed(0)}% savings. Review annually.`;
+        }
+        contextHtml += `<li><strong>📊 Base Case:</strong> ${baseAdvice}</li>`;
+
+        // Bull Market Strategy (Persona-specific)
+        let bullAdvice = "";
+        if (pKey === "babita" || pKey === "roshan") {
+            bullAdvice = `Resist lifestyle inflation! Your ${userWants}% Wants will tempt you. Keep it ≤ ${userWants + 2}% (max +2% only).`;
+        } else if (userWants > 35) {
+            bullAdvice = `You spend ${userWants}% on Wants already. Don't increase! Reinvest windfalls instead.`;
+        } else {
+            bullAdvice = `Reinvest windfalls, don't splurge. Keep lifestyle inflation < 5%/year.`;
+        }
+        contextHtml += `<li><strong>🚀 Bull Market:</strong> ${bullAdvice}</li>`;
+
+        contextHtml += `
                 </ul>
             </div>
             <div style="margin-top:10px; font-size:0.75rem; font-style:italic; color:var(--color-text-muted);">
