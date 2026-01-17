@@ -1008,8 +1008,8 @@ function sendMessage() {
         question: msg
     };
 
-    // Switch to Python Backend for Chat (More reliable than Vercel Node for this setup)
-    fetch("https://gokuldham-backend.onrender.com/inspector/ask", {
+    // Use Vercel Serverless Function (never sleeps!)
+    fetch("/api/inspector", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

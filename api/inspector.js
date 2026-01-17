@@ -1,57 +1,73 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// Vercel Serverless Function - Inspector Chat Proxy
+// Keeps API keys secure, never sleeps!
 
-module.exports = async (req, res) => {
-    // Enable CORS
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-    );
-
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+export default async function handler(req, res) {
+    // Only allow POST
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: "Method Not Allowed" });
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
     }
 
     try {
         const { context, question } = req.body;
-        const apiKey = process.env.GEMINI_API_KEY;
 
-        if (!apiKey) {
-            return res.status(500).json({ error: "Server Configuration Error: GEMINI_API_KEY missing." });
+        // Call Gemini API directly (keep API key in Vercel env)
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+        if (!GEMINI_API_KEY) {
+            return res.status(500).json({
+                answer: "⚠️ API key not configured. Add GEMINI_API_KEY to Vercel environment variables."
+            });
         }
 
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const prompt = `You are Inspector Pandey, a friendly financial advisor for Gokuldham Society members.
 
-        const systemPersona = `
-        You are Inspector Chalu Pandey (from Gokuldham Society context), a strict but helpful Financial Inspector.
-        Your job is to analyze the 'Suspect's' (User's) financial data and answer their questions.
-        
-        Tone:
-        - Use Indian financial context (Lakhs, Crores, FD, SIP).
-        - Be authoritative but funny (like a Bollywood cop).
-        - Use phrases like "Hamara naam hai Inspector Chalu Pandey", "Jhooth bologe toh padenge dande".
-        - BUT give accurate financial advice based on the user's Persona and Ledger.
-        
-        Financial Data provided in JSON format below.
-        `;
+User Context:
+- Persona: ${context.persona || 'Unknown'}
+- Income: ₹${context.income || 0}
+- Goals: ${context.goals?.join(', ') || 'None'}
+- Allocation: ${JSON.stringify(context.allocation || {})}
 
-        const prompt = `${systemPersona}\n\nUser Data: ${JSON.stringify(context, null, 2)}\n\nUser Question: ${question}`;
+Question: ${question}
 
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text();
+Provide a helpful, personalized answer in 2-3 sentences. Be warm and reference their persona if relevant.`;
 
-        return res.status(200).json({ answer: responseText });
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: prompt }]
+                    }]
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!data.candidates || !data.candidates[0]) {
+            throw new Error('No response from Gemini');
+        }
+
+        const answer = data.candidates[0].content.parts[0].text;
+
+        return res.status(200).json({ answer });
 
     } catch (error) {
-        console.error("Inspector Error:", error);
-        return res.status(500).json({ error: "Failed to consult Inspector.", details: error.message });
+        console.error('Inspector error:', error);
+        return res.status(500).json({
+            answer: "Sorry, I'm having trouble connecting right now. Please try again in a moment."
+        });
     }
-};
+}
