@@ -1316,102 +1316,98 @@ function updateScenarioAnalysis() {
         }
     });
 
-    // === CONTEXTUAL WEALTH EXPLANATION + SPENDING ADVICE ===
+    // === SIMPLIFIED, USER-FRIENDLY WEALTH CONTEXT ===
     const legDiv = document.querySelector('.scenario-legend');
     if (legDiv) {
         const userNeeds = GLOBAL_STATE.alloc.needs || 50;
         const userWants = GLOBAL_STATE.alloc.wants || 30;
-
-        let contextHtml = `<div style="text-align:left; margin-top:15px; padding:15px; background:var(--color-bg-card); border-radius:4px; border:1px solid var(--color-border); font-size:0.8rem; line-height:1.6; color:var(--color-text-main);">
-            <strong style="display:block; margin-bottom:8px; color:var(--color-primary);">📊 Wealth Context:</strong>
-            <ul style="margin:0; padding-left:20px;">
-                <li><strong>Your SIP Capacity:</strong> ₹${(availableMonthlySIP / 1000).toFixed(1)}k/month (${(savingsRate * 100).toFixed(0)}% of ₹${(income / 1000).toFixed(0)}k income)</li>
-                <li><strong>Invested Over ${tenure}Y:</strong> ₹${investedL}L Principal</li>`;
-
-        // Goal-specific comparison
-        if (targetCorpus) {
-            const gap = targetCorpus - baseL;
-            if (gap > 0) {
-                contextHtml += `<li><strong style="color:#e74c3c;">Gap to "${targetGoalLabel}":</strong> Need ₹${targetCorpus}L, Base Case gives ₹${baseL}L. <em>Shortfall: ₹${gap}L</em>.</li>`;
-
-                // === PERSONALIZED SPENDING ADVICE ===
-                const requiredMonthlySIP = (targetCorpus * 100000) / ((Math.pow(1 + baseRate / 12, tenure * 12) - 1) * (1 + baseRate / 12) / (baseRate / 12));
-                const additionalSIPNeeded = Math.round(requiredMonthlySIP - availableMonthlySIP);
-
-                if (additionalSIPNeeded > 0) {
-                    contextHtml += `<li><strong style="color:#f39c12;">💡 How to Close the Gap:</strong> Need ₹${(additionalSIPNeeded / 1000).toFixed(1)}k/month more. Here's how:<ul style="margin-top:5px;">`;
-
-                    // Analyze user's spending
-                    if (userWants > 25) {
-                        const wantsReduction = Math.min(10, userWants - 20); // Suggest reducing Wants by max 10%
-                        const savingsFromWants = Math.round(income * (wantsReduction / 100));
-                        contextHtml += `<li><strong>Reduce Wants</strong> (dining, entertainment) from ${userWants}% → ${userWants - wantsReduction}%: Saves ₹${(savingsFromWants / 1000).toFixed(1)}k/month</li>`;
-                    }
-
-                    if (userNeeds > 55) {
-                        contextHtml += `<li><strong>Optimize Needs</strong> (rent, groceries): Your ${userNeeds}% is high. Consider roommates, cheaper groceries for ₹${(income * 0.05 / 1000).toFixed(1)}k/month savings</li>`;
-                    }
-
-                    contextHtml += `<li><strong>Increase Income</strong>: Freelancing or side gig for ₹${(additionalSIPNeeded / 1000).toFixed(1)}k/month extra</li>`;
-                    contextHtml += `</ul></li>`;
-                }
-            } else {
-                contextHtml += `<li><strong style="color:#27ae60;">On Track for "${targetGoalLabel}":</strong> Target ₹${targetCorpus}L, Base Case ₹${baseL}L ✓</li>`;
-            }
-        }
-
-        // === PERSONA & GOAL-AWARE MARKET SCENARIO ADVICE ===
         const pKey = GLOBAL_STATE.persona || "mehta";
         const pData = DATA_ENGINE.PERSONAS[pKey] || DATA_ENGINE.PERSONAS['mehta'];
         const primaryGoal = goals[0] || "wealth creation";
 
-        contextHtml += `
-                <li><strong>Bear Case (${(bearRate * 100).toFixed(1)}% CAGR):</strong> Market crash years. Total ₹${bearL}L.</li>
-                <li><strong>Base Case (${(baseRate * 100).toFixed(1)}% CAGR):</strong> Historical avg. Total ₹${baseL}L.</li>
-                <li><strong>Bull Case (${(bullRate * 100).toFixed(1)}% CAGR):</strong> Strong growth cycle. Total ₹${bullL}L.</li>
-            </ul>
-            <div style="margin-top:15px; padding-top:10px; border-top:1px dashed var(--color-border);">
-                <strong style="color:var(--color-primary);">🌐 ${pData.name}'s Market Playbook:</strong>
-                <ul style="margin:5px 0 0 20px; font-size:0.75rem; line-height:1.6;">`;
+        // Market cycle duration (realistic: 5-7 years max, not entire tenure)
+        const marketCycleDuration = Math.min(7, tenure);
 
-        // Bear Market Strategy (Persona-specific)
-        let bearAdvice = "";
+        let contextHtml = `<div style="background:var(--color-bg-card); border-radius:6px; border:1px solid var(--color-border); padding:15px; margin-top:15px;">`;
+
+        // === SECTION 1: YOUR NUMBERS (Clear & Simple) ===
+        contextHtml += `
+            <div style="margin-bottom:15px; padding-bottom:12px; border-bottom:1px dashed var(--color-border);">
+                <strong style="color:var(--color-primary); display:block; margin-bottom:8px;">💰 Your Starting Point</strong>
+                <div style="font-size:0.85rem; line-height:1.8; color:var(--color-text-main);">
+                    <div><strong>Monthly Income:</strong> ₹${(income / 1000).toFixed(0)}k</div>
+                    <div><strong>You Save:</strong> ${(savingsRate * 100).toFixed(0)}% (from your sliders: ${userNeeds}% Needs + ${userWants}% Wants = ${(savingsRate * 100).toFixed(0)}% left)</div>
+                    <div style="background:var(--color-bg); padding:8px; border-radius:4px; margin-top:5px;">
+                        <strong style="color:var(--color-accent);">→ Your Monthly SIP: ₹${(availableMonthlySIP / 1000).toFixed(1)}k</strong> (${(savingsRate * 100).toFixed(0)}% × ₹${(income / 1000).toFixed(0)}k)
+                    </div>
+                </div>
+            </div>`;
+
+        // === SECTION 2: GOAL PROGRESS (If applicable) ===
+        if (targetCorpus) {
+            const gap = targetCorpus - baseL;
+            contextHtml += `
+                <div style="margin-bottom:15px; padding-bottom:12px; border-bottom:1px dashed var(--color-border);">
+                    <strong style="color:var(--color-primary); display:block; margin-bottom:8px;">🎯 "${targetGoalLabel}" Progress</strong>
+                    <div style="font-size:0.85rem; line-height:1.8;">`;
+
+            if (gap > 0) {
+                const requiredMonthlySIP = (targetCorpus * 100000) / ((Math.pow(1 + baseRate / 12, tenure * 12) - 1) * (1 + baseRate / 12) / (baseRate / 12));
+                const additionalSIPNeeded = Math.round(requiredMonthlySIP - availableMonthlySIP);
+
+                contextHtml += `
+                    <div><strong>Target:</strong> ₹${targetCorpus}L</div>
+                    <div><strong>You'll Have:</strong> ₹${baseL}L (Base case)</div>
+                    <div style="color:#e74c3c;"><strong>Shortfall:</strong> ₹${gap}L</div>
+                    <div style="margin-top:8px; background:#fff3cd; padding:8px; border-radius:4px; border-left:3px solid #f39c12; font-size:0.8rem;">
+                        <strong>💡 To close gap:</strong> Increase SIP by ₹${(additionalSIPNeeded / 1000).toFixed(1)}k/month<br>
+                        <span style="font-size:0.75rem; color:#666;">Or reduce Wants from ${userWants}% → ${Math.max(15, userWants - 10)}%</span>
+                    </div>`;
+            } else {
+                contextHtml += `
+                    <div style="color:#27ae60;"><strong>✓ On Track!</strong></div>
+                    <div>Target: ₹${targetCorpus}L | You'll have: ₹${baseL}L</div>`;
+            }
+
+            contextHtml += `</div></div>`;
+        }
+
+        // === SECTION 3: MARKET SCENARIOS (Realistic cycles) ===
+        contextHtml += `
+            <div style="margin-bottom:15px; padding-bottom:12px; border-bottom:1px dashed var(--color-border);">
+                <strong style="color:var(--color-primary); display:block; margin-bottom:8px;">📈 Next ${marketCycleDuration} Years (Market Cycles)</strong>
+                <div style="font-size:0.75rem; color:var(--color-text-muted); font-style:italic; margin-bottom:8px;">
+                    Note: Markets cycle every 5-7 years. These scenarios show ${marketCycleDuration}Y outcomes, then rebalance.
+                </div>
+                <div style="font-size:0.85rem; line-height:1.8;">
+                    <div><strong>🐻 Bear (${(bearRate * 100).toFixed(1)}% CAGR):</strong> Crash/recession → ₹${bearL}L</div>
+                    <div><strong>📊 Base (${(baseRate * 100).toFixed(1)}% CAGR):</strong> Normal growth → ₹${baseL}L</div>
+                    <div><strong>🚀 Bull (${(bullRate * 100).toFixed(1)}% CAGR):</strong> Boom cycle → ₹${bullL}L</div>
+                </div>
+            </div>`;
+
+        // === SECTION 4: PERSONA PLAYBOOK (Simplified) ===
+        contextHtml += `
+            <div>
+                <strong style="color:var(--color-primary); display:block; margin-bottom:8px;">🎭 ${pData.name}'s Action Plan</strong>
+                <div style="font-size:0.8rem; line-height:1.7;">`;
+
+        // Persona-specific advice (concise)
         if (pKey === "jethalal" || pKey === "roshan") {
-            bearAdvice = `Increase SIP by 30% (buy the dip aggressively). Cut Wants from ${userWants}% → ${Math.max(15, userWants - 15)}% to fund it.`;
+            contextHtml += `<div><strong>If market crashes:</strong> Increase SIP 30%, cut Wants ${userWants}%→${Math.max(15, userWants - 15)}%</div>`;
+            contextHtml += `<div><strong>If market booms:</strong> Lock in gains, don't upgrade lifestyle</div>`;
         } else if (pKey === "popatlal" || pKey === "bhide") {
-            bearAdvice = `Stay the course, don't panic sell! Cut Wants from ${userWants}% → ${Math.max(20, userWants - 10)}% if needed for emergency fund.`;
+            contextHtml += `<div><strong>If market crashes:</strong> DON'T panic sell! Maintain current SIP</div>`;
+            contextHtml += `<div><strong>If market booms:</strong> Stay disciplined, avoid FOMO</div>`;
         } else {
-            bearAdvice = `Increase SIP by 20% (buy the dip). Cut Wants from ${userWants}% → ${Math.max(15, userWants - 10)}%.`;
+            contextHtml += `<div><strong>Strategy:</strong> Maintain ${(savingsRate * 100).toFixed(0)}% savings rate in all conditions</div>`;
         }
-        contextHtml += `<li><strong>🐻 Bear Market:</strong> ${bearAdvice}</li>`;
-
-        // Base Case Strategy (Goal-specific)
-        let baseAdvice = "";
-        if (goals.includes("FIRE (Retire Early)")) {
-            baseAdvice = `Increase SIP by ₹${Math.round(availableMonthlySIP * 0.1 / 1000)}k/year (raises). Keep Wants ≤ ${userWants}% for next ${tenure} years.`;
-        } else if (goals.some(g => g.includes("Wedding") || g.includes("Home"))) {
-            baseAdvice = `Maintain current ${(savingsRate * 100).toFixed(0)}% savings. For "${primaryGoal}", don't touch SIP for ${Math.min(3, tenure)} years.`;
-        } else {
-            baseAdvice = `Stay disciplined. Maintain ${(savingsRate * 100).toFixed(0)}% savings. Review annually.`;
-        }
-        contextHtml += `<li><strong>📊 Base Case:</strong> ${baseAdvice}</li>`;
-
-        // Bull Market Strategy (Persona-specific)
-        let bullAdvice = "";
-        if (pKey === "babita" || pKey === "roshan") {
-            bullAdvice = `Resist lifestyle inflation! Your ${userWants}% Wants will tempt you. Keep it ≤ ${userWants + 2}% (max +2% only).`;
-        } else if (userWants > 35) {
-            bullAdvice = `You spend ${userWants}% on Wants already. Don't increase! Reinvest windfalls instead.`;
-        } else {
-            bullAdvice = `Reinvest windfalls, don't splurge. Keep lifestyle inflation < 5%/year.`;
-        }
-        contextHtml += `<li><strong>🚀 Bull Market:</strong> ${bullAdvice}</li>`;
 
         contextHtml += `
-                </ul>
+                </div>
             </div>
-            <div style="margin-top:10px; font-size:0.75rem; font-style:italic; color:var(--color-text-muted);">
-                Returns based on your ${alloc.equity}/${alloc.debt}/${alloc.gold} allocation mix. Equity@12%, Debt@7%, Gold@8% (historical averages).
+            <div style="margin-top:12px; font-size:0.7rem; color:var(--color-text-muted); font-style:italic;">
+                Returns based on your ${alloc.equity}/${alloc.debt}/${alloc.gold} mix. Equity@12%, Debt@7%, Gold@8%.
             </div>
         </div>`;
 
