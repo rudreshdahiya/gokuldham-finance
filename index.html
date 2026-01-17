@@ -429,64 +429,60 @@
                     </p>
 
                     <!-- Goal Target Display -->
-                    <div id="goal-target-display"
-                        style="background:#f0f9ff; border:1px solid #3498db; border-radius:8px; padding:12px; margin-bottom:15px;">
-                        <div style="font-size:0.85rem; color:#2980b9;"><strong>🎯 Target Goal:</strong> <span
-                                id="target-goal-label">Loading...</span></div>
-                        <div style="font-size:1.2rem; font-weight:bold; color:#2c3e50;">₹<span
-                                id="target-corpus">--</span>L</div>
+                    <div id="goal-target-display" class="goal-timeline-card">
+                        <div class="goal-target-header">
+                            <span class="goal-target-label">🎯 Target Goal: <span
+                                    id="target-goal-label">Loading...</span></span>
+                        </div>
+                        <div class="goal-target-amount">₹<span id="target-corpus">--</span>L</div>
                     </div>
 
-                    <!-- Investment Controls -->
-                    <div class="investment-controls"
-                        style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label style="font-size:0.75rem; color:var(--color-text-muted);">Extra SIP (₹/month)</label>
-                            <input type="number" id="input-extra-sip" value="0" min="0" step="1000"
-                                style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"
-                                oninput="updateGoalTimeline()">
-                        </div>
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label style="font-size:0.75rem; color:var(--color-text-muted);">Lumpsum (₹
-                                One-time)</label>
-                            <input type="number" id="input-lumpsum" value="0" min="0" step="10000"
-                                style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"
-                                oninput="updateGoalTimeline()">
+                    <!-- EXISTING INVESTMENTS SECTION -->
+                    <div class="investment-section">
+                        <div class="section-label">📊 Your Current Investments</div>
+                        <div class="investment-controls">
+                            <div class="input-group">
+                                <label>Existing SIP (₹/month)</label>
+                                <input type="number" id="input-existing-sip" value="0" min="0" step="1000"
+                                    oninput="updateGoalTimeline()">
+                            </div>
+                            <div class="input-group">
+                                <label>Current Corpus (₹)</label>
+                                <input type="number" id="input-existing-corpus" value="0" min="0" step="10000"
+                                    oninput="updateGoalTimeline()">
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Timeline Chart (Years to Goal) -->
-                    <div class="chart-container"
-                        style="position: relative; height:200px; width:100%; margin-bottom:15px;">
+                    <!-- ADDITIONAL INVESTMENTS SECTION -->
+                    <div class="investment-section">
+                        <div class="section-label">➕ Add More (See Impact)</div>
+                        <div class="investment-controls">
+                            <div class="input-group">
+                                <label>Extra SIP (₹/month)</label>
+                                <input type="number" id="input-extra-sip" value="0" min="0" step="1000"
+                                    oninput="updateGoalTimeline()">
+                            </div>
+                            <div class="input-group">
+                                <label>Lumpsum (₹ One-time)</label>
+                                <input type="number" id="input-lumpsum" value="0" min="0" step="10000"
+                                    oninput="updateGoalTimeline()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Investment Summary -->
+                    <div id="total-investment-summary" class="investment-summary">
+                        <!-- JS will inject summary -->
+                    </div>
+
+                    <!-- Timeline Chart (Horizontal Bar) -->
+                    <div class="chart-container" style="position: relative; height:180px; width:100%; margin:15px 0;">
                         <canvas id="scenarioChart"></canvas>
                     </div>
 
-                    <!-- Compounding Power Visualization -->
-                    <div id="compounding-viz"
-                        style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; padding:15px; color:#fff; margin-bottom:15px;">
-                        <div style="font-weight:bold; margin-bottom:8px;">💰 The Power of Compounding</div>
-                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
-                            <div>
-                                <div style="opacity:0.8;">You Invest</div>
-                                <div style="font-size:1.1rem; font-weight:bold;">₹<span id="comp-invested">--</span>L
-                                </div>
-                            </div>
-                            <div style="font-size:2rem; align-self:center;">→</div>
-                            <div>
-                                <div style="opacity:0.8;">You Get (Base)</div>
-                                <div style="font-size:1.1rem; font-weight:bold;">₹<span id="comp-returns">--</span>L
-                                </div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="opacity:0.8;">Wealth Multiplier</div>
-                                <div style="font-size:1.2rem; font-weight:bold;"><span id="comp-multiplier">--</span>x
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Legend -->
-                    <div class="scenario-legend" style="font-size:0.8rem; line-height:1.8;">
+                    <!-- Timeline Details -->
+                    <div class="scenario-legend">
                         <!-- JS will inject timeline context here -->
                     </div>
                 </div>

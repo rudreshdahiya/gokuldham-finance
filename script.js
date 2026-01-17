@@ -1084,28 +1084,28 @@ function renderTaxWiseWithdrawal() {
             SMART REDEMPTION ORDER (To minimize tax):
         </div>
         <div class="withdrawal-grid" style="display:grid; gap:10px; margin-bottom:15px;">
-            <div class="w-card" style="background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:4px; padding:12px;">
-                <div class="w-header equity" style="font-weight:bold; margin-bottom:8px; color:#27ae60;">1. EQUITY (Long Term)</div>
-                <div class="w-body" style="font-size:0.8rem; color:var(--color-text-main);">
-                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Wait:</span> <strong>> 1 Year</strong></div>
-                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Tax:</span> <strong>12.5%</strong></div>
-                    <div class="w-note" style="font-size:0.7rem; color:var(--color-text-muted); margin-top:5px;">${rules.equity.exemption}</div>
+            <div class="w-card">
+                <div class="w-header equity">1. EQUITY (Long Term)</div>
+                <div class="w-body">
+                    <div class="w-row"><span>Wait:</span> <strong>> 1 Year</strong></div>
+                    <div class="w-row"><span>Tax:</span> <strong>12.5%</strong></div>
+                    <div class="w-note">${rules.equity.exemption}</div>
                 </div>
             </div>
-            <div class="w-card" style="background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:4px; padding:12px;">
-                <div class="w-header gold" style="font-weight:bold; margin-bottom:8px; color:#f39c12;">2. GOLD (Long Term)</div>
-                <div class="w-body" style="font-size:0.8rem; color:var(--color-text-main);">
-                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Wait:</span> <strong>> 2 Years</strong></div>
-                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Tax:</span> <strong>12.5%</strong></div>
-                    <div class="w-note" style="font-size:0.7rem; color:var(--color-text-muted); margin-top:5px;">New Rule (Budget '24)</div>
+            <div class="w-card">
+                <div class="w-header gold">2. GOLD (Long Term)</div>
+                <div class="w-body">
+                    <div class="w-row"><span>Wait:</span> <strong>> 2 Years</strong></div>
+                    <div class="w-row"><span>Tax:</span> <strong>12.5%</strong></div>
+                    <div class="w-note">New Rule (Budget '24)</div>
                 </div>
             </div>
-            <div class="w-card" style="background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:4px; padding:12px;">
-                <div class="w-header debt" style="font-weight:bold; margin-bottom:8px; color:#3498db;">3. DEBT (Emergency)</div>
-                <div class="w-body" style="font-size:0.8rem; color:var(--color-text-main);">
-                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Wait:</span> <strong>Any Time</strong></div>
-                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Tax:</span> <strong>Slab Rate (${taxBracket})</strong></div>
-                    <div class="w-note" style="font-size:0.7rem; color:var(--color-text-muted); margin-top:5px;">Use for liquidity only</div>
+            <div class="w-card">
+                <div class="w-header debt">3. DEBT (Emergency)</div>
+                <div class="w-body">
+                    <div class="w-row"><span>Wait:</span> <strong>Any Time</strong></div>
+                    <div class="w-row"><span>Tax:</span> <strong>Slab Rate (${taxBracket})</strong></div>
+                    <div class="w-note">Use for liquidity only</div>
                 </div>
             </div>
         </div>
@@ -1245,17 +1245,53 @@ let scenarioChartInstance = null;
 
 // NEW: Goal Timeline Chart - Calculates YEARS to reach goal
 function updateGoalTimeline() {
-    // 1. Get User Inputs
+    // 1. Get User Inputs (from Page 2)
     const income = GLOBAL_STATE.income || 50000;
     const savingsRate = (GLOBAL_STATE.alloc.savings || 20) / 100;
-    const baseMonthlySIP = Math.round(income * savingsRate);
+    const baseSIPFromSavings = Math.round(income * savingsRate); // Calculated from slider
 
+    // Get Existing Investments (user can edit)
+    const existingSIPInput = document.getElementById("input-existing-sip");
+    const existingCorpusInput = document.getElementById("input-existing-corpus");
+    const existingSIP = existingSIPInput ? parseInt(existingSIPInput.value) || 0 : 0;
+    const existingCorpus = existingCorpusInput ? parseInt(existingCorpusInput.value) || 0 : 0;
+
+    // Get Additional Investments (user can add)
     const extraSIPInput = document.getElementById("input-extra-sip");
     const lumpsumInput = document.getElementById("input-lumpsum");
     const extraSIP = extraSIPInput ? parseInt(extraSIPInput.value) || 0 : 0;
     const lumpsum = lumpsumInput ? parseInt(lumpsumInput.value) || 0 : 0;
 
-    const totalMonthlySIP = baseMonthlySIP + extraSIP;
+    // TOTAL = Base from savings + Existing + Extra
+    const totalMonthlySIP = baseSIPFromSavings + existingSIP + extraSIP;
+    const totalCorpus = existingCorpus + lumpsum;
+
+    // Update Investment Summary (show source of numbers)
+    const summaryDiv = document.getElementById("total-investment-summary");
+    if (summaryDiv) {
+        summaryDiv.innerHTML = `
+            <div class="summary-header">📟 Your Total Investment Setup</div>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">Monthly SIP</span>
+                    <span class="summary-value">₹${(totalMonthlySIP / 1000).toFixed(1)}k</span>
+                    <span class="summary-source">
+                        ₹${(baseSIPFromSavings / 1000).toFixed(1)}k (from ${Math.round(savingsRate * 100)}% savings) 
+                        ${existingSIP > 0 ? `+ ₹${(existingSIP / 1000).toFixed(1)}k existing` : ''}
+                        ${extraSIP > 0 ? `+ ₹${(extraSIP / 1000).toFixed(1)}k extra` : ''}
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Starting Corpus</span>
+                    <span class="summary-value">₹${(totalCorpus / 100000).toFixed(1)}L</span>
+                    <span class="summary-source">
+                        ${existingCorpus > 0 ? `₹${(existingCorpus / 100000).toFixed(1)}L existing` : '₹0'}
+                        ${lumpsum > 0 ? ` + ₹${(lumpsum / 100000).toFixed(1)}L lumpsum` : ''}
+                    </span>
+                </div>
+            </div>
+        `;
+    }
 
     // 2. Goal Target Calculation (Average of selected goals)
     const goals = GLOBAL_STATE.demographics.goals || [];
@@ -1344,9 +1380,9 @@ function updateGoalTimeline() {
         return months >= maxMonths ? 50 : (months / 12).toFixed(1);
     }
 
-    const bearYears = yearsToReachGoal(bearRate, totalMonthlySIP, lumpsum, inflationAdjustedTarget);
-    const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, lumpsum, inflationAdjustedTarget);
-    const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, lumpsum, inflationAdjustedTarget);
+    const bearYears = yearsToReachGoal(bearRate, totalMonthlySIP, totalCorpus, inflationAdjustedTarget);
+    const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, totalCorpus, inflationAdjustedTarget);
+    const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, totalCorpus, inflationAdjustedTarget);
 
     // 5. Render Chart (Horizontal Bar - Years)
     const ctx = document.getElementById('scenarioChart');

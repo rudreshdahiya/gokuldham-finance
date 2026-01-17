@@ -1090,6 +1090,118 @@ input[type=range]:hover {
     font-style: italic;
 }
 
+/* GOAL TIMELINE CARD (V16) */
+.goal-timeline-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+}
+
+.goal-target-header {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+}
+
+.goal-target-amount {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+.investment-section {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.section-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-main);
+    margin-bottom: 10px;
+}
+
+.investment-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-bg);
+    color: var(--color-text-main);
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.investment-summary {
+    background: linear-gradient(135deg, var(--color-primary), #333);
+    color: var(--color-on-primary);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.summary-header {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-label {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.summary-value {
+    font-size: 1.1rem;
+    font-weight: bold;
+    font-family: var(--font-mono);
+}
+
+.summary-source {
+    font-size: 0.65rem;
+    opacity: 0.7;
+    margin-top: 2px;
+}
+
+.scenario-legend {
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+
 /* TAX WITHDRAWAL GUIDE (V15) */
 .withdrawal-grid {
     display: flex;
