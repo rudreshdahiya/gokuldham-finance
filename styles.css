@@ -7,17 +7,17 @@
        DESIGN TOKENS (V2.0 HCD)
        ========================================= */
 
-    /* 1. COLORS - LIGHT MODE (DEFAULT) */
-    --color-bg: #f8f9fa;
-    --color-bg-card: #ffffff;
-    --color-text-main: #121212;
-    --color-text-muted: #666666;
+    /* 1. COLORS - LIGHT MODE (Off-White for easier viewing) */
+    --color-bg: #f5f5f5;
+    --color-bg-card: #fafafa;
+    --color-text-main: #1a1a1a;
+    --color-text-muted: #555555;
 
-    --color-primary: #000000;
+    --color-primary: #1a1a1a;
     /* Main Actions */
     --color-on-primary: #ffffff;
     /* Text on Primary */
-    --color-border: #e0e0e0;
+    --color-border: #d0d0d0;
     --color-accent: #2ecc71;
     /* Success Green */
     --color-danger: #e74c3c;
@@ -25,7 +25,7 @@
     /* Gold Elements */
 
     --radius-card: 16px;
-    --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.08);
 
     /* 2. TYPOGRAPHY */
     --font-main: 'Inter', system-ui, sans-serif;
@@ -43,17 +43,17 @@
     --radius-btn: 8px;
 }
 
-/* DARK MODE OVERRIDES */
+/* DARK MODE OVERRIDES (Soft Grey, not pure black) */
 [data-theme="dark"] {
-    --color-bg: #121212;
-    --color-bg-card: #1e1e1e;
-    --color-text-main: #e0e0e0;
-    --color-text-muted: #a0a0a0;
+    --color-bg: #1a1a1a;
+    --color-bg-card: #252525;
+    --color-text-main: #f0f0f0;
+    --color-text-muted: #b0b0b0;
 
-    --color-primary: #ffffff;
-    --color-on-primary: #000000;
-    --color-border: #333333;
-    --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.3);
+    --color-primary: #f0f0f0;
+    --color-on-primary: #1a1a1a;
+    --color-border: #404040;
+    --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.4);
 }
 
 * {

@@ -34,8 +34,12 @@ function initUI() {
     // 1. Apply Theme (Device Preference First)
     GLOBAL_STATE.theme = getPreferredTheme();
     document.body.setAttribute('data-theme', GLOBAL_STATE.theme);
-    const icon = document.getElementById('theme-icon');
-    if (icon) icon.innerText = GLOBAL_STATE.theme === 'dark' ? '🌙' : '☀️';
+
+    // Update ALL theme icons
+    const iconEmoji = GLOBAL_STATE.theme === 'dark' ? '🌙' : '☀️';
+    document.querySelectorAll('#theme-icon, .theme-icon-inner').forEach(el => {
+        el.innerText = iconEmoji;
+    });
 
     // 2. Navigation Init
     // Check for previous session? (Optional: Restore from local storage)
@@ -54,8 +58,11 @@ function toggleTheme() {
     GLOBAL_STATE.theme = next;
     localStorage.setItem('theme', next);
 
-    const icon = document.getElementById('theme-icon');
-    if (icon) icon.innerText = next === 'dark' ? '🌙' : '☀️';
+    // Update ALL theme icons (on all pages)
+    const iconEmoji = next === 'dark' ? '🌙' : '☀️';
+    document.querySelectorAll('#theme-icon, .theme-icon-inner').forEach(el => {
+        el.innerText = iconEmoji;
+    });
 }
 
 function goToPage(pageNum) {
