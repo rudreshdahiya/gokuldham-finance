@@ -494,6 +494,8 @@ function updateGoals() {
         const goal = DATA_ENGINE.ALL_GOALS[id];
         const pill = document.createElement("div");
         pill.className = "goal-pill";
+        pill.dataset.goalId = id; // Store actual goal ID for later lookup
+        pill.dataset.goalLabel = goal.label; // Store label for cleaner lookup
         pill.innerHTML = `<div style="margin-bottom:4px;">${goal.label}</div><div style="font-size:0.6rem; opacity:0.75; font-weight:normal;">${goal.years || 5}Y | ₹${goal.corpus || 10}L</div>`;
         pill.onclick = () => {
             // Toggle Self
@@ -578,7 +580,9 @@ function generateStrategy() {
         return;
     }
 
-    GLOBAL_STATE.demographics.goals = Array.from(activePills).map(p => p.innerText);
+    // Store goal IDs for proper lookup (not innerText which has extra formatting)
+    GLOBAL_STATE.demographics.goalIds = Array.from(activePills).map(p => p.dataset.goalId);
+    GLOBAL_STATE.demographics.goals = Array.from(activePills).map(p => p.dataset.goalLabel);
 
     // NEW: Calculate Dynamic Tenure based on Goals
     const tenure = determineTenure(GLOBAL_STATE.demographics.goals);
@@ -1330,29 +1334,46 @@ function updateGoalTimeline() {
         `;
     }
 
-    // 2. Goal Target Calculation (Average of selected goals)
-    const goals = GLOBAL_STATE.demographics.goals || [];
+    // 2. Goal Target Calculation (SUM of selected goals)
+    const goalIds = GLOBAL_STATE.demographics.goalIds || [];
+    const goalLabels = GLOBAL_STATE.demographics.goals || [];
     let targetCorpus = 50; // Default 50L
     let targetGoalLabels = [];
+    let totalYears = 0;
 
-    // Map goals to corpus from DATA_ENGINE
+    // Use goalIds for accurate lookup
     let corpusSum = 0;
     let goalCount = 0;
-    for (let gLabel of goals) {
-        // Find goal by label in ALL_GOALS
-        for (let key in DATA_ENGINE.ALL_GOALS) {
-            const g = DATA_ENGINE.ALL_GOALS[key];
-            if (g.label === gLabel && g.corpus) {
-                corpusSum += g.corpus;
-                goalCount++;
-                targetGoalLabels.push(g.label);
-                break;
+
+    for (let gId of goalIds) {
+        const g = DATA_ENGINE.ALL_GOALS[gId];
+        if (g && g.corpus) {
+            corpusSum += g.corpus;
+            totalYears += (g.years || 5);
+            goalCount++;
+            targetGoalLabels.push(g.label);
+        }
+    }
+
+    // Fallback to label matching if goalIds not available
+    if (goalCount === 0 && goalLabels.length > 0) {
+        for (let gLabel of goalLabels) {
+            for (let key in DATA_ENGINE.ALL_GOALS) {
+                const g = DATA_ENGINE.ALL_GOALS[key];
+                if (g.label === gLabel && g.corpus) {
+                    corpusSum += g.corpus;
+                    totalYears += (g.years || 5);
+                    goalCount++;
+                    targetGoalLabels.push(g.label);
+                    break;
+                }
             }
         }
     }
 
+    // SUM the corpus for multiple goals (not average)
     if (goalCount > 0) {
-        targetCorpus = Math.round(corpusSum / goalCount);
+        targetCorpus = corpusSum; // Use SUM, not average
     }
 
     // 2b. Get State-Based Inflation Rate
@@ -1362,14 +1383,7 @@ function updateGoalTimeline() {
         : 0.06; // Default 6% if not found
 
     // Adjust target corpus for inflation over average goal horizon
-    const avgGoalYears = goalCount > 0 ?
-        goals.reduce((sum, gLabel) => {
-            for (let key in DATA_ENGINE.ALL_GOALS) {
-                const g = DATA_ENGINE.ALL_GOALS[key];
-                if (g.label === gLabel && g.years) return sum + g.years;
-            }
-            return sum;
-        }, 0) / goalCount : 10;
+    const avgGoalYears = goalCount > 0 ? Math.round(totalYears / goalCount) : 10;
 
     // Inflation-adjusted target (future value of current goal)
     const inflationAdjustedTarget = Math.round(targetCorpus * Math.pow(1 + stateInflation, avgGoalYears));
