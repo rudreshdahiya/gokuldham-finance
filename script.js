@@ -719,16 +719,63 @@ function renderStrategyInsights(personaKey) {
     // === ALLOCATION REASONING ===
     const reasonDiv = document.getElementById('allocation-reasoning');
     if (reasonDiv) {
-        let allocReason = `Your ${alloc.equity}/${alloc.debt}/${alloc.gold} split comes from the '9-Rule Matrix' (Risk × Horizon). `;
+        const userSavings = GLOBAL_STATE.alloc.savings || 20;
+        const primaryGoal = goals[0] || "general wealth creation";
 
-        // Persona-specific nudge
-        if (personaKey === 'bhide' || personaKey === 'popatlal') {
-            allocReason += `As a risk-averse saver, we've capped Equity to protect your peace of mind.`;
-        } else if (personaKey === 'jethalal' || personaKey === 'roshan') {
-            allocReason += `Your risk appetite allows high Equity for wealth creation, but we've added Debt as a safety net.`;
-        } else allocReason += `Your balanced approach ensures steady growth without sleepless nights.`;
+        let allocReason = `<strong>${pData.name}, here's why we recommend ${alloc.equity}/${alloc.debt}/${alloc.gold}:</strong><br><br>`;
 
-        reasonDiv.innerText = allocReason;
+        // 1. Base logic (9-Rule Matrix)
+        allocReason += `<strong>📊 Base Strategy:</strong> Your ${tenure}-year timeline + `;
+        if (personaKey === 'jethalal' || personaKey === 'roshan' || personaKey === 'babita') {
+            allocReason += `risk-taking nature (like ${pData.name}!) → Started with 65% equity.<br>`;
+        } else if (personaKey === 'bhide' || personaKey === 'popatlal' || personaKey === 'champaklal') {
+            allocReason += `conservative approach (${pData.name}'s wisdom) → Started with 35% equity.<br>`;
+        } else {
+            allocReason += `balanced mindset → Started with 50% equity.<br>`;
+        }
+
+        // 2. Persona adjustments
+        allocReason += `<br><strong>👤 Persona Adjustment:</strong> `;
+        if (personaKey === 'jethalal') {
+            allocReason += `Added +10% equity because risk-takers like Jethalal chase higher returns. Removed 5% gold (you trust markets more than metal).<br>`;
+        } else if (personaKey === 'popatlal') {
+            allocReason += `Added +10% debt for safety because Popatlal-types fear market crashes. Reduced equity by 10%.<br>`;
+        } else if (personaKey === 'bhide') {
+            allocReason += `Added +5% each to debt and gold—disciplined savers trust traditional assets. Reduced equity by 10%.<br>`;
+        } else if (personaKey === 'champaklal') {
+            allocReason += `Added +15% debt for maximum safety (retirees can't recover from losses). Reduced equity by 15%.<br>`;
+        } else if (personaKey === 'babita') {
+            allocReason += `Added +5% debt for lifestyle liquidity (high-spending personalities need cash flow). Reduced equity by 5%.<br>`;
+        } else {
+            allocReason += `No adjustments—your balanced personality fits the standard model.<br>`;
+        }
+
+        // 3. User behavior
+        allocReason += `<br><strong>💰 Your Savings Rate (${userSavings}%):</strong> `;
+        if (userSavings > 30) {
+            allocReason += `High savers like you can handle volatility. Added +5% equity as a reward.<br>`;
+        } else if (userSavings < 15) {
+            allocReason += `Low savings mean less margin for error. Added +5% debt for safety.<br>`;
+        } else {
+            allocReason += `Average savings rate → No adjustments needed.<br>`;
+        }
+
+        // 4. Goal-specific
+        allocReason += `<br><strong>🎯 Goal Impact ("${primaryGoal}"):</strong> `;
+        if (goals.some(g => g.includes("Wedding") || g.includes("Car") || g.includes("Vacation"))) {
+            allocReason += `Short-term high-cost goals require liquidity. Added +10% debt, reduced equity by 10%.<br>`;
+        } else if (goals.includes("FIRE (Retire Early)") || goals.includes("SIP Portfolio")) {
+            allocReason += `Long-term wealth goals allow aggressive growth. Added +10% equity, reduced debt & gold.<br>`;
+        } else if (goals.includes("Parental Medical Care") || goals.includes("Emergency Fund")) {
+            allocReason += `Immediate-access needs critical. Added +10% debt, reduced equity by 10%.<br>`;
+        } else {
+            allocReason += `Your goal fits the standard timeline → No adjustments.<br>`;
+        }
+
+        // Final note
+        allocReason += `<br><em style="color:var(--color-text-muted); font-size:0.85rem;">All percentages clamped to safe ranges (Equity: 20-85%, Debt: 10-60%).</em>`;
+
+        reasonDiv.innerHTML = allocReason;
     }
 
     // === STRENGTHS (Pros) ===
