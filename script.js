@@ -178,6 +178,34 @@ function analyzeHabits() {
 // 3. PAGE 3: PERSONA REVEAL
 // ==========================================
 
+// Show neighbor persona in modal when clicked
+function showNeighborPersona(personaKey) {
+    const personaData = DATA_ENGINE.PERSONAS[personaKey];
+    if (!personaData) return;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
+
+    modal.innerHTML = `
+        <div style="background:var(--color-bg-card); border-radius:12px; max-width:400px; width:100%; padding:30px; position:relative; max-height:80vh; overflow-y:auto;">
+            <button onclick="this.closest('div').parentElement.remove()" 
+                    style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--color-text-muted);">×</button>
+            <div style="text-align:center;">
+                <img src="${personaData.img}" style="width:100px; height:100px; border-radius:50%; margin:0 auto;">
+                <h2 style="color:var(--color-primary); margin:15px 0;">${personaData.name}</h2>
+                <p style="color:var(--color-text-muted); font-size:0.9rem;">${personaData.tagline}</p>
+                <div style="margin-top:20px; padding:15px; background:var(--color-bg); border-radius:8px; text-align:left;">
+                    <strong style="color:var(--color-primary);">Character Traits:</strong>
+                    <p style="font-size:0.85rem; color:var(--color-text-main); margin:10px 0 0 0;">${personaData.desc || 'Classic Gokuldham character'}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+}
+
+
 const PERSONA_TRIBES = {
     "jethalal": ["abdul", "bagha"], "abdul": ["jethalal", "bagha"], // Strugglers
     "babita": ["roshan", "daya"], "roshan": ["babita", "tapu"], "daya": ["babita", "anjali"], "tapu": ["roshan", "babita"], "komal": ["roshan", "daya"], "anjali": ["daya", "babita"], // Spenders
@@ -273,7 +301,9 @@ function renderPersonaPage(personaKey, clusterId) {
             }
 
             neighborsHtml += `
-            <div style="text-align:center; opacity:0.85;">
+            <div style="text-align:center; opacity:0.85; cursor:pointer;" 
+                 onclick="showNeighborPersona('${nKey}')" 
+                 title="Click to explore ${nData.name}">
                 <img src="${nData.img}" style="width:45px; height:45px; border-radius:50%; border:2px solid var(--color-border); box-shadow:0 2px 5px rgba(0,0,0,0.1);">
                 <div style="font-size:0.65rem; margin-top:5px; font-weight:bold; color:var(--color-text-main);">${nData.name}</div>
                 <div style="font-size:0.55rem; color:var(--color-primary); font-weight:500; margin-top:2px;">${directionHint}</div>
@@ -414,7 +444,7 @@ function updateGoals() {
         const goal = DATA_ENGINE.ALL_GOALS[id];
         const pill = document.createElement("div");
         pill.className = "goal-pill";
-        pill.innerText = goal.label;
+        pill.innerHTML = `<div style="margin-bottom:4px;">${goal.label}</div><div style="font-size:0.6rem; opacity:0.75; font-weight:normal;">${goal.years || 5}Y | ₹${goal.corpus || 10}L</div>`;
         pill.onclick = () => {
             // Toggle Self
             pill.classList.toggle("active");
