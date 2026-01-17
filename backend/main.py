@@ -8,9 +8,15 @@ from optimizer import optimizer
 app = FastAPI(title="Gokuldham Bank AI Backend")
 
 # CORS (Allow Frontend to talk to Backend)
+origins = [
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "https://gokuldham-finance.vercel.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins, # Explicit origins for security & credentials
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -54,8 +60,6 @@ def analyze_persona(data: PersonaInput):
         result = ml_engine.predict_persona(data.needs_pct, data.wants_pct, data.savings_pct)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/analyze/prescription")

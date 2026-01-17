@@ -26,328 +26,495 @@
     <!-- ==============================================
          Page 1: INTRO (Splash)
          ============================================== -->
+    <!-- ==============================================
+         Page 1: INTRO (Splash) - Refactored V2.0
+         ============================================== -->
     <div id="ui-page-1" class="ui-screen">
-        <div class="mobile-container splash-container">
-            <div class="bank-logo">GOKULDHAM BANK</div>
-            <h1 class="splash-title">OPEN<br>LEDGER</h1>
-            <p class="splash-subtitle">Wealth Planning for the Modern Indian Family</p>
-            <div class="mission-badge">PRIVACY FIRST • AI POWERED</div>
+        <div class="std-container">
+            <!-- 1. HEADER -->
+            <header class="std-header" style="justify-content:center;">
+                <div class="std-title">GOKULDHAM BANK</div>
+            </header>
 
-            <button class="btn-primary" id="btn-splash-init" onclick="goToPage(2)">
-                OPEN LEDGER
-            </button>
-            <div style="margin-top:20px; font-size:0.7rem; color:#666;">
-                By proceeding, you agree to our <u>Terms of Service</u>.
-            </div>
+            <!-- 2. BODY -->
+            <main class="std-body"
+                style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+                <h1 style="font-size:3rem; font-weight:800; line-height:1; margin-bottom:10px;">OPEN<br>LEDGER</h1>
+                <p style="color:var(--color-text-muted); margin-bottom:20px;">Wealth Planning for the Modern Indian
+                    Family</p>
+
+                <div
+                    style="background:var(--color-text-main); color:var(--color-surface); padding:5px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold;">
+                    PRIVACY FIRST • AI POWERED
+                </div>
+            </main>
+
+            <!-- 3. FOOTER -->
+            <footer class="std-footer">
+                <button class="std-cta" id="btn-splash-init" onclick="goToPage(2)">
+                    START PLANNING
+                </button>
+            </footer>
         </div>
     </div>
 
     <!-- ==============================================
          Page 2: UPI RECEIPT (INPUTS) - Updated V13
          ============================================= -->
+    <!-- ==============================================
+         Page 2: UPI RECEIPT (INPUTS) - Refactored V2.0
+         ============================================= -->
     <div id="ui-page-2" class="ui-screen hidden">
-        <div class="mobile-container p2-container">
-            <!-- Scrollable Body -->
-            <div class="receipt-paper">
-                <div class="receipt-header">
-                    <h2>UPI TRANSFER RECEIPT</h2>
-                    <div style="font-size:0.75rem; letter-spacing:1px;">Transaction ID: GOKUL-<span
-                            id="txn-id">8821</span></div>
+        <div class="std-container">
+            <!-- 1. HEADER -->
+            <header class="std-header">
+                <div class="std-header-left">
+                    <div class="std-back-btn" onclick="goToPage(1)">❮</div>
+                </div>
+                <div class="std-title">UPI RECEIPT</div>
+                <div style="width:24px;"></div>
+            </header>
+
+            <!-- 2. BODY -->
+            <main class="std-body">
+                <div style="text-align:center; margin-bottom:20px;">
+                    <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--color-text-muted);">ID:
+                        GOKUL-<span id="txn-id">8821</span></span>
                 </div>
 
                 <div class="input-section">
-                    <label>MONTHLY INCOME (₹)</label>
-                    <div class="currency-input">
-                        <span>₹</span>
-                        <input type="number" id="input-income" value="50000" placeholder="0" oninput="updateLedger()">
+                    <label style="font-size:var(--text-sm); font-weight:bold; color:var(--color-text-muted);">MONTHLY
+                        INCOME</label>
+                    <div class="currency-input"
+                        style="border-bottom:2px solid var(--color-primary); display:flex; align-items:center; padding:5px 0;">
+                        <span style="font-size:1.5rem; margin-right:5px;">₹</span>
+                        <input type="number" id="input-income" value="50000" placeholder="0" oninput="updateLedger()"
+                            style="border:none; background:transparent; font-size:2rem; width:100%; font-family:var(--font-mono); outline:none;">
                     </div>
                 </div>
 
-                <div class="dashed-line"></div>
-                <div style="text-align:center; margin:10px 0; font-weight:bold; font-size:0.9rem;">SPENDING BREAKDOWN
-                    (%)</div>
+                <div style="text-align:center; margin:20px 0; font-weight:bold; font-size:var(--text-md);">SPENDING
+                    BREAKDOWN (%)</div>
 
                 <!-- NEEDS -->
                 <div class="category-group">
-                    <div class="cat-header">🏠 ESSENTIALS (NEEDS)</div>
+                    <div class="cat-header"
+                        style="background:var(--color-background); padding:8px; border-radius:4px; font-weight:bold; margin-bottom:10px;">
+                        🏠 NEEDS</div>
 
-                    <div class="slider-group">
-                        <label>Rent / EMI / Home</label>
-                        <span id="val-housing">30%</span>
+                    <div class="slider-group" style="margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <label>Rent / EMI</label>
+                            <span id="val-housing" style="font-family:var(--font-mono); font-weight:bold;">30%</span>
+                        </div>
                         <input type="range" id="slider-housing" min="0" max="100" value="30" class="slider"
+                            style="width:100%; accent-color:var(--color-primary);"
                             oninput="updateLedger(this.id, 'housing')">
                     </div>
 
-                    <div class="slider-group">
-                        <label>Groceries / Utilities / Bills</label>
-                        <span id="val-utilities">20%</span>
+                    <div class="slider-group" style="margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <label>Groceries / Bills</label>
+                            <span id="val-utilities" style="font-family:var(--font-mono); font-weight:bold;">20%</span>
+                        </div>
                         <input type="range" id="slider-utilities" min="0" max="100" value="20" class="slider"
+                            style="width:100%; accent-color:var(--color-primary);"
                             oninput="updateLedger(this.id, 'utilities')">
                     </div>
                 </div>
 
                 <!-- WANTS -->
                 <div class="category-group">
-                    <div class="cat-header">🍿 LIFESTYLE (WANTS)</div>
+                    <div class="cat-header"
+                        style="background:var(--color-background); padding:8px; border-radius:4px; font-weight:bold; margin-bottom:10px; margin-top:20px;">
+                        🍿 WANTS</div>
 
-                    <div class="slider-group">
-                        <label>Dining / Zomato / Swiggy</label>
-                        <span id="val-dining">10%</span>
+                    <div class="slider-group" style="margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <label>Dining / Fun</label>
+                            <span id="val-dining" style="font-family:var(--font-mono); font-weight:bold;">10%</span>
+                        </div>
                         <input type="range" id="slider-dining" min="0" max="100" value="10" class="slider"
+                            style="width:100%; accent-color:var(--color-primary);"
                             oninput="updateLedger(this.id, 'dining')">
                     </div>
-
-                    <div class="slider-group">
-                        <label>Travel / Uber / Fuel</label>
-                        <span id="val-travel">10%</span>
+                    <div class="slider-group" style="margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <label>Travel / Uber</label>
+                            <span id="val-travel" style="font-family:var(--font-mono); font-weight:bold;">10%</span>
+                        </div>
                         <input type="range" id="slider-travel" min="0" max="100" value="10" class="slider"
+                            style="width:100%; accent-color:var(--color-primary);"
                             oninput="updateLedger(this.id, 'travel')">
                     </div>
-
-                    <div class="slider-group">
-                        <label>Shopping / Amazon</label>
-                        <span id="val-shopping">10%</span>
+                    <div class="slider-group" style="margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <label>Shopping</label>
+                            <span id="val-shopping" style="font-family:var(--font-mono); font-weight:bold;">10%</span>
+                        </div>
                         <input type="range" id="slider-shopping" min="0" max="100" value="10" class="slider"
+                            style="width:100%; accent-color:var(--color-primary);"
                             oninput="updateLedger(this.id, 'shopping')">
                     </div>
                 </div>
 
                 <!-- SAVINGS -->
                 <div class="category-group">
-                    <div class="cat-header">🌱 FUTURE (SAVINGS)</div>
+                    <div class="cat-header"
+                        style="background:var(--color-background); padding:8px; border-radius:4px; font-weight:bold; margin-bottom:10px; margin-top:20px;">
+                        🐷 SAVINGS</div>
 
-                    <div class="slider-group">
-                        <label>SIP / Investments / Cash</label>
-                        <span id="val-invest">20%</span>
+                    <div class="slider-group" style="margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <label>Investments (SIP)</label>
+                            <span id="val-invest" style="font-family:var(--font-mono); font-weight:bold;">20%</span>
+                        </div>
                         <input type="range" id="slider-invest" min="0" max="100" value="20" class="slider"
+                            style="width:100%; accent-color:var(--color-primary);"
                             oninput="updateLedger(this.id, 'invest')">
                     </div>
                 </div>
+            </main>
 
-                <!-- Spacer for scroll -->
-                <div style="height: 100px;"></div>
-            </div>
+            <!-- 3. FOOTER -->
+            <footer class="std-footer" style="flex-direction:column; gap:10px; height:auto; padding:15px;">
+                <div class="budget-bar-container"
+                    style="width:100%; height:6px; background:#eee; border-radius:3px; overflow:hidden;">
+                    <div id="budget-bar-fill" class="budget-bar-fill"
+                        style="width:100%; height:100%; background:var(--color-accent); transition:width 0.3s;"></div>
+                </div>
+                <div id="total-check"
+                    style="font-size:0.75rem; text-align:center; width:100%; margin-bottom:10px; font-weight:bold;">✓
+                    Perfect Balance (100%)</div>
 
-            <!-- Fixed Footer -->
-            <div class="receipt-footer">
-                <div class="total-status" id="total-check">
-                    Total: 100%
-                </div>
-                <!-- Remaining Budget Indicator -->
-                <div class="budget-bar-container">
-                    <div id="budget-bar-fill" class="budget-bar-fill" style="width: 100%;"></div>
-                </div>
-                <button class="btn-primary" onclick="analyzeHabits()">
-                    SUBMIT TO LEDGER
+                <button class="std-cta" id="btn-input-next" onclick="analyzeHabits()">
+                    ANALYZE SPEND
                 </button>
-            </div>
+            </footer>
         </div>
     </div>
 
     <!-- ==============================================
-         Page 3: CHARACTER REVEAL (Persona)
+         Page 3: CHARACTER REVEAL (Persona) - Refactored V2.0
          ============================================== -->
     <div id="ui-page-3" class="ui-screen hidden">
-        <div class="mobile-container persona-card">
-            <div class="persona-header">YOU ARE...</div>
-            <div id="persona-image-container">
-                <!-- Injected via JS -->
-            </div>
-            <h1 id="persona-name">JETHALAL</h1>
-            <p id="persona-desc">The Risk-Taker merchant who needs balance.</p>
+        <div class="std-container">
+            <!-- 1. HEADER -->
+            <header class="std-header">
+                <div class="std-header-left">
+                    <div class="std-back-btn" onclick="goToPage(2)">❮</div>
+                </div>
+                <div class="std-title">YOUR PROFILE</div>
+                <div style="width:24px;"></div>
+            </header>
 
-            <div class="persona-stat">
-                <span>Cluster ID:</span> <span id="persona-cluster">#A12</span>
-            </div>
+            <!-- 2. BODY -->
+            <main class="std-body"
+                style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div class="persona-card"
+                    style="width:100%; text-align:center; padding:20px; border-radius:var(--radius-card); background:#fff; border:1px solid var(--color-border); box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+                    <div class="persona-header"
+                        style="font-size:var(--text-md); color:var(--color-primary); margin-bottom:10px;">YOU ARE A...
+                    </div>
 
-            <button class="btn-primary" onclick="goToPage(4)">
-                BUILD MY PLAN
-            </button>
-            <button class="btn-text" onclick="goToPage(2)">
-                Rewind Transaction
-            </button>
+                    <div id="persona-image-container" style="margin:20px 0;">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <h1 id="persona-name"
+                        style="font-size:2rem; margin:10px 0; color:var(--color-primary); text-transform:uppercase; letter-spacing:1px;">
+                        JETHALAL</h1>
+                    <p id="persona-desc" style="color:var(--color-text-muted); line-height:1.5;">The Risk-Taker merchant
+                        who needs balance.</p>
+
+                    <div class="persona-stat"
+                        style="margin-top:20px; padding-top:20px; border-top:1px dashed var(--color-border); font-size:var(--text-xs); color:var(--color-text-muted);">
+                        <!-- JS Injects Reason Here -->
+                    </div>
+                </div>
+            </main>
+
+            <!-- 3. FOOTER -->
+            <footer class="std-footer" style="flex-direction:column; gap:10px; height:auto; padding:15px;">
+                <button class="std-cta" onclick="goToPage(4)">
+                    BUILD MY PLAN
+                </button>
+                <div onclick="goToPage(2)"
+                    style="font-size:0.75rem; color:var(--color-text-muted); text-decoration:underline; cursor:pointer;">
+                    Rewind Transaction
+                </div>
+            </footer>
         </div>
     </div>
 
     <!-- ==============================================
-         Page 4: CONTEXT (Demographics)
+         Page 4: CONTEXT (Demographics) - Refactored V2.0
          ============================================== -->
     <div id="ui-page-4" class="ui-screen hidden">
-        <div class="mobile-container">
-            <div class="receipt-header">
-                <h2>PROFILE CONTEXT</h2>
-                <div style="font-size:0.8rem; color:#888;">To build your strategy, we need context.</div>
-            </div>
-
-            <div class="input-section">
-                <label>CURRENT AGE</label>
-                <select id="input-age" class="modern-select">
-                    <option value="18-25">18-25 (Gen Z)</option>
-                    <option value="26-35" selected>26-35 (Millennial)</option>
-                    <option value="36-50">36-50 (Gen X)</option>
-                    <option value="50+">50+ (Boomer)</option>
-                </select>
-            </div>
-
-            <div class="input-section">
-                <label>RESIDENCE (INFLATION INDEX)</label>
-                <select id="input-state" class="modern-select">
-                    <!-- Populated via JS -->
-                </select>
-            </div>
-
-            <div class="input-section">
-                <label>TOP 2 FINANCIAL GOALS</label>
-                <div id="goal-pills-container" class="goal-pills-wrapper">
-                    <!-- Populated via JS -->
+        <div class="std-container">
+            <!-- 1. HEADER -->
+            <header class="std-header">
+                <div class="std-header-left">
+                    <div class="std-back-btn" onclick="goToPage(3)">❮</div>
                 </div>
-            </div>
+                <div class="std-title">PROFILE CONTEXT</div>
+                <div style="width:24px;"></div>
+            </header>
 
-            <button class="btn-primary" onclick="generateStrategy()">
-                GENERATE MASTER PLAN
-            </button>
+            <!-- 2. BODY -->
+            <main class="std-body">
+                <div class="receipt-header" style="margin-bottom:20px;">
+                    <div style="font-size:0.8rem; color:var(--color-text-muted); text-align:center;">To build your
+                        strategy, we need context.</div>
+                </div>
+
+                <!-- 2. BODY -->
+                <main class="std-body">
+                    <div class="input-section" style="margin-bottom:20px;">
+                        <label
+                            style="display:block; font-size:var(--text-sm); font-weight:bold; margin-bottom:8px;">CURRENT
+                            AGE</label>
+                        <select id="input-age" class="modern-select" onchange="updateGoals()"
+                            style="width:100%; height:50px; padding:0 15px; border-radius:var(--radius-btn); border:1px solid var(--color-border); font-size:var(--text-md); background:#fff;">
+                            <option value="18-25">18-25 (Gen Z)</option>
+                            <option value="26-35" selected>26-35 (Millennial)</option>
+                            <option value="36-50">36-50 (Gen X)</option>
+                            <option value="50+">50+ (Boomer)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-section" style="margin-bottom:20px;">
+                        <label
+                            style="display:block; font-size:var(--text-sm); font-weight:bold; margin-bottom:8px;">RESIDENCE
+                            (INFLATION INDEX)</label>
+                        <select id="input-state" class="modern-select" onchange="updateStateContext()"
+                            style="width:100%; height:50px; padding:0 15px; border-radius:var(--radius-btn); border:1px solid var(--color-border); font-size:var(--text-md); background:#fff;">
+                            <!-- JS injects options here. First one should be placeholder -->
+                        </select>
+                        <!-- NEW: State Context Insight -->
+                        <div id="state-context-display"
+                            style="margin-top:10px; font-size:0.8rem; background:#f0fcf4; border:1px solid #c3e6cb; border-radius:4px; padding:8px; display:none;">
+                            <!-- Injected JS: "Expenses here are 20% higher..." -->
+                        </div>
+                    </div>
+
+                    <div class="input-section" style="margin-bottom:20px;">
+                        <label style="display:block; font-size:var(--text-sm); font-weight:bold; margin-bottom:8px;">TOP
+                            2 FINANCIAL GOALS</label>
+                        <div id="goal-pills-container" class="goal-pills-wrapper"
+                            style="display:flex; flex-wrap:wrap; gap:10px;">
+                            <!-- Populated via JS -->
+                        </div>
+                        <!-- NEW: Goal Context Insight -->
+                        <div id="goal-context-display"
+                            style="margin-top:10px; font-size:0.8rem; color:#555; font-style:italic; display:none;">
+                            Goal Insight will appear here...
+                        </div>
+                    </div>
+                </main>
+
+                <!-- 3. FOOTER -->
+                <footer class="std-footer" style="flex-direction:column; gap:10px; height:auto; padding:15px;">
+                    <button class="std-cta" onclick="generateStrategy()">
+                        GENERATE MASTER PLAN
+                    </button>
+                    <div style="font-size:0.75rem; color:var(--color-text-muted); text-align:center;">
+                        AI will analyze 1M+ possibilities...
+                    </div>
+                </footer>
         </div>
     </div>
 
     <!-- ==============================================
          Page 5: MASTER PLAN (Recommendation)
          ============================================== -->
+    <!-- ==============================================
+         Page 5: MASTER PLAN (Recommendation) - Refactored V2.0
+         ============================================== -->
     <div id="ui-page-5" class="ui-screen hidden">
-        <div class="mobile-container result-scroll">
-            <div class="result-header">
-                <h2>MASTER PLAN</h2>
-                <p>AI-Generated Strategy</p>
-            </div>
-
-            <!-- Card 1: Asset Allocation -->
-            <div class="card">
-                <h3>ASSET ALLOCATION</h3>
-                <div class="chart-container" style="position: relative; height:200px; width:100%">
-                    <canvas id="allocationChart"></canvas>
+        <div class="std-container">
+            <!-- 1. HEADER -->
+            <header class="std-header">
+                <div class="std-header-left">
+                    <div class="std-back-btn" onclick="goToPage(4)">❮</div>
                 </div>
-                <div id="allocation-details" style="margin-top:15px;">
-                    <!-- Injected JS -->
-                </div>
-            </div>
+                <div class="std-title">MASTER PLAN</div>
+                <div style="width:24px;"></div>
+            </header>
 
-            <!-- Card 2: Strategic DNA (Pros/Cons) -->
-            <div class="card">
-                <h3>STRATEGY DNA</h3>
-                <div class="strategy-grid">
-                    <div class="dna-block positive">
-                        <div class="dna-icon">👍</div>
-                        <div>
-                            <h4>PROS</h4>
-                            <ul id="strategy-pros">
-                                <li>High Growth Potential</li>
-                            </ul>
-                        </div>
+            <!-- 2. BODY -->
+            <main class="std-body">
+                <div class="result-header" style="text-align:center; margin-bottom:20px;">
+                    <h2 style="margin:0; font-size:1.5rem;">STRATEGY LOCKED</h2>
+                    <p style="margin:5px 0 0; color:var(--color-text-muted); font-size:0.9rem;">AI-Generated for your
+                        profile</p>
+                </div>
+
+                <!-- Card 1: Asset Allocation -->
+                <div class="card"
+                    style="background:#fff; border-radius:var(--radius-card); padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
+                    <h3 style="margin-top:0; font-size:var(--text-md);">ASSET ALLOCATION</h3>
+                    <div class="chart-container" style="position: relative; height:200px; width:100%">
+                        <canvas id="allocationChart"></canvas>
                     </div>
-                    <div class="dna-block negative">
-                        <div class="dna-icon">⚠️</div>
-                        <div>
-                            <h4>RISKS</h4>
-                            <ul id="strategy-cons">
-                                <li>Short-term Volatility</li>
-                            </ul>
-                        </div>
+                    <div id="allocation-details" style="margin-top:15px; font-size:0.9rem;">
+                        <!-- Injected JS -->
                     </div>
                 </div>
-                <div class="market-condition">
-                    <strong>ASSUMED MARKET:</strong> <span id="market-assumption">Bullish (India Growth Story)</span>
-                </div>
-            </div>
 
-            <!-- Card 3: Scenario Analysis -->
-            <div class="card">
-                <h3>WEALTH PROJECTION</h3>
-                <div class="scenario-controls">
-                    <label>Tenure: <span id="tenure-val">10 Years</span></label>
-                    <input type="range" id="input-tenure" min="3" max="30" value="10"
-                        oninput="updateScenarioAnalysis()">
+                <!-- Card 2: Strategic DNA -->
+                <div class="card"
+                    style="background:#fff; border-radius:var(--radius-card); padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
+                    <h3 style="margin-top:0; font-size:var(--text-md);">STRATEGY DNA</h3>
+                    <div class="strategy-grid">
+                        <div class="dna-block positive">
+                            <div class="dna-icon">👍</div>
+                            <div>
+                                <h4 style="margin:0;">PROS</h4>
+                                <ul id="strategy-pros" style="padding-left:15px; margin:5px 0;">
+                                    <li>High Growth Potential</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="dna-block negative">
+                            <div class="dna-icon">⚠️</div>
+                            <div>
+                                <h4 style="margin:0;">RISKS</h4>
+                                <ul id="strategy-cons" style="padding-left:15px; margin:5px 0;">
+                                    <li>Short-term Volatility</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="market-condition"
+                        style="margin-top:10px; font-size:0.8rem; background:#f4f4f4; padding:5px; border-radius:4px;">
+                        <strong>ASSUMED MARKET:</strong> <span id="market-assumption">Bullish (India Growth
+                            Story)</span>
+                    </div>
                 </div>
 
-                <div class="chart-container" style="position: relative; height:250px; width:100%">
-                    <canvas id="scenarioChart"></canvas>
+                <!-- Card 3: Wealth Projection -->
+                <div class="card"
+                    style="background:#fff; border-radius:var(--radius-card); padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
+                    <h3 style="margin-top:0; font-size:var(--text-md);">WEALTH PROJECTION</h3>
+                    <div class="scenario-controls" style="margin-bottom:15px;">
+                        <label
+                            style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.9rem;">Tenure:
+                            <span id="tenure-val">10 Years</span></label>
+                        <input type="range" id="input-tenure" min="3" max="30" value="10"
+                            style="width:100%; accent-color:var(--color-primary);" oninput="updateScenarioAnalysis()">
+                    </div>
+
+                    <div class="chart-container" style="position: relative; height:250px; width:100%">
+                        <canvas id="scenarioChart"></canvas>
+                    </div>
+
+                    <div class="scenario-legend" style="text-align:center; font-size:0.8rem; margin-top:10px;">
+                        <span style="color:#e74c3c">Worst Case</span> •
+                        <span style="color:#f1c40f">Base Case</span> •
+                        <span style="color:#2ecc71">Best Case</span>
+                    </div>
                 </div>
 
-                <div class="scenario-legend">
-                    <span style="color:#e74c3c">Worst Case</span> •
-                    <span style="color:#f1c40f">Base Case</span> •
-                    <span style="color:#2ecc71">Best Case</span>
+                <!-- Card 4: Tax Efficiency -->
+                <div class="card"
+                    style="background:#fff; border-radius:var(--radius-card); padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
+                    <h3 style="margin-top:0; font-size:var(--text-md);">WITHDRAWAL GUIDE (TAX)</h3>
+                    <div id="tax-withdrawal-content">
+                        <div class="loading-text">Loading Tax Rules...</div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Card 4: Tax Efficiency Guide (NEW) -->
-            <div class="card">
-                <h3>WITHDRAWAL GUIDE (TAX EFFICIENT)</h3>
-                <div id="tax-withdrawal-content">
-                    <div class="loading-text">Loading Tax Rules...</div>
+                <!-- Card 5: Tax Optimization -->
+                <div class="card"
+                    style="background:#fff; border-radius:var(--radius-card); padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h3 style="margin:0; font-size:var(--text-md);">TAX OPTIMIZATION</h3>
+                        <span class="badge-success"
+                            style="background:var(--color-accent); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.7rem;">80C
+                            SOLVED</span>
+                    </div>
+                    <div id="tax-strategy-content">
+                        <div class="loading-text">Solving linear equations...</div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Card 5: Tax Optimization -->
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3>TAX OPTIMIZATION</h3>
-                    <span class="badge-success">80C SOLVED</span>
+                <!-- Card 6: Rebalancing -->
+                <div class="card"
+                    style="background:#fff; border-radius:var(--radius-card); padding:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); margin-bottom:20px;">
+                    <h3 style="margin-top:0; font-size:var(--text-md);">REBALANCING SCHEDULE</h3>
+                    <div id="rebalancing-content">
+                        <!-- Injected JS -->
+                    </div>
                 </div>
-                <div id="tax-strategy-content">
-                    <div class="loading-text">Solving linear equations...</div>
+
+                <div style="text-align:center; margin-top:30px; margin-bottom: 20px;">
+                    <button class="btn-text" onclick="localStorage.clear(); location.reload();"
+                        style="color:var(--color-danger); background:none; border:none; font-weight:bold; cursor:pointer;">
+                        ⚠ DELETE MY DATA
+                    </button>
                 </div>
-            </div>
+            </main>
 
-            <!-- Card 3: Rebalancing -->
-            <div class="card">
-                <h3>REBALANCING SCHEDULE</h3>
-                <div id="rebalancing-content">
-                    <!-- Injected JS -->
-                </div>
-            </div>
-
-            <button class="btn-secondary"
-                onclick="document.getElementById('ui-page-5').classList.add('hidden'); document.getElementById('ui-page-6').classList.remove('hidden'); sendMessage();"
-                style="width:100%; margin-top:20px; background:#000;">
-                CHAT WITH AI INSPECTOR ⮕
-            </button>
-
-            <div style="text-align:center; margin-top:30px; margin-bottom: 20px;">
-                <button class="btn-text" onclick="localStorage.clear(); location.reload();" style="color:#e74c3c;">
-                    ⚠ DELETE MY DATA
+            <!-- 3. FOOTER -->
+            <footer class="std-footer">
+                <button class="std-cta"
+                    onclick="document.getElementById('ui-page-5').classList.add('hidden'); document.getElementById('ui-page-6').classList.remove('hidden'); sendMessage();">
+                    CHAT WITH INSPECTOR
                 </button>
-            </div>
-
-            <div style="height: 50px;"></div>
+            </footer>
         </div>
     </div>
 
     <!-- ==============================================
-         Page 6: AI COMPANION (Chat)
+    <!-- ==============================================
+         Page 6: AI COMPANION (Chat) - Refactored V2.0
          ============================================== -->
     <div id="ui-page-6" class="ui-screen hidden">
-        <div class="mobile-container chat-interface"
-            style="display:flex; flex-direction:column; height:100vh; max-width:480px;">
-            <div class="chat-header">
-                <div class="chat-avatar">👮‍♂️</div>
-                <div>
-                    <div style="font-weight:bold;">Inspector Chalu Pandey</div>
-                    <div style="font-size:0.8rem; color:green;">● Online</div>
+        <div class="std-container">
+            <!-- 1. HEADER -->
+            <header class="std-header">
+                <div class="std-header-left">
+                    <div class="std-back-btn" onclick="goToPage(5)">❮</div>
                 </div>
-                <div style="margin-left:auto; cursor:pointer;" onclick="goToPage(5)">✕</div>
-            </div>
-
-            <div id="chat-history" class="chat-history">
-                <div class="chat-msg system">
-                    Hello! I have analyzed your portfolio. Based on your spending, I suspect some... irregularities. Ask
-                    me anything!
+                <!-- Persona Avatar + Status -->
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="assets/inspector_avatar.png" onerror="this.src='assets/mehta.png'"
+                        style="width:30px; height:30px; border-radius:50%; border:1px solid #fff;">
+                    <div style="text-align:left;">
+                        <div class="std-title" style="font-size:0.9rem; line-height:1;">INSPECTOR</div>
+                        <div style="font-size:0.6rem; color:#aaffaa; line-height:1;">Online</div>
+                    </div>
                 </div>
-            </div>
+                <div style="width:24px;"></div>
+            </header>
 
-            <div class="chat-input-area">
-                <input type="text" id="chat-input" placeholder="Ask about tax, stocks, or risks..."
-                    onkeypress="if(event.key==='Enter') sendMessage()">
-                <button onclick="sendMessage()">➤</button>
-            </div>
+            <!-- 2. BODY (Chat History) -->
+            <main class="std-body" id="chat-history"
+                style="padding:15px; display:flex; flex-direction:column; gap:15px; background:#f4f4f5; overflow-y:auto; flex:1;">
+
+                <!-- Welcome Message -->
+                <div class="chat-msg system"
+                    style="align-self: flex-start; background:#fff; padding:12px 16px; border-radius: 0px 12px 12px 12px; font-size:0.9rem; color:#333; box-shadow:0 1px 3px rgba(0,0,0,0.05); max-width:85%;">
+                    <strong>Inspector Pandey here!</strong><br>
+                    I have analyzed your portfolio. I can explain the tax efficiency strategy or why your asset
+                    allocation looks risky. Ask me anything!
+                </div>
+            </main>
+
+            <!-- 3. FOOTER (Input) -->
+            <footer class="std-footer" style="padding:10px; height:auto; background:#fff; border-top:1px solid #eee;">
+                <div
+                    style="display:flex; width:100%; gap:10px; background:#f9f9f9; padding:8px; border-radius:25px; border:1px solid #e0e0e0;">
+                    <input type="text" id="chat-input" placeholder="Ask about tax, stocks, or risks..."
+                        style="flex:1; background:transparent; border:none; padding:5px 10px; font-family:inherit; font-size:0.95rem; outline:none;"
+                        onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button id="chat-send-btn" onclick="sendMessage()"
+                        style="width:36px; height:36px; background:var(--color-primary); color:#fff; border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold;">
+                        ➤
+                    </button>
+                </div>
+            </footer>
         </div>
     </div>
 

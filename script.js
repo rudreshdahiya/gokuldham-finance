@@ -159,23 +159,121 @@ function analyzeHabits() {
 // 3. PAGE 3: PERSONA REVEAL
 // ==========================================
 
+const PERSONA_TRIBES = {
+    "jethalal": ["abdul", "bagha"], "abdul": ["jethalal", "bagha"], // Strugglers
+    "babita": ["roshan", "daya"], "roshan": ["babita", "tapu"], "daya": ["babita", "anjali"], "tapu": ["roshan", "babita"], "komal": ["roshan", "daya"], "anjali": ["daya", "babita"], // Spenders
+    "bhide": ["popatlal", "madhavi"], "popatlal": ["bhide", "champaklal"], "madhavi": ["bhide", "sodhi"], "iyer": ["sodhi", "bhide"], "sodhi": ["iyer", "madhavi"], "champaklal": ["popatlal", "bhide"], // Savers
+    "mehta": ["iyer", "bhide"], "bagha": ["jethalal", "popatlal"] // Balanced
+};
+
 function renderPersonaPage(personaKey, clusterId) {
     const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['mehta'];
 
+    // 1. Basic Info
     document.getElementById("persona-name").innerText = pData.name.toUpperCase();
     document.getElementById("persona-desc").innerText = pData.quote;
-    // document.getElementById("persona-cluster").innerText = clusterId || "CLUSTER-X"; // Hidden per user request
 
-    // Image with Fallback and smooth load
+    // 2. Image
     const container = document.getElementById("persona-image-container");
-    const imgPath = pData.img || "assets/mehta.png"; // Fallback
-
+    const imgPath = pData.img || "assets/mehta.png";
     container.innerHTML = `<img src="${imgPath}" alt="${pData.name}" onerror="this.src='assets/mehta.png'">`;
+
+    // 3. WHY? (Reasoning)
+    // We get this from the last entry of the logic log, or generate a generic one.
+    // GLOBAL_STATE.personaData contains { key, log, effectiveSavings }
+    let reason = "Your spending habits match this profile.";
+    if (GLOBAL_STATE.personaData && GLOBAL_STATE.personaData.log && GLOBAL_STATE.personaData.log.length > 0) {
+        reason = GLOBAL_STATE.personaData.log[GLOBAL_STATE.personaData.log.length - 1];
+        // Clean up the log string for display
+        reason = reason.split("->")[0].trim(); // Take the part before "->"
+    }
+
+    const statContainer = document.querySelector(".persona-stat");
+    statContainer.innerHTML = `
+        <div style="margin-bottom:15px;">
+            <div style="font-size:0.7rem; font-weight:bold; color:var(--color-primary); letter-spacing:1px; margin-bottom:5px;">WHY THIS MATCH?</div>
+            <div style="font-family:var(--font-mono); font-size:0.85rem; color:#333;">"${reason}"</div>
+        </div>
+    `;
+
+    // 4. NEIGHBORS
+    const neighbors = PERSONA_TRIBES[personaKey] || ["mehta", "bhide"];
+    let neighborsHtml = `<div style="display:flex; justify-content:center; gap:15px; margin-top:10px;">`;
+
+    neighbors.forEach(nKey => {
+        const nData = DATA_ENGINE.PERSONAS[nKey];
+        if (nData) {
+            neighborsHtml += `
+            <div style="text-align:center; opacity:0.6;">
+                <img src="${nData.img}" style="width:40px; height:40px; border-radius:50%; border:2px solid #ddd;">
+                <div style="font-size:0.6rem; margin-top:3px; font-weight:bold;">${nData.name}</div>
+            </div>`;
+        }
+    });
+    neighborsHtml += `</div>`;
+
+    statContainer.innerHTML += `
+        <div style="border-top:1px dashed #ddd; margin-top:15px; padding-top:15px;">
+             <div style="font-size:0.7rem; font-weight:bold; color:#888; letter-spacing:1px; margin-bottom:10px;">CLOSEST MATCHES</div>
+             ${neighborsHtml}
+        </div>
+    `;
 }
 
 // ==========================================
 // 4. PAGE 4: CONTEXT (DEMOGRAPHICS)
 // ==========================================
+
+// Helper: Populate States
+function populateStates() {
+    const select = document.getElementById('input-state');
+    if (!select) return;
+
+    // Use DATA_ENGINE source of truth
+    const states = window.DATA_ENGINE ? window.DATA_ENGINE.ALL_STATES : [];
+
+    // Clear and Add Placeholder
+    select.innerHTML = `<option value="" disabled selected>-- Select Your State --</option>`;
+
+    states.forEach(state => {
+        const option = document.createElement("option");
+        option.value = state;
+        option.innerText = state.replace(/-/g, ' ').toUpperCase();
+        select.appendChild(option);
+    });
+}
+
+function updateStateContext() {
+    const state = document.getElementById("input-state").value;
+    const contextDiv = document.getElementById("state-context-display");
+
+    if (!state || !DATA_ENGINE.STATE_MULTIPLIERS[state]) {
+        contextDiv.style.display = "none";
+        return;
+    }
+
+    const mul = DATA_ENGINE.STATE_MULTIPLIERS[state];
+    const diff = Math.round((mul - 1.0) * 100);
+
+    let text = "";
+    let color = "#333";
+    let bg = "#f4f4f4";
+    let border = "#ddd";
+
+    if (diff > 0) {
+        text = `📈 Cost of Living is <strong>${Math.abs(diff)}% HIGHER</strong> than average.`;
+        color = "#c0392b"; bg = "#fadbd8"; border = "#e6b0aa"; // Red for high cost
+    } else {
+        text = `📉 Cost of Living is <strong>${Math.abs(diff)}% LOWER</strong> than average.`;
+        color = "#27ae60"; bg = "#d5f5e3"; border = "#a9dfbf"; // Green for low cost
+    }
+
+    contextDiv.innerHTML = text + ` (Rent & Food Impact)`;
+    contextDiv.style.display = "block";
+    contextDiv.style.color = color;
+    contextDiv.style.background = bg;
+    contextDiv.style.borderColor = border;
+}
 
 function updateGoals() {
     const age = document.getElementById("input-age").value;
@@ -190,22 +288,81 @@ function updateGoals() {
     // Use DATA_ENGINE
     const goalIds = DATA_ENGINE.GOALS_BY_AGE[ageKey] || DATA_ENGINE.GOALS_BY_AGE["18-25"];
 
-    goalIds.slice(0, 6).forEach(id => { // Limit to 6 for mobile UI
+    goalIds.slice(0, 6).forEach(id => {
         const goal = DATA_ENGINE.ALL_GOALS[id];
         const pill = document.createElement("div");
         pill.className = "goal-pill";
         pill.innerText = goal.label;
         pill.onclick = () => {
+            // Toggle Self
             pill.classList.toggle("active");
+
             // Limit 2
             const active = document.querySelectorAll(".goal-pill.active");
             if (active.length > 2) {
                 pill.classList.remove("active");
                 alert("Please select top 2 goals only.");
+                return;
             }
+
+            // Show Context
+            updateGoalContext();
         };
         container.appendChild(pill);
     });
+}
+
+function updateGoalContext() {
+    const activePills = document.querySelectorAll(".goal-pill.active");
+    const contextDiv = document.getElementById("goal-context-display");
+
+    if (activePills.length === 0) {
+        contextDiv.style.display = "none";
+        return;
+    }
+
+    // Capture the last clicked one (heuristic) or just avg the active ones
+    // For simplicity, let's show summary of the FIRST active goal
+    const goalLabel = activePills[0].innerText;
+    // Find ID by label (inverse lookup or iterate)
+    const goalEntry = Object.values(DATA_ENGINE.ALL_GOALS).find(g => g.label === goalLabel);
+
+    if (goalEntry) {
+        contextDiv.innerHTML = `
+            <strong>${goalEntry.label}:</strong> Avg Cost ${goalEntry.cost} over ${goalEntry.horizon} Term. <br>
+            <span style='font-size:0.75rem; color:#666;'>${goalEntry.primer}</span>
+         `;
+        contextDiv.style.display = "block";
+    }
+}
+
+// ==========================================
+// 6. STRATEGY ENGINE (PAGE 5 & 6)
+// ==========================================
+
+// NEW: Helper to determine Tenure
+function determineTenure(goals) {
+    if (!goals || goals.length === 0) return 10; // Default
+
+    let totalYears = 0;
+    let count = 0;
+
+    goals.forEach(gLabel => {
+        // Reverse lookup or search
+        const gEntry = Object.values(DATA_ENGINE.ALL_GOALS).find(g => g.label === gLabel);
+        if (gEntry) {
+            let y = 5; // Medium
+            if (gEntry.horizon.includes("Short")) y = 2;
+            else if (gEntry.horizon.includes("Long")) y = 15;
+            else y = 7;
+
+            totalYears += y;
+            count++;
+        }
+    });
+
+    const avg = Math.round(totalYears / count);
+    return Math.max(3, Math.min(30, avg)); // Clamp 3-30
 }
 
 function generateStrategy() {
@@ -221,17 +378,26 @@ function generateStrategy() {
 
     GLOBAL_STATE.demographics.goals = Array.from(activePills).map(p => p.innerText);
 
-    // 2. LOGIC STEP B: GENERATE RECOMMENDATION
-    // Call Python Backend (Optimization) or Fallback to Rule Engine
+    // NEW: Calculate Dynamic Tenure based on Goals
+    const tenure = determineTenure(GLOBAL_STATE.demographics.goals);
 
+    // Update UI elements if they exist (Page 5)
+    setTimeout(() => {
+        const tInput = document.getElementById("input-tenure");
+        const tVal = document.getElementById("tenure-val");
+        if (tInput) tInput.value = tenure;
+        if (tVal) tVal.innerText = tenure + " Years";
+    }, 500);
+
+    // 2. LOGIC STEP B: GENERATE RECOMMENDATION
     console.log("Generating Strategy...", GLOBAL_STATE);
-    goToPage(5); // Show Page 5 immediately with Loading States
+    goToPage(5);
 
     // Trigger Async Loaders
-    runAssetAllocationEngine();
+    runAssetAllocationEngine(tenure); // Pass calculated tenure
     runTaxOptimizer();
 
-    // Trigger Insights & Scenarios (V14)
+    // Trigger Insights & Scenarios
     setTimeout(() => {
         renderStrategyInsights(GLOBAL_STATE.persona);
         updateScenarioAnalysis();
@@ -239,37 +405,12 @@ function generateStrategy() {
 }
 
 // ==========================================
-// 5. DOCUMENT LOADING (STYLES & LISTENERS)
-// ==========================================
-
-document.addEventListener("DOMContentLoaded", () => {
-    initUI();
-});
-
-// Helper: Populate States
-function populateStates() {
-    const select = document.getElementById('input-state');
-    if (!select) return;
-
-    // Use DATA_ENGINE source of truth
-    const states = window.DATA_ENGINE ? window.DATA_ENGINE.ALL_STATES : [];
-
-    states.forEach(state => {
-        const option = document.createElement("option");
-        option.value = state;
-        option.innerText = state.replace(/-/g, ' ').toUpperCase();
-        select.appendChild(option);
-    });
-}
-
-// ==========================================
 // 6. STRATEGY ENGINE (PAGE 5 & 6)
 // ==========================================
 
-function runAssetAllocationEngine() {
+function runAssetAllocationEngine(horizonInput) {
     // 1. Prepare Payload
     // If we have AI persona, we use it. Else rule-based.
-    // For MVP, valid inputs: Age, Income, Risk (derived from Persona).
 
     // Heuristic Risk Score
     let risk = 2; // Moderate
@@ -277,11 +418,13 @@ function runAssetAllocationEngine() {
     if (["jethalal", "babita", "roshan", "daya", "tapu"].includes(pKey)) risk = 3;
     if (["bhide", "popatlal", "champaklal", "abdul"].includes(pKey)) risk = 1;
 
+    const horizon = horizonInput || 10;
+
     // Call Backend
     const presPayload = {
         age: parseInt(GLOBAL_STATE.demographics.age.split("-")[0]) || 30,
         income: GLOBAL_STATE.income,
-        horizon_years: 10, // Default for now, or calc from goals
+        horizon_years: horizon,
         risk_tolerance: risk
     };
 
@@ -319,43 +462,79 @@ function renderAllocationChart(data) {
     // Destroy old if exists
     if (window.allocChartInstance) window.allocChartInstance.destroy();
 
+    // Design System Colors: Equity (Emerald), Debt (Blue), Gold (Yellow)
+    const dsColors = ['#10b981', '#3b82f6', '#f59e0b'];
+
     window.allocChartInstance = new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut', // Better than Pie
         data: {
             labels: ['Equity (Growth)', 'Debt (Safety)', 'Gold (Hedge)'],
             datasets: [{
                 data: [data.equity, data.debt, data.gold],
-                backgroundColor: ['#2ecc71', '#3498db', '#f1c40f'],
-                borderWidth: 0
+                backgroundColor: dsColors,
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverOffset: 4
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom', labels: { color: '#333' } }
-            }
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Inter', size: 12 },
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            },
+            cutout: '60%' // Modern look
         }
     });
 
     // Details Text
     const details = document.getElementById("allocation-details");
     details.innerHTML = `
-        <div class="allocation-item">
-            <span><strong>Equity</strong> (Nifty 50/Midcap)</span>
-            <span>${data.equity}%</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
+            <span style="color:${dsColors[0]};">● Equity</span>
+            <strong>${data.equity}%</strong>
         </div>
-        <div class="allocation-item">
-            <span><strong>Debt</strong> (PPF/Bonds)</span>
-            <span>${data.debt}%</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
+            <span style="color:${dsColors[1]};">● Debt</span>
+            <strong>${data.debt}%</strong>
         </div>
-        <div class="allocation-item">
-            <span><strong>Gold</strong> (SGB/Digital)</span>
-            <span>${data.gold}%</span>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.9rem;">
+            <span style="color:${dsColors[2]};">● Gold</span>
+            <strong>${data.gold}%</strong>
         </div>
-        <p style="font-size:0.9em; color:#666; margin-top:10px; font-style:italic;">
-            Strategy: "${data.reco || "AI Generated"}"
-        </p>
+        <div style="margin-top:15px; padding:10px; background:#f9f9f9; border-left:4px solid var(--color-primary); font-size:0.85rem; color:#555; line-height:1.4;">
+            <em>Strategy: "${data.reco || "AI Generated"}"</em>
+        </div>
     `;
+}
+// ...
+// ...
+function renderStrategyInsights(personaKey) {
+    // ...
+    // ...
+    const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['mehta'];
+
+    // Personalized Nudge based on Ruler/Traits
+    const nudge = `Since you are ruled by <strong>${pData.ruler}</strong> (` + pData.traits.join(", ") + `), your strategy balances your natural tendency to <em>${pData.role.split("The ")[1]}</em>.`;
+
+    document.getElementById("strategy-pros").innerHTML = `<li>${nudge}</li><li><strong>Why this works:</strong> Matches your ${GLOBAL_STATE.demographics.goals.length} goals with a ${document.getElementById("input-tenure").value}Y Horizon.</li>`;
+
+    // Risk Warning personalized
+    let riskWarn = "Market Volatility";
+    if (pData.traits.includes("High Risk")) riskWarn = "Over-exposure to Sectoral Bets";
+    if (pData.traits.includes("Fearful")) riskWarn = "Inflation eroding idle cash";
+
+    document.getElementById("strategy-cons").innerHTML = `<li><strong>Watch out for:</strong> ${riskWarn}.</li>`;
+
+    // Market Context
+    document.getElementById("market-assumption").innerHTML = `Bullish (Nifty PE 22.5)`;
 }
 
 function runTaxOptimizer() {
@@ -376,41 +555,41 @@ function runTaxOptimizer() {
     // 3. Fallback Logic (Local Heuristic)
     const runFallback = () => {
         console.warn("Using Local Tax Heuristics.");
-        // Simple Logic: Fill 1.5L 80C first
-        // Split: ELSS (60%), PPF (40%) for younger; PPF (100%) for risk averse.
+        // Logic: 
+        // 1. 80C Limit = 1.5L
+        // 2. Existing Probable Investments (EPF/Life Insurance) = ~5% of Income
+        const existing80C = Math.round(income * 0.05);
+        const gap80C = Math.max(0, 150000 - existing80C);
 
         let elss = 0, ppf = 0, insurance = 0;
-        const limit80C = 150000;
 
-        // Capacity check
-        const capacity = Math.min(invAmount, limit80C);
-
-        if (GLOBAL_STATE.persona === "bhide" || GLOBAL_STATE.persona === "popatlal") {
-            ppf = capacity; // Safety first
-        } else {
-            elss = capacity * 0.6; // Growth
-            ppf = capacity * 0.4;
+        if (gap80C > 0) {
+            // Allocate Gap
+            if (GLOBAL_STATE.persona === "bhide" || GLOBAL_STATE.persona === "popatlal") {
+                ppf = gap80C; // Risk Averse -> PPF
+            } else {
+                elss = Math.round(gap80C * 0.7); // Growth -> ELSS
+                ppf = gap80C - elss;
+            }
         }
 
         // Render Fallback
-        let html = `<div style="margin-bottom:10px; color:#27ae60; font-weight:bold;">Strategy: Maximize 80C (₹1.5L)</div>`;
+        let html = `<div style="margin-bottom:10px; color:#27ae60; font-weight:bold;">Strategy: Fill ₹${(gap80C / 1000).toFixed(0)}k 80C Gap</div>`;
 
-        html += `
-            <div class="tax-row">
-                <span>ELSS (Tax Saver Fund)</span>
-                <span>₹${(elss / 1000).toFixed(0)}k</span>
-            </div>
-            <div class="tax-row">
-                <span>PPF / EPF</span>
-                <span>₹${(ppf / 1000).toFixed(0)}k</span>
-            </div>
-             <div class="tax-row">
-                <span>Term Insurance</span>
-                <span>₹15k</span>
-            </div>
-        `;
+        if (gap80C === 0) {
+            html += `<div style="color:#555; font-size:0.9rem;">Great job! Your Section 80C (₹1.5L) is likely covered by EPF/Insurance. Focus on Wealth Creation (Equity) now.</div>`;
+        } else {
+            if (elss > 0) html += `<div class="tax-row"><span>ELSS (Tax Saver)</span><span>₹${(elss / 1000).toFixed(0)}k</span></div>`;
+            if (ppf > 0) html += `<div class="tax-row"><span>PPF / EPF Vol</span><span>₹${(ppf / 1000).toFixed(0)}k</span></div>`;
 
-        html += `<div style="font-size:0.8em; color:#888; margin-top:5px;">Projected Tax Saved: ₹${(capacity * 0.3).toFixed(0)} (Old Regime)</div>`;
+            // Add Term Insurance heuristic if Age < 40
+            const ageVal = parseInt(GLOBAL_STATE.demographics.age) || 30;
+            if (ageVal < 40) {
+                html += `<div class="tax-row"><span>Term Insurance</span><span>₹15k</span></div>`;
+            }
+
+            html += `<div style="font-size:0.8em; color:#888; margin-top:5px;">Projected Tax Saved: ₹${(gap80C * 0.3).toFixed(0)} (Old Regime)</div>`;
+        }
         container.innerHTML = html;
     };
 
@@ -638,99 +817,110 @@ function renderStrategyInsights(personaKey) {
 let scenarioChartInstance = null;
 
 function updateScenarioAnalysis() {
-    // 1. Get Tenure
-    const tenureInput = document.getElementById("input-tenure");
-    if (!tenureInput) return;
+    // 1. Get Params
+    const tenure = parseInt(document.getElementById("input-tenure").value) || 10;
+    document.getElementById("tenure-val").innerText = tenure + " Years";
 
-    const tenure = parseInt(tenureInput.value);
-    document.getElementById("tenure-val").innerText = `${tenure} Years`;
+    // Monthly SIP based on 20% savings of Income
+    const income = GLOBAL_STATE.income || 50000;
+    const monthlySIP = Math.round(income * 0.2);
 
-    // 2. Assumptions (CAGR)
-    // Simplified: Assume 60/30/10 split if no algo run yet
-    // Equity: 12%, Debt: 7%, Gold: 8%
-    const wReturn = (0.6 * 12) + (0.3 * 7) + (0.1 * 8); // ~10.1%
+    // Allocation Logic (or Default 50/30/20)
+    const alloc = GLOBAL_STATE.recommendation || { equity: 50, debt: 30, gold: 20 };
 
-    const rates = {
-        worst: wReturn - 4, // ~6%
-        base: wReturn,      // ~10%
-        best: wReturn + 4   // ~14%
-    };
+    // 2. Returns Assumptions (Real Rates)
+    const R_EQUITY = 0.12;
+    const R_DEBT = 0.07;
+    const R_GOLD = 0.08;
 
-    // 3. Compute Future Value (FV)
-    const principal = GLOBAL_STATE.income || 50000;
-    const sip = (GLOBAL_STATE.alloc.savings / 100) * principal; // Monthly SIP
+    // Weighted Avg Monthly Return
+    const wRateAnnual = ((alloc.equity * R_EQUITY) + (alloc.debt * R_DEBT) + (alloc.gold * R_GOLD)) / 100;
 
-    // Future Value of SIP: P * [ (1+i)^n - 1 ] / i * (1+i)
-    const fv = (r, years) => {
-        const i = r / 12 / 100;
-        const n = years * 12;
-        return Math.round(sip * ((Math.pow(1 + i, n) - 1) / i) * (1 + i));
-    };
+    // 3. Scenarios (CAGR Deviations)
+    const deviation = 0.04; // +/- 4%
 
-    const data = [
-        fv(rates.worst, tenure),
-        fv(rates.base, tenure),
-        fv(rates.best, tenure)
-    ];
+    // FV Calculation: P * [ (1+r)^n - 1 ] * (1+r)/r
+    function calculateCorpus(rateAnnual) {
+        const months = tenure * 12;
+        const r = rateAnnual / 12;
+        const corpus = monthlySIP * ((Math.pow(1 + r, months) - 1) * (1 + r) / r);
+        return Math.round(corpus / 100000); // Return in Lakhs
+    }
+
+    const investedL = Math.round((monthlySIP * 12 * tenure) / 100000);
+    const bearL = calculateCorpus(wRateAnnual - deviation);
+    const baseL = calculateCorpus(wRateAnnual);
+    const bullL = calculateCorpus(wRateAnnual + deviation);
 
     // 4. Render Chart
     const ctx = document.getElementById('scenarioChart');
     if (!ctx) return;
 
-    if (scenarioChartInstance) {
-        scenarioChartInstance.destroy();
-    }
+    if (scenarioChartInstance) scenarioChartInstance.destroy();
 
     scenarioChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'bar',
         data: {
-            labels: ['Bear (-4%)', 'Base', 'Bull (+4%)'],
-            datasets: [{
-                label: `Projected Wealth (Units of ₹)`,
-                data: data,
-                backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71'],
-                borderRadius: 4,
-                barThickness: 40
-            }]
+            labels: ['Bear (Poor)', 'Base (Expected)', 'Bull (Great)'],
+            datasets: [
+                {
+                    label: 'Principal Invested',
+                    data: [investedL, investedL, investedL],
+                    backgroundColor: '#bdc3c7',
+                    stack: 'Stack 0'
+                },
+                {
+                    label: 'Wealth Gained',
+                    data: [bearL - investedL, baseL - investedL, bullL - investedL],
+                    backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71'],
+                    stack: 'Stack 0'
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
                 tooltip: {
                     callbacks: {
                         label: function (context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed.y !== null) {
-                                label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumSignificantDigits: 3 }).format(context.parsed.y);
-                            }
-                            return label;
+                            return context.dataset.label + ': ₹' + context.raw + ' Lakhs';
+                        },
+                        footer: function (tooltipItems) {
+                            const total = tooltipItems.reduce((a, e) => a + e.raw, 0);
+                            return 'Total Corpus: ₹' + total + ' Lakhs';
                         }
                     }
-                }
+                },
+                legend: { position: 'bottom' }
             },
             scales: {
                 y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: '#666',
-                        callback: function (value) { return '₹' + (value / 100000).toFixed(0) + 'L'; }
-                    },
-                    grid: { color: '#eee' }
+                    stacked: true,
+                    title: { display: true, text: 'Corpus (₹ Lakhs)' },
+                    ticks: { callback: v => '₹' + v + 'L' }
                 },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#333', font: { weight: 'bold' } }
-                }
+                x: { stacked: true }
             }
         }
     });
 
-    // TRIGGER DAISY CHAIN (Tax & Rebalancing)
+    // 5. Context
+    const legendDiv = document.querySelector(".scenario-legend");
+    if (legendDiv) {
+        legendDiv.innerHTML = `
+            <div style="margin-top:15px; font-size:0.8rem; color:#666; text-align:left; background:#f9f9f9; padding:10px; border-radius:4px;">
+                <div><strong>Wealth Context:</strong></div>
+                <ul style="margin:5px 0 0 15px; padding:0;">
+                    <li>Invested: <strong>₹${investedL} Lakhs</strong> (via ₹${(monthlySIP / 1000).toFixed(1)}k SIP)</li>
+                    <li>Weighted Return: <strong>${(wRateAnnual * 100).toFixed(1)}%</strong> (based on your mix)</li>
+                    <li>Bull Case: <strong>₹${bullL} Lakhs</strong> @ ${(wRateAnnual * 100 + 4).toFixed(1)}%</li>
+                </ul>
+            </div>
+        `;
+    }
+
+    // TRIGGER DAISY CHAIN
     if (typeof renderTaxWiseWithdrawal === "function") renderTaxWiseWithdrawal();
     if (typeof updateRebalancingSchedule === "function") updateRebalancingSchedule(tenure);
 }
