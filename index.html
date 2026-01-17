@@ -14,9 +14,6 @@
 <body>
 
     <!-- ==============================================
-         SCREEN 1: SPLASH (THE HOOK)
-         ============================================== -->
-    <!-- ==============================================
          SCREEN 1: ABDUL'S SHOP (SPLASH)
          ============================================== -->
     <div id="ui-splash" class="ui-screen">
@@ -60,71 +57,69 @@
                         Sign In</button>
                 </div>
             </div>
+
             <div class="terminal-body">
-                <div class="console-log">
-                    <span class="green">> SYSTEM:</span> Initializing Finance Engine...<br>
-                    <span class="green">> STATE:</span> Waiting for user inputs...<br>
-                    <span class="blue">> INFO:</span> Ideally, this data comes from your AA (Account Aggregator). For
-                    now, tell us your estimates.<br><br>
-                </div>
+                <form id="finance-form" class="bento-grid">
 
-                <form id="finance-form">
-                    <!-- 1. PERSONAL DETAILS -->
-                    <div class="form-group-row">
-                        <div class="form-group">
-                            <label>AGE BRACKET</label>
-                            <select id="input-age" onchange="updateGoals()">
-                                <option value="18-22">18 - 22 (Student)</option>
-                                <option value="22-28">22 - 28 (Young Pro)</option>
-                                <option value="29-39" selected>29 - 39 (Mid Career)</option>
-                                <option value="40-60">40 - 60 (Pre-Retire)</option>
-                                <option value="60+">60+ (Retired)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>STATE (For Inflation Index)</label>
-                            <select id="input-state">
-                                <!-- Populated via JS -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>MONTHLY INCOME (₹)</label>
-                        <input type="number" id="input-monthly-income" placeholder="e.g. 100000"
-                            oninput="updateTotal()">
-                    </div>
-
-                    <div class="form-group">
-                        <label>FINANCIAL GOALS (Select Multiple)</label>
-                        <div id="goal-pills-container" class="goal-pills-wrapper">
-                            <!-- Dynamic Content injected by JS -->
-                        </div>
-                        <div id="goal-primers" class="primer-text">Hover over a goal to see details.</div>
-                    </div>
-
-                    <div class="divider"></div>
-                    <div class="section-title">MONTHLY SPEND BREAKDOWN (%)</div>
-                    <div class="section-subtitle">Allocate your income in percentages. Total must be 100%.</div>
-
-                    <div class="split-view">
-                        <div class="left-inputs">
-                            <!-- GPAY STYLE LEDGER -->
-                            <div class="ledger-container" id="transaction-ledger">
-                                <!-- Dynamic Expense Rows Injected Here -->
-                                <div class="txn-placeholder">Loading your passbook...</div>
+                    <!-- BOX 1: IDENTITY (Top Left) -->
+                    <div class="bento-identity bento-box">
+                        <div class="section-title">PROFILE</div>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label>AGE BRACKET</label>
+                                <select id="input-age" onchange="updateGoals()">
+                                    <option value="18-22">18 - 22 (Student)</option>
+                                    <option value="22-28">22 - 28 (Young Pro)</option>
+                                    <option value="29-39" selected>29 - 39 (Mid Career)</option>
+                                    <option value="40-60">40 - 60 (Pre-Retire)</option>
+                                    <option value="60+">60+ (Retired)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>STATE</label>
+                                <select id="input-state">
+                                    <!-- Populated via JS -->
+                                </select>
                             </div>
                         </div>
 
-                        <div class="right-vis">
-                            <div class="chart-container">
-                                <canvas id="spendChart"></canvas>
+                        <div class="form-group">
+                            <label>MONTHLY INCOME (₹)</label>
+                            <input type="number" id="input-monthly-income" placeholder="e.g. 100000"
+                                oninput="updateTotal()">
+                        </div>
+
+                        <div class="form-group">
+                            <label>FINANCIAL GOALS</label>
+                            <div id="goal-pills-container" class="goal-pills-wrapper">
+                                <!-- Dynamic Content injected by JS -->
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- BOX 2: VISUALS (Top Right) -->
+                    <div class="bento-visuals bento-box">
+                        <div class="chart-container">
+                            <canvas id="spendChart"></canvas>
+                        </div>
+                        <div class="total-stats">
                             <div class="total-status" id="total-display">TOTAL: 100%</div>
-                            <button type="button" class="btn-process"
-                                onclick="analyzeProfile()">RUN_DIAGNOSTIC_V10.1</button>
+                        </div>
+                        <button type="button" class="btn-process" onclick="analyzeProfile()">RUN DIAGNOSTIC</button>
+                    </div>
+
+                    <!-- BOX 3: LEDGER (Bottom) -->
+                    <div class="bento-ledger bento-box">
+                        <div class="ledger-header">
+                            <div class="section-title">MONTHLY SPEND BREAKDOWN (%)</div>
+                            <div class="section-subtitle">Allocate your income. Total must be 100%.</div>
+                        </div>
+                        <div class="ledger-container" id="transaction-ledger">
+                            <!-- Dynamic Expense Rows Injected Here -->
+                            <div class="txn-placeholder">Loading your passbook...</div>
                         </div>
                     </div>
+
                 </form>
             </div>
         </div>
@@ -159,14 +154,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
     <!-- SUPABASE SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- STACK AUTH SDK (Using global bundle if available, otherwise we might need a workaround or simple fetch) -->
-    <!-- Note: Stack Auth usually requires a bundler. For vanilla JS, we might fallback to basic fetch or assume simple layout -->
+    <!-- STACK AUTH SDK -->
     <script src="https://unpkg.com/@stackframe/js-core"></script>
 
     <!-- ANALYTICS: Google Analytics -->
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7GNSKT9D0R"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -175,10 +169,6 @@
 
         gtag('config', 'G-7GNSKT9D0R');
     </script>
-
-
-    <!-- SUPABASE SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- ANALYTICS: Microsoft Clarity -->
     <script type="text/javascript">
@@ -203,7 +193,7 @@
             });
         };
     </script>
-    <script src="crash_reporter.js"></script>
+
     <script src="data_engine.js"></script>
     <script src="macro_data.js"></script>
     <script src="telemetry.js"></script>
