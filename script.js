@@ -829,48 +829,78 @@ function sendMessage() {
 }
 
 // ==========================================
-// 9. TAX EFFICIENCY ENGINE (NEW V15)
+// 9. TAX EFFICIENCY ENGINE (PERSONALIZED)
 // ==========================================
 function renderTaxWiseWithdrawal() {
     const rules = window.DATA_ENGINE.TAX_RULES_2024;
     if (!rules) return;
 
     const container = document.getElementById("tax-withdrawal-content");
-    if (!container) return; // Need to create this DIV in HTML next
+    if (!container) return;
+
+    // === PERSONALIZATION INPUTS ===
+    const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
+    const income = GLOBAL_STATE.income || 50000;
+    const goals = GLOBAL_STATE.demographics.goals || [];
+    const tenure = parseInt(document.getElementById("input-tenure")?.value) || 10;
+
+    // Determine tax bracket (simplified Indian slab)
+    const annualIncome = income * 12;
+    let taxBracket = "30%"; // Default
+    if (annualIncome < 500000) taxBracket = "5%";
+    else if (annualIncome < 1000000) taxBracket = "20%";
+
+    // Check for short-term goals
+    const hasShortGoal = tenure < 5 || goals.some(g => g.includes("Wedding") || g.includes("Car") || g.includes("Vacation"));
 
     let html = `
-        <div style="font-family: 'Space Mono', monospace; font-size: 0.8rem; margin-bottom: 15px; color: #555;">
+        <div style="font-family: 'Space Mono', monospace; font-size:0.75rem; margin-bottom: 15px; color:var(--color-text-muted); background:var(--color-bg); padding:8px; border-radius:4px;">
             SMART REDEMPTION ORDER (To minimize tax):
         </div>
-        <div class="withdrawal-grid">
-            <div class="w-card">
-                <div class="w-header equity">1. EQUITY (Long Term)</div>
-                <div class="w-body">
-                    <div class="w-row"><span>Wait:</span> <strong>> 1 Year</strong></div>
-                    <div class="w-row"><span>Tax:</span> <strong>12.5%</strong></div>
-                    <div class="w-note">${rules.equity.exemption}</div>
+        <div class="withdrawal-grid" style="display:grid; gap:10px; margin-bottom:15px;">
+            <div class="w-card" style="background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:4px; padding:12px;">
+                <div class="w-header equity" style="font-weight:bold; margin-bottom:8px; color:#27ae60;">1. EQUITY (Long Term)</div>
+                <div class="w-body" style="font-size:0.8rem; color:var(--color-text-main);">
+                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Wait:</span> <strong>> 1 Year</strong></div>
+                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Tax:</span> <strong>12.5%</strong></div>
+                    <div class="w-note" style="font-size:0.7rem; color:var(--color-text-muted); margin-top:5px;">${rules.equity.exemption}</div>
                 </div>
             </div>
-            <div class="w-card">
-                <div class="w-header gold">2. GOLD (Long Term)</div>
-                <div class="w-body">
-                    <div class="w-row"><span>Wait:</span> <strong>> 2 Years</strong></div>
-                    <div class="w-row"><span>Tax:</span> <strong>12.5%</strong></div>
-                    <div class="w-note">New Rule (Budget '24)</div>
+            <div class="w-card" style="background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:4px; padding:12px;">
+                <div class="w-header gold" style="font-weight:bold; margin-bottom:8px; color:#f39c12;">2. GOLD (Long Term)</div>
+                <div class="w-body" style="font-size:0.8rem; color:var(--color-text-main);">
+                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Wait:</span> <strong>> 2 Years</strong></div>
+                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Tax:</span> <strong>12.5%</strong></div>
+                    <div class="w-note" style="font-size:0.7rem; color:var(--color-text-muted); margin-top:5px;">New Rule (Budget '24)</div>
                 </div>
             </div>
-            <div class="w-card">
-                <div class="w-header debt">3. DEBT (Emergency)</div>
-                <div class="w-body">
-                    <div class="w-row"><span>Wait:</span> <strong>Any Time</strong></div>
-                    <div class="w-row"><span>Tax:</span> <strong>Slab Rate</strong></div>
-                    <div class="w-note">Use for liquidity only</div>
+            <div class="w-card" style="background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:4px; padding:12px;">
+                <div class="w-header debt" style="font-weight:bold; margin-bottom:8px; color:#3498db;">3. DEBT (Emergency)</div>
+                <div class="w-body" style="font-size:0.8rem; color:var(--color-text-main);">
+                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Wait:</span> <strong>Any Time</strong></div>
+                    <div class="w-row" style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Tax:</span> <strong>Slab Rate (${taxBracket})</strong></div>
+                    <div class="w-note" style="font-size:0.7rem; color:var(--color-text-muted); margin-top:5px;">Use for liquidity only</div>
                 </div>
             </div>
         </div>
-        
-        <div style="background:#fff3cd; padding:10px; border-radius:4px; margin-top:15px; font-size:0.8rem; border-left:4px solid #f1c40f;">
-            <strong>💡 Pro Tip:</strong> If you need cash, sell assets with <em>Losses</em> first (Tax Harvesting), then Equity < ₹1.25L gain.
+        `;
+
+    // === PERSONALIZED PRO TIP ===
+    let proTip = "";
+
+    if (alloc.equity > 60) {
+        proTip = `Your ${alloc.equity}% equity allocation means most wealth will be taxed as LTCG (12.5%). Minimize withdrawals before 1-year holding period.`;
+    } else if (hasShortGoal) {
+        proTip = `Since you have short-term goals (${tenure}Y), prioritize debt withdrawals to avoid selling equity during market dips.`;
+    } else if (alloc.debt < 20) {
+        proTip = `Your low debt allocation (${alloc.debt}%) means emergency needs will force equity sales. Consider keeping ₹${(income * 6 / 1000).toFixed(0)}k (6 months) in liquid funds.`;
+    } else {
+        proTip = `If you need cash, sell assets with <em>Losses</em> first (Tax Harvesting), then Equity < ₹1.25L gain.`;
+    }
+
+    html += `
+        <div style="background:#fff3cd; padding:12px; border-radius:4px; margin-top:10px; font-size:0.8rem; border-left:4px solid #f1c40f; color:#856404;">
+            <strong>💡 Pro Tip (For You):</strong> ${proTip}
         </div>
     `;
 
@@ -878,46 +908,79 @@ function renderTaxWiseWithdrawal() {
 }
 
 // ==========================================
-// 10. DYNAMIC REBALANCING LOGIC (V16)
+// 10. DYNAMIC REBALANCING LOGIC (PERSONALIZED)
 // ==========================================
 function updateRebalancingSchedule(tenureYears) {
     const container = document.getElementById("rebalancing-content");
     if (!container) return;
 
-    // Logic Factors
+    // === PERSONALIZATION INPUTS ===
     const pKey = GLOBAL_STATE.persona || "mehta";
-    const isHighRisk = ["jethalal", "babita", "roshan"].includes(pKey);
+    const pData = DATA_ENGINE.PERSONAS[pKey] || DATA_ENGINE.PERSONAS['mehta'];
+    const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
+    const isHighRisk = ["jethalal", "babita", "roshan", "daya"].includes(pKey);
+    const isLowRisk = ["bhide", "popatlal", "champaklal", "madhavi"].includes(pKey);
     const isShortTerm = tenureYears < 5;
 
+    // === DETERMINE FREQUENCY ===
     let frequency = "Yearly";
-    let logic = "Long-term compounding needs patience. Excessive churning hurts returns.";
+    let logic = "";
     let dateOffsetMonths = 12;
+    let deviationTrigger = "5%";
 
     if (isShortTerm) {
         frequency = "Quarterly";
-        logic = "Short tenure (< 5y) requires tight risk management to protect capital.";
+        logic = `Your short ${tenureYears}-year horizon requires tight risk control. Review every 3 months to protect capital near goal date.`;
         dateOffsetMonths = 3;
+        deviationTrigger = "3%";
     } else if (isHighRisk) {
         frequency = "Semi-Annually";
-        logic = "High-risk portfolio needs containment. Rebalance if equity deviates > 5%.";
+        logic = `As a ${pData.name}-type (high-risk taker), your portfolio needs containment. Rebalance every 6 months to avoid over-concentration.`;
         dateOffsetMonths = 6;
+        deviationTrigger = "5%";
+    } else if (isLowRisk) {
+        frequency = "Yearly";
+        logic = `Your conservative ${pData.name} approach benefits from patience. Annual rebalancing avoids excessive churning and tax events.`;
+        dateOffsetMonths = 12;
+        deviationTrigger = "7%";
+    } else {
+        frequency = "Yearly";
+        logic = `Balanced portfolios perform best with minimal intervention. Review once a year to maintain discipline.`;
+        dateOffsetMonths = 12;
+        deviationTrigger = "5%";
     }
 
+    // Calculate next review date
     const nextDate = new Date();
     nextDate.setMonth(nextDate.getMonth() + dateOffsetMonths);
 
     container.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <span style="font-size:0.9rem; color:#555;">Frequency:</span>
-            <span style="font-weight:bold; color:#d35400;">${frequency}</span>
+        <div style="background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:4px; padding:15px; color:var(--color-text-main);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; padding-bottom:10px; border-bottom:1px dashed var(--color-border);">
+                <span style="font-size:0.85rem; color:var(--color-text-muted);">Frequency:</span>
+                <span style="font-weight:bold; color:var(--color-primary); font-size:0.95rem;">${frequency}</span>
+            </div>
+            
+            <div style="background:var(--color-bg); border-left:4px solid var(--color-accent); padding:10px; border-radius:4px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.8rem;">
+                    <span style="color:var(--color-text-muted);">Next Review Date:</span>
+                    <span style="font-weight:bold; color:var(--color-text-main);">${nextDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                    <span style="color:var(--color-text-muted);">Trigger:</span>
+                    <span style="font-weight:bold; color:var(--color-text-main);">If Equity drifts >${deviationTrigger} from ${alloc.equity}%</span>
+                </div>
+            </div>
+            
+            <div style="font-size:0.75rem; color:var(--color-text-muted); line-height:1.6; font-style:italic; background:var(--color-bg); padding:10px; border-radius:4px;">
+                <strong style="color:var(--color-text-main);">Why ${frequency}?</strong><br>
+                ${logic}
+            </div>
+            
+            <div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--color-border); font-size:0.7rem; color:var(--color-text-muted);">
+                <strong style="color:var(--color-primary);">How to Rebalance:</strong> If Equity > ${alloc.equity + parseInt(deviationTrigger)}%, sell equity funds and buy debt/gold to restore ${alloc.equity}/${alloc.debt}/${alloc.gold} ratio.
+            </div>
         </div>
-        <div class="tax-row" style="background:#fff3e0; border-left:4px solid #f39c12;">
-            <span>Next Review Date</span>
-            <span>${nextDate.toLocaleDateString()}</span>
-        </div>
-        <p style="font-size:0.8rem; color:#666; margin-top:10px; font-style:italic;">
-            <strong>Why?</strong> ${logic}
-        </p>
     `;
 }
 
