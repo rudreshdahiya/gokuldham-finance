@@ -347,33 +347,325 @@ input[type=range]::-webkit-slider-thumb {
     box-shadow: 0 4px 0 #000;
 }
 
-/* MOBILE BENTO (Stack Everything) */
-@media screen and (max-width: 768px) {
-    .bento-grid {
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-        /* Scroll the whole page on mobile */
-        padding-bottom: 40px;
+/* ==========================================================================
+   V2.0: MOBILE FIRST "GOOGLE BANK" THEME
+   ========================================================================== */
+
+.mobile-container {
+    width: 100%;
+    max-width: 480px;
+    /* Mobile width constraint */
+    height: 100vh;
+    background: #121212;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    position: relative;
+    border-left: 1px solid #333;
+    border-right: 1px solid #333;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+/* PAGE 1: SPLASH EXTENSIONS */
+.mission-badge {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    /* Modern font fallback */
+    font-size: 0.9rem;
+    color: #aeaeae;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+/* PAGE 2: UPI RECEIPT */
+.receipt-paper {
+    background: #fff;
+    color: #000;
+    font-family: 'Courier New', monospace;
+    border-top: 10px solid #e0e0e0;
+    /* Perforation effect top */
+    border-bottom: 10px solid #e0e0e0;
+    /* Perforation effect bottom */
+    position: relative;
+    height: auto;
+    min-height: 80vh;
+    margin-top: 5vh;
+    border-radius: 5px;
+}
+
+.receipt-header {
+    text-align: center;
+    border-bottom: 2px dashed #000;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.receipt-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.currency-input {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #000;
+    margin-bottom: 20px;
+}
+
+.currency-input span {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.currency-input input {
+    border: none;
+    background: transparent;
+    font-size: 2rem;
+    color: #000;
+    width: 100%;
+    text-align: right;
+    font-family: 'Courier New', monospace;
+}
+
+.currency-input input:focus {
+    outline: none;
+}
+
+.slider-group {
+    margin-bottom: 20px;
+}
+
+.slider-group label {
+    color: #555;
+    font-size: 1rem;
+}
+
+.slider-group span {
+    float: right;
+    font-weight: bold;
+}
+
+.total-check {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    padding: 10px;
+    background: #eee;
+}
+
+.btn-primary {
+    background: #000;
+    color: #fff;
+    border: none;
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2rem;
+    font-family: 'Courier New', monospace;
+    margin-top: 20px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.2s;
+}
+
+.btn-primary:active {
+    background: #333;
+}
+
+.btn-secondary {
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-family: var(--pixel-font);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: #666;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 15px;
+    display: block;
+    width: 100%;
+}
+
+/* PAGE 3: PERSONA CARD */
+.persona-card {
+    text-align: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
+    color: #fff;
+    border: 4px solid #f1c40f;
+}
+
+.persona-header {
+    font-size: 1.5rem;
+    color: #f1c40f;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+}
+
+#persona-name {
+    font-size: 3rem;
+    color: var(--soda-green);
+    margin: 10px 0;
+}
+
+#persona-desc {
+    font-size: 1.2rem;
+    color: #ddd;
+    font-style: italic;
+    margin-bottom: 30px;
+}
+
+.persona-stat {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-family: 'Courier New', monospace;
+}
+
+/* PAGE 5: RESULT CARDS */
+.result-scroll {
+    background: #f5f5f5;
+    /* Light mode for professional report feel */
+    color: #333;
+}
+
+.result-scroll .card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.result-scroll h2,
+.result-scroll h3 {
+    color: #2c3e50;
+    margin-top: 0;
+}
+
+.result-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.allocation-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.tax-row {
+    background: #e8f5e9;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    border-left: 4px solid #4CAF50;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* PAGE 6: CHAT */
+.chat-interface {
+    background: #fff;
+    color: #000;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    background: #f8f9fa;
+}
+
+.chat-avatar {
+    font-size: 2rem;
+    margin-right: 10px;
+}
+
+.chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f1f3f4;
+}
+
+.chat-msg {
+    padding: 10px 15px;
+    border-radius: 18px;
+    margin-bottom: 10px;
+    max-width: 80%;
+}
+
+.chat-msg.system {
+    background: #fff;
+    margin-right: auto;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.chat-msg.user {
+    background: #d2e3fc;
+    margin-left: auto;
+    text-align: right;
+}
+
+.chat-input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #eee;
+    background: #fff;
+}
+
+.chat-input-area input {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.chat-input-area button {
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+/* LOADING STATES */
+.loading-text {
+    color: #777;
+    font-style: italic;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
     }
 
-    .bento-box {
-        overflow: visible;
-        flex-shrink: 0;
-        margin-bottom: 15px;
+    50% {
+        opacity: 1;
     }
 
-    .chart-container {
-        height: 250px;
-    }
-
-    .ledger-container {
-        overflow-y: visible;
-        max-height: none;
-    }
-
-    /* Ensure body scrolls */
-    .terminal-body {
-        overflow-y: auto;
+    100% {
+        opacity: 0.5;
     }
 }

@@ -16,18 +16,20 @@
     <!-- ==============================================
          SCREEN 1: ABDUL'S SHOP (SPLASH)
          ============================================== -->
-    <div id="ui-splash" class="ui-screen">
+    <!-- ==============================================
+         Page 1: INTRO (Splash)
+         ============================================== -->
+    <div id="ui-page-1" class="ui-screen">
         <div class="splash-content">
-            <h1 style="font-size: 6rem; margin-bottom: 0;">GOKULDHAM</h1>
+            <h1 style="font-size: 5rem; margin-bottom: 0;">GOKULDHAM</h1>
             <div class="subtitle">TRUST BANK</div>
-            <p style="font-size: 1.5rem; color: #ccc; margin: 20px 0;">"Sahi Investment, Sahi Future!"</p>
+            <p style="font-size: 1.2rem; color: #ccc; margin: 20px 0;">"Sahi Investment, Sahi Future!"</p>
 
-            <div style="margin: 30px 0;">
-                <p>Welcome to <strong>Abdul's Soda Shop</strong>.</p>
-                <p>Relax, have a soda, and let's check your finances.</p>
+            <div class="mission-badge">
+                Fair Price Discovery • Personalized Banking
             </div>
 
-            <button id="btn-splash-init" class="voxel-btn" onclick="goToInput()">
+            <button id="btn-start" class="voxel-btn" onclick="goToPage(2)">
                 <img src="assets/soda.png" alt="Soda">
                 OPEN LEDGER
             </button>
@@ -35,119 +37,177 @@
     </div>
 
     <!-- ==============================================
-         SCREEN 2: DATA TERMINAL (THE INPUT)
+         Page 2: UPI RECEIPT (Inputs)
          ============================================== -->
-    <div id="ui-input" class="ui-screen hidden">
-        <div class="terminal-window" id="input-terminal">
-            <div class="terminal-header">
-                <div class="buttons">
-                    <div class="red"></div>
-                    <div class="yellow"></div>
-                    <div class="green"></div>
-                </div>
-                <button onclick="goBackToSplash()"
-                    style="background:transparent; border:none; color:#aaa; font-size:1.5rem; cursor:pointer; margin-left:15px; padding:0;"
-                    title="Back to Splash">
-                    ⬅
-                </button>
-                <div class="header-logo">Gokuldham Bank</div>
-                <div style="position:absolute; right:20px; top:20px;">
-                    <button id="auth-btn"
-                        style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-family:'Courier New';">☁️
-                        Sign In</button>
+    <div id="ui-page-2" class="ui-screen hidden">
+        <div class="mobile-container receipt-paper">
+            <div class="receipt-header">
+                <h2>UPI TRANSFER RECEIPT</h2>
+                <div class="receipt-meta">Transaction ID: GOKUL-8821</div>
+            </div>
+
+            <div class="input-section">
+                <label>MONTHLY INCOME</label>
+                <div class="currency-input">
+                    <span>₹</span>
+                    <input type="number" id="input-income" placeholder="0" oninput="updateLedger()">
                 </div>
             </div>
 
-            <div class="terminal-body">
-                <form id="finance-form" class="bento-grid">
+            <div class="sliders-section">
+                <div class="slider-group">
+                    <label>NEEDS (Rent, Food)</label>
+                    <input type="range" id="slider-needs" value="50" min="0" max="100" oninput="updateLedger('needs')">
+                    <span id="val-needs">50%</span>
+                </div>
+                <div class="slider-group">
+                    <label>WANTS (Travel, Dining)</label>
+                    <input type="range" id="slider-wants" value="30" min="0" max="100" oninput="updateLedger('wants')">
+                    <span id="val-wants">30%</span>
+                </div>
+                <div class="slider-group">
+                    <label>SAVINGS (Investments)</label>
+                    <input type="range" id="slider-savings" value="20" min="0" max="100"
+                        oninput="updateLedger('savings')">
+                    <span id="val-savings">20%</span>
+                </div>
+            </div>
 
-                    <!-- BOX 1: IDENTITY (Top Left) -->
-                    <div class="bento-identity bento-box">
-                        <div class="section-title">PROFILE</div>
-                        <div class="form-group-row">
-                            <div class="form-group">
-                                <label>AGE BRACKET</label>
-                                <select id="input-age" onchange="updateGoals()">
-                                    <option value="18-22">18 - 22 (Student)</option>
-                                    <option value="22-28">22 - 28 (Young Pro)</option>
-                                    <option value="29-39" selected>29 - 39 (Mid Career)</option>
-                                    <option value="40-60">40 - 60 (Pre-Retire)</option>
-                                    <option value="60+">60+ (Retired)</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>STATE</label>
-                                <select id="input-state">
-                                    <!-- Populated via JS -->
-                                </select>
-                            </div>
-                        </div>
+            <div class="total-check" id="total-check">Total: 100%</div>
 
-                        <div class="form-group">
-                            <label>MONTHLY INCOME (₹)</label>
-                            <input type="number" id="input-monthly-income" placeholder="e.g. 100000"
-                                oninput="updateTotal()">
-                        </div>
+            <button class="btn-primary" onclick="analyzeHabits()">
+                SUBMIT TO LEDGER
+            </button>
+        </div>
+    </div>
 
-                        <div class="form-group">
-                            <label>FINANCIAL GOALS</label>
-                            <div id="goal-pills-container" class="goal-pills-wrapper">
-                                <!-- Dynamic Content injected by JS -->
-                            </div>
-                        </div>
-                    </div>
+    <!-- ==============================================
+         Page 3: CHARACTER REVEAL (Persona)
+         ============================================== -->
+    <div id="ui-page-3" class="ui-screen hidden">
+        <div class="mobile-container persona-card">
+            <div class="persona-header">YOU ARE...</div>
+            <div id="persona-image-container">
+                <!-- Injected via JS -->
+            </div>
+            <h1 id="persona-name">JETHALAL</h1>
+            <p id="persona-desc">The Risk-Taker merchant who needs balance.</p>
 
-                    <!-- BOX 2: VISUALS (Top Right) -->
-                    <div class="bento-visuals bento-box">
-                        <div class="chart-container">
-                            <canvas id="spendChart"></canvas>
-                        </div>
-                        <div class="total-stats">
-                            <div class="total-status" id="total-display">TOTAL: 100%</div>
-                        </div>
-                        <button type="button" class="btn-process" onclick="analyzeProfile()">RUN DIAGNOSTIC</button>
-                    </div>
+            <div class="persona-stat">
+                <span>Cluster ID:</span> <span id="persona-cluster">#A12</span>
+            </div>
 
-                    <!-- BOX 3: LEDGER (Bottom) -->
-                    <div class="bento-ledger bento-box">
-                        <div class="ledger-header">
-                            <div class="section-title">MONTHLY SPEND BREAKDOWN (%)</div>
-                            <div class="section-subtitle">Allocate your income. Total must be 100%.</div>
-                        </div>
-                        <div class="ledger-container" id="transaction-ledger">
-                            <!-- Dynamic Expense Rows Injected Here -->
-                            <div class="txn-placeholder">Loading your passbook...</div>
-                        </div>
-                    </div>
+            <button class="btn-primary" onclick="goToPage(4)">
+                BUILD MY PLAN
+            </button>
+            <button class="btn-text" onclick="goToPage(2)">
+                Rewind Transaction
+            </button>
+        </div>
+    </div>
 
-                </form>
+    <!-- ==============================================
+         Page 4: CONTEXT (Demographics)
+         ============================================== -->
+    <div id="ui-page-4" class="ui-screen hidden">
+        <div class="mobile-container">
+            <h2>COMPLETE KYC</h2>
+            <p style="color:#aaa;">To calibrate inflation & risk.</p>
+
+            <div class="form-group">
+                <label>AGE</label>
+                <select id="input-age">
+                    <option value="18-22">18 - 22 (Student)</option>
+                    <option value="22-28">22 - 28 (Young Pro)</option>
+                    <option value="29-39" selected>29 - 39 (Mid Career)</option>
+                    <option value="40-60">40 - 60 (Pre-Retire)</option>
+                    <option value="60+">60+ (Retired)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>STATE (For Inflation Index)</label>
+                <select id="input-state">
+                    <!-- Populated via JS -->
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>PRIMARY GOALS (Select 2)</label>
+                <div id="goal-pills-container" class="goal-pills-wrapper">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="generateStrategy()">
+                GENERATE MASTER PLAN
+            </button>
+        </div>
+    </div>
+
+    <!-- ==============================================
+         Page 5: MASTER PLAN (Result)
+         ============================================== -->
+    <div id="ui-page-5" class="ui-screen hidden">
+        <div class="mobile-container result-scroll">
+            <div class="result-header">
+                <h2>YOUR FINANCIAL PASSPORT</h2>
+            </div>
+
+            <!-- A. ASSET ALLOCATION -->
+            <div class="card">
+                <h3>Recommended Allocation</h3>
+                <canvas id="allocationChart" style="max-height: 200px;"></canvas>
+                <div id="allocation-details"></div>
+            </div>
+
+            <!-- B. TAX STRATEGY -->
+            <div class="card">
+                <h3>Tax Efficiency Strategy</h3>
+                <div id="tax-strategy-content">
+                    <div class="loading-text">Optimizing for 80C...</div>
+                </div>
+            </div>
+
+            <!-- C. REBALANCING -->
+            <div class="card">
+                <h3>Rebalancing Schedule</h3>
+                <div id="rebalancing-content"></div>
+            </div>
+
+            <div class="action-row">
+                <button class="btn-secondary" onclick="window.location.reload()">DELETE DATA</button>
+                <button class="btn-primary" onclick="goToPage(6)">TALK TO INSPECTOR</button>
             </div>
         </div>
     </div>
 
     <!-- ==============================================
-         SCREEN 3: PROCESSING MATRIX (The Calculation)
+         Page 6: AI COMPANION (Chat)
          ============================================== -->
-    <div id="ui-processing" class="ui-screen hidden">
-        <div class="processing-terminal construction-zone">
-            <div class="proc-header">
-                <div>⚠️ SOCIETY MAINTENANCE IN PROGRESS ⚠️</div>
-                <div class="voxel-loader"></div>
+    <div id="ui-page-6" class="ui-screen hidden">
+        <div class="mobile-container chat-interface">
+            <div class="chat-header">
+                <div class="chat-avatar">👮</div>
+                <div>
+                    <div>Inspector Chalu Pandey</div>
+                    <div style="font-size:0.7em; color:#ccc;">Gokuldham Police (Financial Crime Unit)</div>
+                </div>
             </div>
-            <div class="voxel-bar-container">
-                <div class="voxel-bar-fill" id="proc-bar"></div>
-            </div>
-            <div class="proc-body" id="console-output" style="margin-top:20px;">
-                <!-- Javascript injects logs here -->
-            </div>
-        </div>
-    </div>
 
-    <!-- ==============================================
-         SCREEN 4: THE PASSPORT (The Result)
-         ============================================== -->
-    <div id="ui-result" class="ui-screen hidden">
-        <!-- Content Injected via JS -->
+            <div id="chat-history" class="chat-history">
+                <div class="chat-msg system">
+                    Namaste! I have reviewed your case file (Pages 1-5). Ask me anything about your logic or future.
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type your question...">
+                <button onclick="sendMessage()">SEND</button>
+            </div>
+
+            <button class="btn-text" onclick="goToPage(5)">Back to Passport</button>
+        </div>
     </div>
 
     <!-- END UI SCREENS -->
