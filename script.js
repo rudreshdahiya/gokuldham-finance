@@ -1286,25 +1286,30 @@ let scenarioChartInstance = null;
 
 // NEW: Goal Timeline Chart - Calculates YEARS to reach goal
 function updateGoalTimeline() {
-    // 1. Get User Inputs (from Page 2)
+    // 1. Get User Inputs (from Page 2 - Income & Savings Allocation)
     const income = GLOBAL_STATE.income || 50000;
     const savingsRate = (GLOBAL_STATE.alloc.savings || 20) / 100;
-    const baseSIPFromSavings = Math.round(income * savingsRate); // Calculated from slider
+    const baseSIPFromSavings = Math.round(income * savingsRate); // Calculated from Page 2 slider
 
-    // Get Existing Investments (user can edit)
+    // Get input elements
     const existingSIPInput = document.getElementById("input-existing-sip");
     const existingCorpusInput = document.getElementById("input-existing-corpus");
-    const existingSIP = existingSIPInput ? parseInt(existingSIPInput.value) || 0 : 0;
-    const existingCorpus = existingCorpusInput ? parseInt(existingCorpusInput.value) || 0 : 0;
-
-    // Get Additional Investments (user can add)
     const extraSIPInput = document.getElementById("input-extra-sip");
     const lumpsumInput = document.getElementById("input-lumpsum");
+
+    // PREFILL: Set Existing SIP to the calculated savings from Page 2 (only if empty/0)
+    if (existingSIPInput && (existingSIPInput.value === "" || existingSIPInput.value === "0")) {
+        existingSIPInput.value = baseSIPFromSavings;
+    }
+
+    // Read current values (user can edit these)
+    const existingSIP = existingSIPInput ? parseInt(existingSIPInput.value) || 0 : 0;
+    const existingCorpus = existingCorpusInput ? parseInt(existingCorpusInput.value) || 0 : 0;
     const extraSIP = extraSIPInput ? parseInt(extraSIPInput.value) || 0 : 0;
     const lumpsum = lumpsumInput ? parseInt(lumpsumInput.value) || 0 : 0;
 
-    // TOTAL = Base from savings + Existing + Extra
-    const totalMonthlySIP = baseSIPFromSavings + existingSIP + extraSIP;
+    // TOTAL = Existing SIP (prefilled from savings) + Extra SIP
+    const totalMonthlySIP = existingSIP + extraSIP;
     const totalCorpus = existingCorpus + lumpsum;
 
     // Update Investment Summary (show source of numbers)
@@ -1317,16 +1322,15 @@ function updateGoalTimeline() {
                     <span class="summary-label">Monthly SIP</span>
                     <span class="summary-value">₹${(totalMonthlySIP / 1000).toFixed(1)}k</span>
                     <span class="summary-source">
-                        ₹${(baseSIPFromSavings / 1000).toFixed(1)}k (from ${Math.round(savingsRate * 100)}% savings) 
-                        ${existingSIP > 0 ? `+ ₹${(existingSIP / 1000).toFixed(1)}k existing` : ''}
-                        ${extraSIP > 0 ? `+ ₹${(extraSIP / 1000).toFixed(1)}k extra` : ''}
+                        ₹${(existingSIP / 1000).toFixed(1)}k (from ${Math.round(savingsRate * 100)}% savings on ₹${(income / 1000).toFixed(0)}k income)
+                        ${extraSIP > 0 ? ` + ₹${(extraSIP / 1000).toFixed(1)}k extra` : ''}
                     </span>
                 </div>
                 <div class="summary-item">
                     <span class="summary-label">Starting Corpus</span>
                     <span class="summary-value">₹${(totalCorpus / 100000).toFixed(1)}L</span>
                     <span class="summary-source">
-                        ${existingCorpus > 0 ? `₹${(existingCorpus / 100000).toFixed(1)}L existing` : '₹0'}
+                        ${existingCorpus > 0 ? `₹${(existingCorpus / 100000).toFixed(1)}L corpus` : '₹0'}
                         ${lumpsum > 0 ? ` + ₹${(lumpsum / 100000).toFixed(1)}L lumpsum` : ''}
                     </span>
                 </div>
