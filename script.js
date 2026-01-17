@@ -462,24 +462,84 @@ function generateReasoning(personaKey, alloc) {
 // 4. PAGE 4: CONTEXT (DEMOGRAPHICS)
 // ==========================================
 
-// Helper: Populate States
+// Helper: Populate States (Custom Searchable Dropdown)
 function populateStates() {
-    const select = document.getElementById('input-state');
-    if (!select) return;
+    const list = document.getElementById('state-list-dropdown');
+    if (!list) return;
 
     // Use DATA_ENGINE source of truth
     const states = window.DATA_ENGINE ? window.DATA_ENGINE.ALL_STATES : [];
 
-    // Clear and Add Placeholder
-    select.innerHTML = `<option value="" disabled selected>-- Select Your State --</option>`;
+    // Clear list
+    list.innerHTML = '';
 
     states.forEach(state => {
-        const option = document.createElement("option");
-        option.value = state;
-        option.innerText = state.replace(/-/g, ' ').toUpperCase();
-        select.appendChild(option);
+        const div = document.createElement("div");
+        div.className = "state-option";
+        div.style.padding = "10px 15px";
+        div.style.cursor = "pointer";
+        div.style.borderBottom = "1px solid var(--color-border)";
+        div.style.color = "var(--color-text-main)";
+        div.style.fontSize = "0.9rem";
+
+        // Add hover effect via inline JS for simplicity or use CSS class
+        div.onmouseover = () => { div.style.background = "var(--color-bg)"; };
+        div.onmouseout = () => { div.style.background = "transparent"; };
+
+        div.innerText = state.replace(/-/g, ' ').toUpperCase();
+        div.dataset.value = state;
+
+        div.onclick = () => selectState(state, div.innerText);
+
+        list.appendChild(div);
     });
 }
+
+// Show/Filter Dropdown
+function showStateList() {
+    const list = document.getElementById('state-list-dropdown');
+    if (list) list.style.display = 'block';
+}
+
+function filterStates() {
+    const input = document.getElementById('input-state-search');
+    const filter = input.value.toUpperCase();
+    const list = document.getElementById('state-list-dropdown');
+    const options = list.getElementsByTagName('div');
+
+    list.style.display = 'block';
+
+    for (let i = 0; i < options.length; i++) {
+        const txtValue = options[i].innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            options[i].style.display = "";
+        } else {
+            options[i].style.display = "none";
+        }
+    }
+}
+
+// Select State
+function selectState(value, text) {
+    document.getElementById('input-state').value = value;
+    document.getElementById('input-state-search').value = text;
+    document.getElementById('state-list-dropdown').style.display = 'none';
+
+    GLOBAL_STATE.demographics.state = value;
+    updateStateContext(); // Trigger update logic
+}
+
+// Hide dropdown when clicking outside
+document.addEventListener('click', function (e) {
+    const container = document.querySelector('.input-section'); // Scope to input section
+    const isClickInside = container && container.contains(e.target);
+    const input = document.getElementById('input-state-search');
+
+    if (!isClickInside && input && e.target !== input) {
+        const list = document.getElementById('state-list-dropdown');
+        if (list) list.style.display = 'none';
+    }
+});
 
 function updateStateContext() {
     const state = document.getElementById("input-state").value;
@@ -524,33 +584,64 @@ function updateGoals() {
     if (["40-60", "60+"].includes(age)) ageKey = "43-58";
 
     // Use DATA_ENGINE
+    // Use mapped key to filter
     const goalIds = DATA_ENGINE.GOALS_BY_AGE[ageKey] || DATA_ENGINE.GOALS_BY_AGE["18-25"];
+
+    // Clear and Redraw
+    container.innerHTML = ""; // Hard Clear
 
     goalIds.slice(0, 6).forEach(id => {
         const goal = DATA_ENGINE.ALL_GOALS[id];
         const pill = document.createElement("div");
         pill.className = "goal-pill";
-        pill.dataset.goalId = id; // Store actual goal ID for later lookup
-        pill.dataset.goalLabel = goal.label; // Store label for cleaner lookup
+        pill.dataset.goalId = id;
+        pill.dataset.goalLabel = goal.label;
         pill.innerHTML = `<div style="margin-bottom:4px;">${goal.label}</div><div style="font-size:0.6rem; opacity:0.75; font-weight:normal;">${goal.years || 5}Y | ₹${goal.corpus || 10}L</div>`;
         pill.onclick = () => {
-            // Toggle Self
             pill.classList.toggle("active");
-
-            // Limit 2
-            const active = document.querySelectorAll(".goal-pill.active");
+            // Limit 2 logic...
+            const active = container.querySelectorAll(".goal-pill.active");
             if (active.length > 2) {
-                pill.classList.remove("active");
-                alert("Please select top 2 goals only.");
-                return;
+                active[0].classList.remove("active");
             }
-
-            // Show Context
-            updateGoalContext();
+            // Update State
+            GLOBAL_STATE.demographics.goals = Array.from(container.querySelectorAll(".active")).map(p => p.dataset.goalLabel);
+            GLOBAL_STATE.demographics.goalIds = Array.from(container.querySelectorAll(".active")).map(p => p.dataset.goalId);
         };
         container.appendChild(pill);
     });
 }
+
+function renderAssetMixExplainer(personaKey) {
+    const container = document.getElementById("asset-class-explainer");
+    const nameSpan = document.getElementById("asset-mix-persona-name");
+
+    if (!container) return;
+
+    const pData = DATA_ENGINE.PERSONAS[personaKey || 'mehta'];
+    if (nameSpan) nameSpan.innerText = (pData.name || "YOU").toUpperCase();
+
+    // Context from User Alloc
+    const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
+
+    // Dynamic Logic
+    let equityText = "wealth creation over 5+ years";
+    if (alloc.equity > 60) equityText = "maximizing long-term growth (Risk-Taker mode)";
+    if (alloc.equity < 40) equityText = "steady growth with lower volatility";
+
+    let debtText = "safety and liquidity";
+    if (alloc.debt > 40) debtText = "preserving capital (Conservative mode)";
+
+    let goldText = "inflation hedge";
+    if (alloc.gold > 15) goldText = "insurance against market crashes";
+
+    container.innerHTML = `
+        <div style="margin-bottom:6px;"><strong>Equity (${alloc.equity}%):</strong> ${equityText}.</div>
+        <div style="margin-bottom:6px;"><strong>Debt (${alloc.debt}%):</strong> ${debtText}.</div>
+        <div><strong>Gold (${alloc.gold}%):</strong> ${goldText}.</div>
+    `;
+}
+
 
 function updateGoalContext() {
     const activePills = document.querySelectorAll(".goal-pill.active");
@@ -1349,6 +1440,29 @@ function updateGoalTimeline() {
     // Read current values (user can edit these)
     const existingSIP = existingSIPInput ? parseInt(existingSIPInput.value) || 0 : 0;
     const existingCorpus = existingCorpusInput ? parseInt(existingCorpusInput.value) || 0 : 0;
+
+    // NUDGE: If existing corpus is 0, add a subtle shake/glow effect once
+    if (existingCorpusInput && existingCorpus === 0 && !existingCorpusInput.dataset.nudged) {
+        existingCorpusInput.dataset.nudged = "true";
+        existingCorpusInput.style.transition = "box-shadow 0.3s ease, border-color 0.3s ease";
+        setTimeout(() => {
+            existingCorpusInput.style.borderColor = "var(--color-accent)";
+            existingCorpusInput.style.boxShadow = "0 0 8px rgba(46, 204, 113, 0.4)";
+
+            // Add tooltip via placeholder or temporary label change
+            const originalPlace = existingCorpusInput.placeholder;
+            existingCorpusInput.placeholder = "Enter current savings here!";
+
+            setTimeout(() => {
+                existingCorpusInput.style.borderColor = "var(--color-border)";
+                existingCorpusInput.style.boxShadow = "none";
+                existingCorpusInput.placeholder = originalPlace;
+            }, 2000);
+        }, 800);
+    }
+
+    // Call Asset Mix Explainer (New V3 Feature)
+    renderAssetMixExplainer(GLOBAL_STATE.persona);
     const extraSIP = extraSIPInput ? parseInt(extraSIPInput.value) || 0 : 0;
     const lumpsum = lumpsumInput ? parseInt(lumpsumInput.value) || 0 : 0;
 
