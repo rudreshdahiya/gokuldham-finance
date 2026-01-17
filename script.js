@@ -1307,9 +1307,12 @@ function updateScenarioAnalysis() {
         }
     });
 
-    // === CONTEXTUAL WEALTH EXPLANATION ===
+    // === CONTEXTUAL WEALTH EXPLANATION + SPENDING ADVICE ===
     const legDiv = document.querySelector('.scenario-legend');
     if (legDiv) {
+        const userNeeds = GLOBAL_STATE.alloc.needs || 50;
+        const userWants = GLOBAL_STATE.alloc.wants || 30;
+
         let contextHtml = `<div style="text-align:left; margin-top:15px; padding:15px; background:var(--color-bg-card); border-radius:4px; border:1px solid var(--color-border); font-size:0.8rem; line-height:1.6; color:var(--color-text-main);">
             <strong style="display:block; margin-bottom:8px; color:var(--color-primary);">📊 Wealth Context:</strong>
             <ul style="margin:0; padding-left:20px;">
@@ -1320,17 +1323,48 @@ function updateScenarioAnalysis() {
         if (targetCorpus) {
             const gap = targetCorpus - baseL;
             if (gap > 0) {
-                contextHtml += `<li><strong style="color:#e74c3c;">Gap to "${targetGoalLabel}":</strong> Need ₹${targetCorpus}L, Base Case gives ₹${baseL}L. <em>Shortfall: ₹${gap}L</em>. Consider increasing SIP or tenure.</li>`;
+                contextHtml += `<li><strong style="color:#e74c3c;">Gap to "${targetGoalLabel}":</strong> Need ₹${targetCorpus}L, Base Case gives ₹${baseL}L. <em>Shortfall: ₹${gap}L</em>.</li>`;
+
+                // === PERSONALIZED SPENDING ADVICE ===
+                const requiredMonthlySIP = (targetCorpus * 100000) / ((Math.pow(1 + baseRate / 12, tenure * 12) - 1) * (1 + baseRate / 12) / (baseRate / 12));
+                const additionalSIPNeeded = Math.round(requiredMonthlySIP - availableMonthlySIP);
+
+                if (additionalSIPNeeded > 0) {
+                    contextHtml += `<li><strong style="color:#f39c12;">💡 How to Close the Gap:</strong> Need ₹${(additionalSIPNeeded / 1000).toFixed(1)}k/month more. Here's how:<ul style="margin-top:5px;">`;
+
+                    // Analyze user's spending
+                    if (userWants > 25) {
+                        const wantsReduction = Math.min(10, userWants - 20); // Suggest reducing Wants by max 10%
+                        const savingsFromWants = Math.round(income * (wantsReduction / 100));
+                        contextHtml += `<li><strong>Reduce Wants</strong> (dining, entertainment) from ${userWants}% → ${userWants - wantsReduction}%: Saves ₹${(savingsFromWants / 1000).toFixed(1)}k/month</li>`;
+                    }
+
+                    if (userNeeds > 55) {
+                        contextHtml += `<li><strong>Optimize Needs</strong> (rent, groceries): Your ${userNeeds}% is high. Consider roommates, cheaper groceries for ₹${(income * 0.05 / 1000).toFixed(1)}k/month savings</li>`;
+                    }
+
+                    contextHtml += `<li><strong>Increase Income</strong>: Freelancing or side gig for ₹${(additionalSIPNeeded / 1000).toFixed(1)}k/month extra</li>`;
+                    contextHtml += `</ul></li>`;
+                }
             } else {
                 contextHtml += `<li><strong style="color:#27ae60;">On Track for "${targetGoalLabel}":</strong> Target ₹${targetCorpus}L, Base Case ₹${baseL}L ✓</li>`;
             }
         }
 
+        // Market scenario advice
         contextHtml += `
                 <li><strong>Bear Case (${(bearRate * 100).toFixed(1)}% CAGR):</strong> Market crash years. Total ₹${bearL}L.</li>
                 <li><strong>Base Case (${(baseRate * 100).toFixed(1)}% CAGR):</strong> Historical avg. Total ₹${baseL}L.</li>
                 <li><strong>Bull Case (${(bullRate * 100).toFixed(1)}% CAGR):</strong> Strong growth cycle. Total ₹${bullL}L.</li>
             </ul>
+            <div style="margin-top:15px; padding-top:10px; border-top:1px dashed var(--color-border);">
+                <strong style="color:var(--color-primary);">🌐 Market Scenario Actions:</strong>
+                <ul style="margin:5px 0 0 20px; font-size:0.75rem;">
+                    <li><strong>Bear Market (₹${bearL}L):</strong> If markets crash, <em>increase</em> SIP by 20% (buy the dip). Cut Wants from ${userWants}% → ${Math.max(15, userWants - 10)}%.</li>
+                    <li><strong>Base Case (₹${baseL}L):</strong> Stay disciplined. Maintain current ${(savingsRate * 100).toFixed(0)}% savings rate.</li>
+                    <li><strong>Bull Market (₹${bullL}L):</strong> Don't increase spending! Reinvest windfalls. Keep lifestyle inflation \u003c 5%/year.</li>
+                </ul>
+            </div>
             <div style="margin-top:10px; font-size:0.75rem; font-style:italic; color:var(--color-text-muted);">
                 Returns based on your ${alloc.equity}/${alloc.debt}/${alloc.gold} allocation mix. Equity@12%, Debt@7%, Gold@8% (historical averages).
             </div>
