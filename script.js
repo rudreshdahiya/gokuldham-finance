@@ -296,7 +296,9 @@ function renderPersonaPage(personaKey, clusterId) {
     // 2. Image
     const container = document.getElementById("persona-image-container");
     const imgPath = pData.img || "assets/mehta.png";
-    container.innerHTML = `<img src="${imgPath}" alt="${pData.name}" onerror="this.src='assets/mehta.png'">`;
+    container.innerHTML = `<img src="${imgPath}" alt="${pData.name}" 
+        style="width:140px; height:140px; border-radius:50%; object-fit:cover; border:4px solid var(--color-bg-card); box-shadow:0 8px 16px rgba(0,0,0,0.15); background:var(--color-bg);"
+        onerror="this.src='assets/mehta.png'">`;
 
     // 3. REASONING LOGIC (Personalized)
     const reason = generateReasoning(personaKey, GLOBAL_STATE.alloc);
