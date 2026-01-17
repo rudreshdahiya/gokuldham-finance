@@ -73,16 +73,10 @@ body {
     justify-content: center;
 }
 
-/* THEME TOGGLE BUTTON - NEXT TO BACK BUTTON */
+/* THEME TOGGLE BUTTON - INLINE IN HEADER */
 .theme-toggle-btn {
-    position: absolute;
-    top: 50%;
-    left: 55px;
-    /* Right after back button */
-    transform: translateY(-50%);
-    z-index: 100;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: var(--color-bg-card);
     color: var(--color-text-main);
@@ -91,14 +85,15 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
+    margin-left: 8px;
 }
 
 .theme-toggle-btn:hover {
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
     border-color: var(--color-primary);
 }
 
@@ -154,7 +149,16 @@ body {
 .std-header-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    min-width: 80px;
+}
+
+.std-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 50px;
+    justify-content: flex-end;
 }
 
 .std-title {
@@ -162,18 +166,15 @@ body {
     font-weight: 700;
     color: var(--color-text-main);
     text-transform: uppercase;
-    max-width: 60%;
+    flex: 1;
+    text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* PAGE COUNTER - RIGHT SIDE TO AVOID TITLE CLASH */
+/* PAGE COUNTER - IN HEADER RIGHT */
 .page-counter {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 600;

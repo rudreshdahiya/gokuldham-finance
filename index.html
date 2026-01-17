@@ -24,24 +24,22 @@
 
 <body>
     <!-- ==============================================
-         Page 1: INTRO (Splash)
-         ============================================== -->
-    <!-- Theme Toggle (Fixed Top Right) -->
-    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
-        <span id="theme-icon">☀️</span>
-    </button>
-
-    <!-- ==============================================
          Page 1: INTRO (Splash) - Refactored V2.0
          ============================================== -->
     <div id="ui-page-1" class="ui-screen active">
         <div class="std-container">
             <!-- 1. HEADER -->
             <header class="std-header">
-                <div style="width:40px;"></div>
+                <div class="std-header-left">
+                    <!-- Theme Toggle Button -->
+                    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                        <span id="theme-icon">☀️</span>
+                    </button>
+                </div>
                 <div class="std-title">OPEN LEDGER</div>
-                <!-- Page Counter -->
-                <div class="page-counter" style="position:absolute; right:15px;">1/6</div>
+                <div class="std-header-right">
+                    <div class="page-counter">1/6</div>
+                </div>
             </header>
 
             <!-- 2. BODY -->
@@ -79,10 +77,14 @@
             <header class="std-header">
                 <div class="std-header-left">
                     <div class="std-back-btn" onclick="goToPage(1)">❮</div>
+                    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                        <span class="theme-icon-inner">☀️</span>
+                    </button>
                 </div>
                 <div class="std-title">INPUT LEDGER</div>
-                <!-- Page Counter -->
-                <div class="page-counter">2/6</div>
+                <div class="std-header-right">
+                    <div class="page-counter">2/6</div>
+                </div>
             </header>
 
             <!-- 2. BODY -->

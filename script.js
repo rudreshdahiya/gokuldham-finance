@@ -9,8 +9,20 @@ let GLOBAL_STATE = {
     persona: null,
     demographics: { age: "29-39", state: "maharashtra", goals: [] },
     recommendation: null,
-    theme: localStorage.getItem('theme') || 'light' // Theme State
+    theme: null // Will be set in initUI based on device preference
 };
+
+// Get device preference or stored preference
+function getPreferredTheme() {
+    const stored = localStorage.getItem('theme');
+    if (stored) return stored;
+
+    // Device preference
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+    }
+    return 'light';
+}
 
 // ==========================================
 // 1. NAVIGATION & INITIALIZATION
@@ -19,7 +31,8 @@ let GLOBAL_STATE = {
 function initUI() {
     console.log("🚀 Initializing Google Bank UI...");
 
-    // 1. Apply Theme
+    // 1. Apply Theme (Device Preference First)
+    GLOBAL_STATE.theme = getPreferredTheme();
     document.body.setAttribute('data-theme', GLOBAL_STATE.theme);
     const icon = document.getElementById('theme-icon');
     if (icon) icon.innerText = GLOBAL_STATE.theme === 'dark' ? '🌙' : '☀️';
