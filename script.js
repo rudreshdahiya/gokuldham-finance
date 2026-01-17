@@ -867,8 +867,8 @@ function renderAllocationChart(data) {
     // Destroy old if exists
     if (window.allocChartInstance) window.allocChartInstance.destroy();
 
-    // Design System Colors: Equity (Emerald), Debt (Blue), Gold (Yellow)
-    const dsColors = ['#10b981', '#3b82f6', '#f59e0b'];
+    // Design System Colors: Equity (Pastel Blue), Debt (Pastel Purple), Gold (Pastel Yellow)
+    const dsColors = ['#90caf9', '#ce93d8', '#fff59d'];
 
     window.allocChartInstance = new Chart(ctx, {
         type: 'doughnut', // Better than Pie
@@ -1058,105 +1058,27 @@ function renderStrategyInsights(personaKey) {
     document.getElementById("market-assumption").innerHTML = `Bullish (Nifty PE ~22.5, India remains EM favorite)`;
 }
 
+// Disabled as per user feedback
 function runTaxOptimizer() {
-    // 1. Calculate Targets
-    // Rule: Max 1.5L under 80C
-    const income = GLOBAL_STATE.income;
-    const invAmount = income * 0.2 * 12; // Annual Savings
-
     const container = document.getElementById("tax-strategy-content");
-    container.innerHTML = `<div class="loading-text">Analyzing 80C & Tax Slabs...</div>`;
-
-    // 2. Prepare Payload for Backend
-    const payload = {
-        investment_amount: invAmount,
-        risk_profile: 2
-    };
-
-    // 3. Fallback Logic (Local Heuristic)
-    const runFallback = () => {
-        console.warn("Using Local Tax Heuristics.");
-        // Logic: 
-        // 1. 80C Limit = 1.5L
-        // 2. Existing Probable Investments (EPF/Life Insurance) = ~5% of Income
-        const existing80C = Math.round(income * 0.05);
-        const gap80C = Math.max(0, 150000 - existing80C);
-
-        let elss = 0, ppf = 0, insurance = 0;
-
-        if (gap80C > 0) {
-            // Allocate Gap
-            if (GLOBAL_STATE.persona === "bhide" || GLOBAL_STATE.persona === "popatlal") {
-                ppf = gap80C; // Risk Averse -> PPF
-            } else {
-                elss = Math.round(gap80C * 0.7); // Growth -> ELSS
-                ppf = gap80C - elss;
-            }
-        }
-
-        // Render Fallback
-        let html = `<div style="margin-bottom:10px; color:#27ae60; font-weight:bold;">Strategy: Fill ₹${(gap80C / 1000).toFixed(0)}k 80C Gap</div>`;
-
-        if (gap80C === 0) {
-            html += `<div style="color:#555; font-size:0.9rem;">Great job! Your Section 80C (₹1.5L) is likely covered by EPF/Insurance. Focus on Wealth Creation (Equity) now.</div>`;
-        } else {
-            if (elss > 0) html += `<div class="tax-row"><span>ELSS (Tax Saver)</span><span>₹${(elss / 1000).toFixed(0)}k</span></div>`;
-            if (ppf > 0) html += `<div class="tax-row"><span>PPF / EPF Vol</span><span>₹${(ppf / 1000).toFixed(0)}k</span></div>`;
-
-            // Add Term Insurance heuristic if Age < 40
-            const ageVal = parseInt(GLOBAL_STATE.demographics.age) || 30;
-            if (ageVal < 40) {
-                html += `<div class="tax-row"><span>Term Insurance</span><span>₹15k</span></div>`;
-            }
-
-            html += `<div style="font-size:0.8em; color:#888; margin-top:5px;">Projected Tax Saved: ₹${(gap80C * 0.3).toFixed(0)} (Old Regime)</div>`;
-        }
-        container.innerHTML = html;
-    };
-
-    // 4. Try Network call with Timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s Timeout
-
-    fetch("https://gokuldham-backend.onrender.com/analyze/optimize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-    })
-        .then(res => {
-            if (!res.ok) throw new Error("Server Error");
-            return res.json();
-        })
-        .then(data => {
-            clearTimeout(timeoutId);
-            // Success Render
-            let html = `<div style="margin-bottom:10px; color:#27ae60; font-weight:bold;">${data.message}</div>`;
-            for (const [key, val] of Object.entries(data.allocation)) {
-                if (val && val !== "₹0") {
-                    html += `
-                <div class="tax-row">
-                    <span>${key}</span>
-                    <span>${val}</span>
-                </div>`;
-                }
-            }
-            html += `<div style="font-size:0.8em; color:#888; margin-top:5px;">Projected 1Y Yield: ₹${data.projected_return_1y}</div>`;
-            container.innerHTML = html;
-        })
-        .catch(e => {
-            // Run Fallback on ANY error (Network, Timeout, Server)
-            runFallback();
-        });
+    if (container) container.innerHTML = "";
 }
 
 function renderRebalancing(data) {
     const container = document.getElementById("rebalancing-content");
     container.innerHTML = `
-        <p>Your portfolio drifts with market volatility. Review every <strong>6 months</strong> or when deviation > 5%.</p>
-        <div class="tax-row" style="background:#fff3e0; border-left:4px solid #f39c12;">
+        <p style="color:var(--color-text-main);">Your portfolio drifts with market volatility. Review every <strong>6 months</strong> or when deviation > 5%.</p>
+        <div class="tax-row" style="background:#fff3e0; border-left:4px solid #f39c12; color:#e65100;">
             <span>Next Review Date</span>
             <span>${new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>
+        </div>
+        <div style="margin-top:15px; background:var(--color-bg); padding:10px; border-radius:6px; font-size:0.85rem; color:var(--color-text-main);">
+            <strong>📌 How to Rebalance:</strong>
+            <ol style="margin:5px 0 0 15px; padding:0;">
+                <li style="margin-bottom:4px;">Check Current % vs Target %.</li>
+                <li style="margin-bottom:4px;">Sell <span style="color:#e74c3c;">Overweight</span> assets (Sell High).</li>
+                <li>Buy <span style="color:#27ae60;">Underweight</span> assets (Buy Low).</li>
+            </ol>
         </div>
     `;
 }
@@ -1190,7 +1112,10 @@ function sendMessage() {
     };
 
     // Use Vercel Serverless Function (never sleeps!)
-    fetch("/api/inspector", {
+    const apiUrl = "/api/inspector";
+    console.log("Inspector: Sending request to", window.location.origin + apiUrl);
+
+    fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1231,82 +1156,9 @@ function sendMessage() {
 // 9. TAX EFFICIENCY ENGINE (PERSONALIZED)
 // ==========================================
 function renderTaxWiseWithdrawal() {
-    const rules = window.DATA_ENGINE.TAX_RULES_2024;
-    if (!rules) return;
-
+    // Feature disabled
     const container = document.getElementById("tax-withdrawal-content");
-    if (!container) return;
-
-    // === PERSONALIZATION INPUTS ===
-    const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
-    const income = GLOBAL_STATE.income || 50000;
-    const goals = GLOBAL_STATE.demographics.goals || [];
-    const tenure = parseInt(document.getElementById("input-tenure")?.value) || 10;
-
-    // Determine tax bracket (simplified Indian slab)
-    const annualIncome = income * 12;
-    let taxBracket = "30%"; // Default
-    if (annualIncome < 500000) taxBracket = "5%";
-    else if (annualIncome < 1000000) taxBracket = "20%";
-
-    // Check for short-term goals
-    const hasShortGoal = tenure < 5 || goals.some(g => g.includes("Wedding") || g.includes("Car") || g.includes("Vacation"));
-
-    let html = `
-        <div style="background:#e8f5e9; padding:10px; border-radius:4px; margin-bottom:15px; border-left:4px solid #27ae60;">
-            <strong style="color:#27ae60;">✓ For Your ${alloc.equity}/${alloc.debt}/${alloc.gold} Mix (Tax Bracket: ${taxBracket})</strong>
-        </div>
-        <div style="font-family: 'Space Mono', monospace; font-size:0.75rem; margin-bottom: 15px; color:var(--color-text-muted); background:var(--color-bg); padding:8px; border-radius:4px;">
-            SMART REDEMPTION ORDER (To minimize tax):
-        </div>
-        <div class="withdrawal-grid" style="display:grid; gap:10px; margin-bottom:15px;">
-            <div class="w-card">
-                <div class="w-header equity">1. EQUITY (Long Term)</div>
-                <div class="w-body">
-                    <div class="w-row"><span>Wait:</span> <strong>> 1 Year</strong></div>
-                    <div class="w-row"><span>Tax:</span> <strong>12.5%</strong></div>
-                    <div class="w-note">${rules.equity.exemption}</div>
-                </div>
-            </div>
-            <div class="w-card">
-                <div class="w-header gold">2. GOLD (Long Term)</div>
-                <div class="w-body">
-                    <div class="w-row"><span>Wait:</span> <strong>> 2 Years</strong></div>
-                    <div class="w-row"><span>Tax:</span> <strong>12.5%</strong></div>
-                    <div class="w-note">New Rule (Budget '24)</div>
-                </div>
-            </div>
-            <div class="w-card">
-                <div class="w-header debt">3. DEBT (Emergency)</div>
-                <div class="w-body">
-                    <div class="w-row"><span>Wait:</span> <strong>Any Time</strong></div>
-                    <div class="w-row"><span>Tax:</span> <strong>Slab Rate (${taxBracket})</strong></div>
-                    <div class="w-note">Use for liquidity only</div>
-                </div>
-            </div>
-        </div>
-        `;
-
-    // === PERSONALIZED PRO TIP ===
-    let proTip = "";
-
-    if (alloc.equity > 60) {
-        proTip = `Your ${alloc.equity}% equity allocation means most wealth will be taxed as LTCG (12.5%). Minimize withdrawals before 1-year holding period.`;
-    } else if (hasShortGoal) {
-        proTip = `Since you have short-term goals (${tenure}Y), prioritize debt withdrawals to avoid selling equity during market dips.`;
-    } else if (alloc.debt < 20) {
-        proTip = `Your low debt allocation (${alloc.debt}%) means emergency needs will force equity sales. Consider keeping ₹${(income * 6 / 1000).toFixed(0)}k (6 months) in liquid funds.`;
-    } else {
-        proTip = `If you need cash, sell assets with <em>Losses</em> first (Tax Harvesting), then Equity < ₹1.25L gain.`;
-    }
-
-    html += `
-        <div style="background:#fff3cd; padding:12px; border-radius:4px; margin-top:10px; font-size:0.8rem; border-left:4px solid #f1c40f; color:#856404;">
-            <strong>💡 Pro Tip (For You):</strong> ${proTip}
-        </div>
-    `;
-
-    container.innerHTML = html;
+    if (container) container.innerHTML = "";
 }
 
 // ==========================================
@@ -1547,7 +1399,7 @@ function updateGoalTimeline() {
     // Adjust target corpus for inflation over average goal horizon
     const avgGoalYears = goalCount > 0 ? Math.round(totalYears / goalCount) : 10;
 
-    // Inflation-adjusted target (future value of current goal)
+    // Inflation-adjusted target (future value of current goal) - DISPLAY ONLY
     const inflationAdjustedTarget = Math.round(targetCorpus * Math.pow(1 + stateInflation, avgGoalYears));
 
     // Update UI with inflation info
@@ -1555,9 +1407,11 @@ function updateGoalTimeline() {
     const targetCorpusEl = document.getElementById("target-corpus");
     if (targetLabel) {
         const goalText = targetGoalLabels.length > 0 ? targetGoalLabels.join(" + ") : "Wealth Creation";
-        targetLabel.innerHTML = `${goalText} <span style="font-size:0.7em; color:#e74c3c;">(${(stateInflation * 100).toFixed(1)}% inflation in ${userState})</span>`;
+        // Show Present Value clearly
+        targetLabel.innerHTML = `${goalText} <span style="font-size:0.7em; color:#e74c3c;">(Results in Today's Value)</span>`;
     }
-    if (targetCorpusEl) targetCorpusEl.innerText = inflationAdjustedTarget;
+    // Show Present Value (Target) not Future Value, to match Real Rate graph
+    if (targetCorpusEl) targetCorpusEl.innerText = targetCorpus;
 
     // 3. Returns Assumptions (REAL RETURNS = Nominal - Inflation)
     const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
@@ -1568,15 +1422,14 @@ function updateGoalTimeline() {
     const realRate = nominalRate - stateInflation;
     const wRateAnnual = Math.max(0.01, realRate); // At least 1% real return
 
-    const deviation = 0.03; // Lower deviation for real rates
+    const deviation = 0.02; // Lower deviation for real rates
     const bearRate = Math.max(0.005, wRateAnnual - deviation);
     const baseRate = wRateAnnual;
     const bullRate = wRateAnnual + deviation;
 
     // 4. Calculate YEARS to reach target corpus
-    // Formula: n = log((FV * r / PMT) + 1) / log(1+r)  [for SIP]
-    // With lumpsum: FV = Lumpsum * (1+r)^n + SIP * ((1+r)^n - 1) * (1+r) / r
-    // We'll use iterative approach for simplicity
+    // NOTE: using targetCorpus (Present Value) because we are using Real Rates.
+    // This avoids double counting inflation.
 
     function yearsToReachGoal(annualRate, monthlySIP, lumpsum, targetL) {
         const targetAmount = targetL * 100000; // Convert to INR
@@ -1593,25 +1446,33 @@ function updateGoalTimeline() {
         return months >= maxMonths ? 50 : (months / 12).toFixed(1);
     }
 
-    const bearYears = yearsToReachGoal(bearRate, totalMonthlySIP, totalCorpus, inflationAdjustedTarget);
-    const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, totalCorpus, inflationAdjustedTarget);
-    const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, totalCorpus, inflationAdjustedTarget);
+    // Use targetCorpus (PV) not inflationAdjustedTarget (FV)
+    const bearYears = yearsToReachGoal(bearRate, totalMonthlySIP, totalCorpus, targetCorpus);
+    const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, totalCorpus, targetCorpus);
+    const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, totalCorpus, targetCorpus);
 
     // 5. Render Chart (Horizontal Bar - Years)
     const ctx = document.getElementById('scenarioChart');
     if (!ctx) return;
 
-    if (scenarioChartInstance) scenarioChartInstance.destroy();
+    if (window.scenarioChartInstance) {
+        window.scenarioChartInstance.destroy();
+    }
 
-    scenarioChartInstance = new Chart(ctx.getContext('2d'), {
+    // Chart Colors (Pastel V3)
+    // Bear: Deep Orange 200, Base: Amber 200, Bull: Green 200
+    window.scenarioChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'bar',
         data: {
             labels: ['🐻 Bear', '📊 Base', '🚀 Bull'],
             datasets: [{
                 label: 'Years to Goal',
                 data: [bearYears, baseYears, bullYears],
-                backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71'],
-                borderRadius: 8
+                backgroundColor: ['#ffab91', '#ffe082', '#a5d6a7'],
+                borderColor: ['#ff8a65', '#ffd54f', '#81c784'],
+                borderWidth: 1,
+                borderRadius: 6,
+                barThickness: 25
             }]
         },
         options: {
@@ -1622,7 +1483,7 @@ function updateGoalTimeline() {
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: (ctx) => `${ctx.parsed.x} years to reach ₹${targetCorpus}L`
+                        label: (ctx) => `${ctx.parsed.x} years to reach ₹${targetCorpus}L (Real Value)`
                     }
                 }
             },
@@ -1630,7 +1491,11 @@ function updateGoalTimeline() {
                 x: {
                     beginAtZero: true,
                     title: { display: true, text: 'Years' },
-                    ticks: { callback: (v) => v + 'Y' }
+                    ticks: { callback: (v) => v + 'Y' },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                y: {
+                    grid: { display: false }
                 }
             }
         }
@@ -1654,21 +1519,21 @@ function updateGoalTimeline() {
     const legDiv = document.querySelector('.scenario-legend');
     if (legDiv) {
         legDiv.innerHTML = `
-            <div style="padding:10px; background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6;">
-                <div style="margin-bottom:8px;">
-                    <strong>📊 Your Timeline:</strong> At ₹${(totalMonthlySIP / 1000).toFixed(1)}k/month SIP${lumpsum > 0 ? ` + ₹${(lumpsum / 100000).toFixed(1)}L lumpsum` : ''}
+            <div style="padding:10px; background:var(--color-bg-card); border-radius:6px; border:1px solid var(--color-border); margin-top:10px;">
+                <div style="margin-bottom:8px; font-size:0.9rem;">
+                    <strong>📊 Your Timeline (Real Terms):</strong> At ₹${(totalMonthlySIP / 1000).toFixed(1)}k/month SIP
                 </div>
                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; text-align:center;">
                     <div style="background:#ffebee; padding:8px; border-radius:4px;">
-                        <div style="font-size:1.2em; font-weight:bold; color:#e74c3c;">${bearYears}Y</div>
+                        <div style="font-size:1.1em; font-weight:bold; color:#e57373;">${bearYears}Y</div>
                         <div style="font-size:0.7em;">Bear (${(bearRate * 100).toFixed(1)}%)</div>
                     </div>
-                    <div style="background:#fffde7; padding:8px; border-radius:4px;">
-                        <div style="font-size:1.2em; font-weight:bold; color:#f39c12;">${baseYears}Y</div>
+                    <div style="background:#fff8e1; padding:8px; border-radius:4px;">
+                        <div style="font-size:1.1em; font-weight:bold; color:#fbc02d;">${baseYears}Y</div>
                         <div style="font-size:0.7em;">Base (${(baseRate * 100).toFixed(1)}%)</div>
                     </div>
                     <div style="background:#e8f5e9; padding:8px; border-radius:4px;">
-                        <div style="font-size:1.2em; font-weight:bold; color:#27ae60;">${bullYears}Y</div>
+                        <div style="font-size:1.1em; font-weight:bold; color:#66bb6a;">${bullYears}Y</div>
                         <div style="font-size:0.7em;">Bull (${(bullRate * 100).toFixed(1)}%)</div>
                     </div>
                 </div>
