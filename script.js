@@ -76,6 +76,19 @@ function goToPage(pageNum) {
     // Special Inits per Page
     if (pageNum === 2) updateLedger(); // Init Sliders
     if (pageNum === 4) updateGoals(); // Init Goals
+    if (pageNum === 5) {
+        // Force refresh Existing SIP from current Income/Savings state
+        const income = GLOBAL_STATE.income || 50000;
+        const savingsRate = (GLOBAL_STATE.alloc.savings || 20) / 100;
+        const baseSIPFromSavings = Math.round(income * savingsRate); // Recalculate fresh
+
+        const existingSIPInput = document.getElementById("input-existing-sip");
+        if (existingSIPInput) {
+            existingSIPInput.value = baseSIPFromSavings; // Always sync with Page 2
+        }
+
+        updateGoalTimeline(); // Init Chart & Summary
+    }
 }
 
 // ==========================================
