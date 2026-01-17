@@ -314,29 +314,41 @@ input[type=range]::-webkit-slider-thumb {
    FEEDBACK FIXES V1.0 (Layout & Visibility)
    ============================ */
 
-/* 1. SPLIT VIEW LAYOUT */
+/* 1. SPLIT VIEW LAYOUT (V2 IMPROVED) */
+.terminal-body {
+    overflow: hidden;
+    /* Let split view handle scroll */
+    display: flex;
+    flex-direction: column;
+}
+
 .split-view {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    /* Side-by-side on desktop */
     gap: 20px;
     align-items: flex-start;
+    height: 100%;
 }
 
 .left-inputs {
     flex: 1;
     min-width: 300px;
+    overflow-y: auto;
+    /* Independent Scroll */
+    height: 65vh;
+    padding-right: 10px;
 }
 
 .right-vis {
-    flex: 0.8;
+    flex: 0.6;
     min-width: 280px;
     background: rgba(0, 0, 0, 0.4);
     padding: 15px;
     border-radius: 10px;
     border: 1px solid #444;
     position: sticky;
-    top: 20px;
-    /* Sticky Effect */
+    top: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -345,7 +357,6 @@ input[type=range]::-webkit-slider-thumb {
 .chart-container {
     width: 100%;
     height: 300px;
-    /* Specific height for visibility */
     margin-bottom: 10px;
 }
 

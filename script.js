@@ -11,6 +11,9 @@ const FALLBACK_STATES = [
     "telangana", "tripura", "uttar-pradesh", "uttarakhand", "west-bengal"
 ];
 
+// CONSTANTS
+const MAX_GOALS = 5;
+
 // USER STATE
 let userInputs = {
     income: 0,
@@ -29,14 +32,23 @@ let calculatedPersona = null;
 function initUI() {
     console.log("🚀 Initializing UI...");
 
-    // 1. Wait for DATA_ENGINE
-    if (!window.DATA_ENGINE) {
-        console.warn("⏳ DATA_ENGINE not ready. Retrying...");
+    // 1. Wait for DATA_ENGINE & Auth Button
+    const authBtn = document.getElementById('auth-btn');
+    if (!window.DATA_ENGINE || !authBtn) {
+        console.warn("⏳ Resources (Engine/DOM) not ready. Retrying...");
         setTimeout(initUI, 200);
         return;
     }
 
-    // 2. Input Listeners
+    // 2. Auth Init (Explicit)
+    if (window.CloudServices) {
+        // Force re-attach listener
+        authBtn.onclick = window.CloudServices.login;
+        // Check session
+        window.CloudServices.init();
+    }
+
+    // 3. Input Listeners
     // Explicitly bind the init button
     const initBtn = document.getElementById('btn-splash-init');
     if (initBtn) {
@@ -154,7 +166,6 @@ const CATEGORY_COLORS = {
 // =====================================
 // 1. DYNAMIC DROPDOWNS & UI
 // =====================================
-const MAX_GOALS = 3;
 
 function updateGoals() {
     const age = document.getElementById("input-age").value;
