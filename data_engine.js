@@ -63,6 +63,33 @@ const DATA_ENGINE_CORE = {
     // ===================================
     // 2. LOGIC CORE (NISM COMPLIANT)
     // ===================================
+    // ===================================
+    // 2. LOGIC CORE (TAX RULES 2024-25)
+    // ===================================
+    TAX_RULES_2024: {
+        "equity": {
+            short_term: "20% (if < 1yr)",
+            long_term: "12.5% (if > 1yr)",
+            exemption: "LTCG upto ₹1.25L is Tax Free"
+        },
+        "debt": {
+            short_term: "Slab Rate (if bought > Apr '23)",
+            long_term: "Slab Rate (No Indexation benefit)"
+        },
+        "gold": {
+            short_term: "Slab Rate (if < 24 months)",
+            long_term: "12.5% (if > 24 months)"
+        },
+        "hybrid_equity": { // > 65% Equity
+            short_term: "20% (if < 1yr)",
+            long_term: "12.5% (if > 1yr)"
+        },
+        "hybrid_debt": { // < 35% Equity
+            short_term: "Slab Rate",
+            long_term: "Slab Rate"
+        }
+    },
+
     NISM_RULES: {
         "young_earner": {
             range: [18, 28],
@@ -109,7 +136,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Cash Rich", "Asset Poor", "High Risk"],
             ruler: "Mars (Power)",
             quote: "Tapu ke papa, business badhana hai!",
-            color: "#FF5733" // Orange
+            color: "#FF5733",
+            img: "assets/jethalal.png"
         },
         "bhide": {
             name: "Aatmaram Bhide",
@@ -117,7 +145,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Saver", "Risk Averse", "FD Lover"],
             ruler: "Jupiter (Wisdom)",
             quote: "Hamare zamane mein savings karte thay!",
-            color: "#FFC300" // Yellow
+            color: "#FFC300",
+            img: "assets/bhide.png"
         },
         "popatlal": {
             name: "Popatlal",
@@ -125,7 +154,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Fearful", "Cash Hoarder", "Zero Growth"],
             ruler: "Saturn (Delay)",
             quote: "Duniya hil jayegi, par mera paisa nahi hilega!",
-            color: "#C70039" // Red
+            color: "#C70039",
+            img: "assets/popatlal.png"
         },
         "babita": {
             name: "Babita Ji",
@@ -133,7 +163,8 @@ const DATA_ENGINE_CORE = {
             traits: ["High Spender", "Aesthetics", "Impulse"],
             ruler: "Venus (Beauty)",
             quote: "Ye dress discount mein mila!",
-            color: "#DAF7A6" // Light Green
+            color: "#DAF7A6",
+            img: "assets/babita.png"
         },
         "iyer": {
             name: "Krishnan Iyer",
@@ -141,7 +172,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Data Driven", "Crypto/Tech", "Systematic"],
             ruler: "Mercury (Intellect)",
             quote: "Rocket science logic lagaya hai maine.",
-            color: "#33FFBD" // Teal
+            color: "#33FFBD",
+            img: "assets/iyer.png"
         },
         "sodhi": {
             name: "Roshan Singh Sodhi",
@@ -149,7 +181,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Real Estate", "Optimist", "High Growth"],
             ruler: "Mars (Land)",
             quote: "Property ke daam kabhi neeche nahi jaate!",
-            color: "#FF9800" // Orange-Red
+            color: "#FF9800",
+            img: "assets/sodhi.png"
         },
         "daya": {
             name: "Daya Bhabhi",
@@ -157,7 +190,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Generous", "Travel Lover", "Charity"],
             ruler: "Jupiter + Venus",
             quote: "Hey Maa Mataji! Sabka bhala karo.",
-            color: "#E91E63" // Pink
+            color: "#E91E63",
+            img: "assets/daya.png"
         },
         "tapu": {
             name: "Tapu",
@@ -165,7 +199,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Speculative", "Zero Savings", "FOMO"],
             ruler: "Rahu (Chaos)",
             quote: "Crypto is the future, Dadaji!",
-            color: "#900C3F" // Dark Red
+            color: "#900C3F",
+            img: "assets/tapu.png"
         },
         "anjali": {
             name: "Anjali Mehta",
@@ -173,7 +208,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Protection", "Conservative", "Health First"],
             ruler: "Moon (Care)",
             quote: "Paisa aur Sehat, dono control mein chahiye.",
-            color: "#2ECC71" // Green
+            color: "#2ECC71",
+            img: "assets/anjali.png"
         },
         "mehta": {
             name: "Taarak Mehta",
@@ -181,7 +217,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Overthinking", "Balanced", "Slow Action"],
             ruler: "Mercury (Writer)",
             quote: "Har pehlu ko sochna padta hai Jethalal.",
-            color: "#5DADE2" // Blue
+            color: "#5DADE2",
+            img: "assets/mehta.png"
         },
         "komal": {
             name: "Komal Hathi",
@@ -189,7 +226,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Foodie", "Comfort First", "Instant Joy"],
             ruler: "Jupiter (Abundance)",
             quote: "Oh c'mon Hans! Thoda khaane do.",
-            color: "#9C27B0" // Purple
+            color: "#9C27B0",
+            img: "assets/komal.png"
         },
         "madhavi": {
             name: "Madhavi Bhide",
@@ -197,7 +235,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Entrepreneurial", "Saver", "Balanced"],
             ruler: "Venus (Business)",
             quote: "Achaar papad se bhi empire banta hai.",
-            color: "#F4D03F" // Sunflower
+            color: "#F4D03F",
+            img: "assets/madhavi.png"
         },
         "champaklal": {
             name: "Champak Chacha",
@@ -205,7 +244,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Debt Hater", "Traditional", "No Credit"],
             ruler: "Sun (Authority)",
             quote: "Udhaar maangna paap hai!",
-            color: "#D35400" // Pumpkin
+            color: "#D35400",
+            img: "assets/champaklal.png"
         },
         "natukaka": {
             name: "Natu Kaka",
@@ -213,7 +253,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Loyal", "Safety First", "Low Income"],
             ruler: "Ketu (Routine)",
             quote: "Pagar kab badhegi sethji?",
-            color: "#7F8C8D" // Grey
+            color: "#7F8C8D",
+            img: "assets/natukaka.png"
         },
         "bagha": {
             name: "Bagha",
@@ -221,7 +262,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Random", "Gullible", "Weird Bets"],
             ruler: "Rahu (Confusion)",
             quote: "Jaisi jiski soch!",
-            color: "#8E44AD" // Purple
+            color: "#8E44AD",
+            img: "assets/bagha.png"
         },
         "roshan": {
             name: "Mrs. Roshan",
@@ -229,7 +271,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Social", "Heart-driven", "Generous"],
             ruler: "Venus (Love)",
             quote: "Oh ji, party karte hai!",
-            color: "#F1948A" // Light Red
+            color: "#F1948A",
+            img: "assets/roshan.png"
         },
         "abdul": {
             name: "Abdul",
@@ -237,7 +280,8 @@ const DATA_ENGINE_CORE = {
             traits: ["Cash Flow Focus", "Survival", "No Assets"],
             ruler: "Saturn (Service)",
             quote: "Sabka kaam karta hoon, par apna account khali hai.",
-            color: "#2C3E50" // Dark Blue
+            color: "#2C3E50",
+            img: "assets/abdul.png"
         }
     },
 

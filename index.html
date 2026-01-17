@@ -3,81 +3,144 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gokuldham Society Analysis</title>
-    <!-- CRASH REPORTER (Must be first) -->
-    <script src="crash_reporter.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gokuldham Bank - Smart Ledger</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
 </head>
 
 <body>
-
-    <!-- ==============================================
-         SCREEN 1: ABDUL'S SHOP (SPLASH)
-         ============================================== -->
     <!-- ==============================================
          Page 1: INTRO (Splash)
          ============================================== -->
     <div id="ui-page-1" class="ui-screen">
-        <div class="splash-content">
-            <h1 style="font-size: 5rem; margin-bottom: 0;">GOKULDHAM</h1>
-            <div class="subtitle">TRUST BANK</div>
-            <p style="font-size: 1.2rem; color: #ccc; margin: 20px 0;">"Sahi Investment, Sahi Future!"</p>
+        <div class="mobile-container splash-container">
+            <div class="bank-logo">GOKULDHAM BANK</div>
+            <h1 class="splash-title">OPEN<br>LEDGER</h1>
+            <p class="splash-subtitle">Wealth Planning for the Modern Indian Family</p>
+            <div class="mission-badge">PRIVACY FIRST • AI POWERED</div>
 
-            <div class="mission-badge">
-                Fair Price Discovery • Personalized Banking
-            </div>
-
-            <button id="btn-start" class="voxel-btn" onclick="goToPage(2)">
-                <img src="assets/soda.png" alt="Soda">
+            <button class="btn-primary" id="btn-splash-init" onclick="goToPage(2)">
                 OPEN LEDGER
             </button>
+            <div style="margin-top:20px; font-size:0.7rem; color:#666;">
+                By proceeding, you agree to our <u>Terms of Service</u>.
+            </div>
         </div>
     </div>
 
     <!-- ==============================================
-         Page 2: UPI RECEIPT (Inputs)
-         ============================================== -->
+         Page 2: UPI RECEIPT (INPUTS) - Updated V13
+         ============================================= -->
     <div id="ui-page-2" class="ui-screen hidden">
-        <div class="mobile-container receipt-paper">
-            <div class="receipt-header">
-                <h2>UPI TRANSFER RECEIPT</h2>
-                <div class="receipt-meta">Transaction ID: GOKUL-8821</div>
+        <div class="mobile-container p2-container">
+            <!-- Scrollable Body -->
+            <div class="receipt-paper">
+                <div class="receipt-header">
+                    <h2>UPI TRANSFER RECEIPT</h2>
+                    <div style="font-size:0.75rem; letter-spacing:1px;">Transaction ID: GOKUL-<span
+                            id="txn-id">8821</span></div>
+                </div>
+
+                <div class="input-section">
+                    <label>MONTHLY INCOME (₹)</label>
+                    <div class="currency-input">
+                        <span>₹</span>
+                        <input type="number" id="input-income" value="50000" placeholder="0" oninput="updateLedger()">
+                    </div>
+                </div>
+
+                <div class="dashed-line"></div>
+                <div style="text-align:center; margin:10px 0; font-weight:bold; font-size:0.9rem;">SPENDING BREAKDOWN
+                    (%)</div>
+
+                <!-- NEEDS -->
+                <div class="category-group">
+                    <div class="cat-header">🏠 ESSENTIALS (NEEDS)</div>
+
+                    <div class="slider-group">
+                        <label>Rent / EMI / Home</label>
+                        <span id="val-housing">30%</span>
+                        <input type="range" id="slider-housing" min="0" max="100" value="30" class="slider"
+                            oninput="updateLedger(this.id, 'housing')">
+                    </div>
+
+                    <div class="slider-group">
+                        <label>Groceries / Utilities / Bills</label>
+                        <span id="val-utilities">20%</span>
+                        <input type="range" id="slider-utilities" min="0" max="100" value="20" class="slider"
+                            oninput="updateLedger(this.id, 'utilities')">
+                    </div>
+                </div>
+
+                <!-- WANTS -->
+                <div class="category-group">
+                    <div class="cat-header">🍿 LIFESTYLE (WANTS)</div>
+
+                    <div class="slider-group">
+                        <label>Dining / Zomato / Swiggy</label>
+                        <span id="val-dining">10%</span>
+                        <input type="range" id="slider-dining" min="0" max="100" value="10" class="slider"
+                            oninput="updateLedger(this.id, 'dining')">
+                    </div>
+
+                    <div class="slider-group">
+                        <label>Travel / Uber / Fuel</label>
+                        <span id="val-travel">10%</span>
+                        <input type="range" id="slider-travel" min="0" max="100" value="10" class="slider"
+                            oninput="updateLedger(this.id, 'travel')">
+                    </div>
+
+                    <div class="slider-group">
+                        <label>Shopping / Amazon</label>
+                        <span id="val-shopping">10%</span>
+                        <input type="range" id="slider-shopping" min="0" max="100" value="10" class="slider"
+                            oninput="updateLedger(this.id, 'shopping')">
+                    </div>
+                </div>
+
+                <!-- SAVINGS -->
+                <div class="category-group">
+                    <div class="cat-header">🌱 FUTURE (SAVINGS)</div>
+
+                    <div class="slider-group">
+                        <label>SIP / Investments / Cash</label>
+                        <span id="val-invest">20%</span>
+                        <input type="range" id="slider-invest" min="0" max="100" value="20" class="slider"
+                            oninput="updateLedger(this.id, 'invest')">
+                    </div>
+                </div>
+
+                <!-- Spacer for scroll -->
+                <div style="height: 100px;"></div>
             </div>
 
-            <div class="input-section">
-                <label>MONTHLY INCOME</label>
-                <div class="currency-input">
-                    <span>₹</span>
-                    <input type="number" id="input-income" placeholder="0" oninput="updateLedger()">
+            <!-- Fixed Footer -->
+            <div class="receipt-footer">
+                <div class="total-status" id="total-check">
+                    Total: 100%
                 </div>
+                <!-- Remaining Budget Indicator -->
+                <div class="budget-bar-container">
+                    <div id="budget-bar-fill" class="budget-bar-fill" style="width: 100%;"></div>
+                </div>
+                <button class="btn-primary" onclick="analyzeHabits()">
+                    SUBMIT TO LEDGER
+                </button>
             </div>
-
-            <div class="sliders-section">
-                <div class="slider-group">
-                    <label>NEEDS (Rent, Food)</label>
-                    <input type="range" id="slider-needs" value="50" min="0" max="100" oninput="updateLedger('needs')">
-                    <span id="val-needs">50%</span>
-                </div>
-                <div class="slider-group">
-                    <label>WANTS (Travel, Dining)</label>
-                    <input type="range" id="slider-wants" value="30" min="0" max="100" oninput="updateLedger('wants')">
-                    <span id="val-wants">30%</span>
-                </div>
-                <div class="slider-group">
-                    <label>SAVINGS (Investments)</label>
-                    <input type="range" id="slider-savings" value="20" min="0" max="100"
-                        oninput="updateLedger('savings')">
-                    <span id="val-savings">20%</span>
-                </div>
-            </div>
-
-            <div class="total-check" id="total-check">Total: 100%</div>
-
-            <button class="btn-primary" onclick="analyzeHabits()">
-                SUBMIT TO LEDGER
-            </button>
         </div>
     </div>
 
@@ -111,29 +174,30 @@
          ============================================== -->
     <div id="ui-page-4" class="ui-screen hidden">
         <div class="mobile-container">
-            <h2>COMPLETE KYC</h2>
-            <p style="color:#aaa;">To calibrate inflation & risk.</p>
+            <div class="receipt-header">
+                <h2>PROFILE CONTEXT</h2>
+                <div style="font-size:0.8rem; color:#888;">To build your strategy, we need context.</div>
+            </div>
 
-            <div class="form-group">
-                <label>AGE</label>
-                <select id="input-age">
-                    <option value="18-22">18 - 22 (Student)</option>
-                    <option value="22-28">22 - 28 (Young Pro)</option>
-                    <option value="29-39" selected>29 - 39 (Mid Career)</option>
-                    <option value="40-60">40 - 60 (Pre-Retire)</option>
-                    <option value="60+">60+ (Retired)</option>
+            <div class="input-section">
+                <label>CURRENT AGE</label>
+                <select id="input-age" class="modern-select">
+                    <option value="18-25">18-25 (Gen Z)</option>
+                    <option value="26-35" selected>26-35 (Millennial)</option>
+                    <option value="36-50">36-50 (Gen X)</option>
+                    <option value="50+">50+ (Boomer)</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>STATE (For Inflation Index)</label>
-                <select id="input-state">
+            <div class="input-section">
+                <label>RESIDENCE (INFLATION INDEX)</label>
+                <select id="input-state" class="modern-select">
                     <!-- Populated via JS -->
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>PRIMARY GOALS (Select 2)</label>
+            <div class="input-section">
+                <label>TOP 2 FINANCIAL GOALS</label>
                 <div id="goal-pills-container" class="goal-pills-wrapper">
                     <!-- Populated via JS -->
                 </div>
@@ -146,39 +210,114 @@
     </div>
 
     <!-- ==============================================
-         Page 5: MASTER PLAN (Result)
+         Page 5: MASTER PLAN (Recommendation)
          ============================================== -->
     <div id="ui-page-5" class="ui-screen hidden">
         <div class="mobile-container result-scroll">
             <div class="result-header">
-                <h2>YOUR FINANCIAL PASSPORT</h2>
+                <h2>MASTER PLAN</h2>
+                <p>AI-Generated Strategy</p>
             </div>
 
-            <!-- A. ASSET ALLOCATION -->
+            <!-- Card 1: Asset Allocation -->
             <div class="card">
-                <h3>Recommended Allocation</h3>
-                <canvas id="allocationChart" style="max-height: 200px;"></canvas>
-                <div id="allocation-details"></div>
-            </div>
-
-            <!-- B. TAX STRATEGY -->
-            <div class="card">
-                <h3>Tax Efficiency Strategy</h3>
-                <div id="tax-strategy-content">
-                    <div class="loading-text">Optimizing for 80C...</div>
+                <h3>ASSET ALLOCATION</h3>
+                <div class="chart-container" style="position: relative; height:200px; width:100%">
+                    <canvas id="allocationChart"></canvas>
+                </div>
+                <div id="allocation-details" style="margin-top:15px;">
+                    <!-- Injected JS -->
                 </div>
             </div>
 
-            <!-- C. REBALANCING -->
+            <!-- Card 2: Strategic DNA (Pros/Cons) -->
             <div class="card">
-                <h3>Rebalancing Schedule</h3>
-                <div id="rebalancing-content"></div>
+                <h3>STRATEGY DNA</h3>
+                <div class="strategy-grid">
+                    <div class="dna-block positive">
+                        <div class="dna-icon">👍</div>
+                        <div>
+                            <h4>PROS</h4>
+                            <ul id="strategy-pros">
+                                <li>High Growth Potential</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="dna-block negative">
+                        <div class="dna-icon">⚠️</div>
+                        <div>
+                            <h4>RISKS</h4>
+                            <ul id="strategy-cons">
+                                <li>Short-term Volatility</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="market-condition">
+                    <strong>ASSUMED MARKET:</strong> <span id="market-assumption">Bullish (India Growth Story)</span>
+                </div>
             </div>
 
-            <div class="action-row">
-                <button class="btn-secondary" onclick="window.location.reload()">DELETE DATA</button>
-                <button class="btn-primary" onclick="goToPage(6)">TALK TO INSPECTOR</button>
+            <!-- Card 3: Scenario Analysis -->
+            <div class="card">
+                <h3>WEALTH PROJECTION</h3>
+                <div class="scenario-controls">
+                    <label>Tenure: <span id="tenure-val">10 Years</span></label>
+                    <input type="range" id="input-tenure" min="3" max="30" value="10"
+                        oninput="updateScenarioAnalysis()">
+                </div>
+
+                <div class="chart-container" style="position: relative; height:250px; width:100%">
+                    <canvas id="scenarioChart"></canvas>
+                </div>
+
+                <div class="scenario-legend">
+                    <span style="color:#e74c3c">Worst Case</span> •
+                    <span style="color:#f1c40f">Base Case</span> •
+                    <span style="color:#2ecc71">Best Case</span>
+                </div>
             </div>
+
+            <!-- Card 4: Tax Efficiency Guide (NEW) -->
+            <div class="card">
+                <h3>WITHDRAWAL GUIDE (TAX EFFICIENT)</h3>
+                <div id="tax-withdrawal-content">
+                    <div class="loading-text">Loading Tax Rules...</div>
+                </div>
+            </div>
+
+            <!-- Card 5: Tax Optimization -->
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3>TAX OPTIMIZATION</h3>
+                    <span class="badge-success">80C SOLVED</span>
+                </div>
+                <div id="tax-strategy-content">
+                    <div class="loading-text">Solving linear equations...</div>
+                </div>
+            </div>
+
+            <!-- Card 3: Rebalancing -->
+            <div class="card">
+                <h3>REBALANCING SCHEDULE</h3>
+                <div id="rebalancing-content">
+                    <!-- Injected JS -->
+                </div>
+            </div>
+
+            <button class="btn-secondary"
+                onclick="document.getElementById('ui-page-5').classList.add('hidden'); document.getElementById('ui-page-6').classList.remove('hidden'); sendMessage();"
+                style="width:100%; margin-top:20px; background:#000;">
+                CHAT WITH AI INSPECTOR ⮕
+            </button>
+
+            <div style="text-align:center; margin-top:30px; margin-bottom: 20px;">
+                <button class="btn-text" onclick="localStorage.clear(); location.reload();" style="color:#e74c3c;">
+                    ⚠ DELETE MY DATA
+                </button>
+            </div>
+
+            <div style="height: 50px;"></div>
         </div>
     </div>
 
@@ -186,74 +325,33 @@
          Page 6: AI COMPANION (Chat)
          ============================================== -->
     <div id="ui-page-6" class="ui-screen hidden">
-        <div class="mobile-container chat-interface">
+        <div class="mobile-container chat-interface"
+            style="display:flex; flex-direction:column; height:100vh; max-width:480px;">
             <div class="chat-header">
-                <div class="chat-avatar">👮</div>
+                <div class="chat-avatar">👮‍♂️</div>
                 <div>
-                    <div>Inspector Chalu Pandey</div>
-                    <div style="font-size:0.7em; color:#ccc;">Gokuldham Police (Financial Crime Unit)</div>
+                    <div style="font-weight:bold;">Inspector Chalu Pandey</div>
+                    <div style="font-size:0.8rem; color:green;">● Online</div>
                 </div>
+                <div style="margin-left:auto; cursor:pointer;" onclick="goToPage(5)">✕</div>
             </div>
 
             <div id="chat-history" class="chat-history">
                 <div class="chat-msg system">
-                    Namaste! I have reviewed your case file (Pages 1-5). Ask me anything about your logic or future.
+                    Hello! I have analyzed your portfolio. Based on your spending, I suspect some... irregularities. Ask
+                    me anything!
                 </div>
             </div>
 
             <div class="chat-input-area">
-                <input type="text" id="chat-input" placeholder="Type your question...">
-                <button onclick="sendMessage()">SEND</button>
+                <input type="text" id="chat-input" placeholder="Ask about tax, stocks, or risks..."
+                    onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()">➤</button>
             </div>
-
-            <button class="btn-text" onclick="goToPage(5)">Back to Passport</button>
         </div>
     </div>
 
-    <!-- END UI SCREENS -->
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-
-    <!-- SUPABASE SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- STACK AUTH SDK -->
-    <script src="https://unpkg.com/@stackframe/js-core"></script>
-
-    <!-- ANALYTICS: Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7GNSKT9D0R"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-
-        gtag('config', 'G-7GNSKT9D0R');
-    </script>
-
-    <!-- ANALYTICS: Microsoft Clarity -->
-    <script type="text/javascript">
-        (function (c, l, a, r, i, t, y) {
-            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
-            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
-            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
-        })(window, document, "clarity", "script", "v2i2peiyyt");
-    </script>
-
-    <!-- TELEMETRY: Sentry -->
-    <script src="https://js.sentry-cdn.com/f6389a36d42bb1089afabd806967030f.min.js" crossorigin="anonymous"></script>
-    <script>
-        window.Sentry = window.Sentry || {};
-        window.Sentry.onLoad = function () {
-            Sentry.init({
-                dsn: "https://f6389a36d42bb1089afabd806967030f@o4510686639161344.ingest.us.sentry.io/4510686684315648",
-                integrations: [new Sentry.BrowserTracing(), new Sentry.Replay()],
-                tracesSampleRate: 1.0,
-                replaysSessionSampleRate: 0.1,
-                replaysOnErrorSampleRate: 1.0,
-            });
-        };
-    </script>
-
+    <!-- Scripts -->
     <script src="data_engine.js"></script>
     <script src="macro_data.js"></script>
     <script src="telemetry.js"></script>

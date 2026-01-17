@@ -43,81 +43,113 @@ function goToPage(pageNum) {
 // 2. PAGE 2: UPI RECEIPT (INPUTS)
 // ==========================================
 
-function updateLedger(changedId) {
+// ==========================================
+// 2. PAGE 2: UPI RECEIPT (INPUTS) - GRANULAR V13
+// ==========================================
+
+// Granular State Map
+let GRANULAR_ALLOC = {
+    housing: 30, utilities: 20, // Needs
+    dining: 10, travel: 10, shopping: 10, // Wants
+    invest: 20 // Savings
+};
+
+function updateLedger(changedId, categoryKey) {
     // 1. Get Income
     GLOBAL_STATE.income = parseFloat(document.getElementById("input-income").value) || 0;
 
-    // 2. Handle Sliders (Auto-balance to 100%)
-    let needs = parseInt(document.getElementById("slider-needs").value);
-    let wants = parseInt(document.getElementById("slider-wants").value);
-    let savings = parseInt(document.getElementById("slider-savings").value);
-
-    // Simple Locker: Only modify the one NOT dragged if possible? 
-    // For MVP simplicity: Just display error if not 100 on "Submit", or try to smart-adjust.
-    // Let's rely on the "Total Check" visual for user.
-
-    let total = needs + wants + savings;
-    const checkEl = document.getElementById("total-check");
-
-    if (total === 100) {
-        checkEl.style.background = "#d4edda";
-        checkEl.style.color = "#155724";
-        checkEl.innerText = "Total: 100% (Perfect)";
-    } else {
-        checkEl.style.background = "#f8d7da";
-        checkEl.style.color = "#721c24";
-        checkEl.innerText = `Total: ${total}% (Target: 100%)`;
+    // 2. Update State from Input
+    if (changedId && categoryKey) {
+        const val = parseInt(document.getElementById(changedId).value);
+        GRANULAR_ALLOC[categoryKey] = val;
+        // Update Label
+        document.getElementById(`val-${categoryKey}`).innerText = val + "%";
     }
 
-    // Update Text Labels
-    document.getElementById("val-needs").innerText = needs + "%";
-    document.getElementById("val-wants").innerText = wants + "%";
-    document.getElementById("val-savings").innerText = savings + "%";
+    // 3. Calculate Totals
+    let total = 0;
+    for (let key in GRANULAR_ALLOC) total += GRANULAR_ALLOC[key];
 
-    GLOBAL_STATE.alloc = { needs, wants, savings };
+    // 4. Smart Cap Visualization (Max 100 Logic)
+    // We don't block the slider movement (UX friction), but we show the overflow visually.
+    // User requested "Intuitive... don't allow above 100".
+    // Strict Mode: If total > 100, we clamp the CHANGED slider back?
+
+    if (total > 100 && changedId) {
+        // Revert Operation?
+        // It's better to clamp the input value to (100 - (total - current))
+        const pVal = GRANULAR_ALLOC[categoryKey];
+        const overflow = total - 100;
+        const correctVal = pVal - overflow;
+
+        if (correctVal >= 0) {
+            document.getElementById(changedId).value = correctVal;
+            GRANULAR_ALLOC[categoryKey] = correctVal;
+            document.getElementById(`val-${categoryKey}`).innerText = correctVal + "%";
+            total = 100;
+        }
+    }
+
+    // 5. Update Footer UI
+    const checkEl = document.getElementById("total-check");
+    const barFill = document.getElementById("budget-bar-fill");
+
+    barFill.style.width = total + "%";
+
+    if (total === 100) {
+        checkEl.style.color = "#2ecc71"; // Green
+        checkEl.innerText = "✓ Perfect Balance (100%)";
+        barFill.style.background = "#2ecc71";
+    } else if (total < 100) {
+        checkEl.style.color = "#f1c40f"; // Yellow
+        checkEl.innerText = `${100 - total}% Remaining for Allocation`;
+        barFill.style.background = "#f1c40f";
+    } else {
+        // Should catch above, but strictly:
+        checkEl.style.color = "#e74c3c"; // Red
+        checkEl.innerText = `Overload! Reduce by ${total - 100}%`;
+        barFill.style.background = "#e74c3c";
+    }
+
+    // 6. Map to Global State (N/W/S) for Compability
+    GLOBAL_STATE.alloc.needs = GRANULAR_ALLOC.housing + GRANULAR_ALLOC.utilities;
+    GLOBAL_STATE.alloc.wants = GRANULAR_ALLOC.dining + GRANULAR_ALLOC.travel + GRANULAR_ALLOC.shopping;
+    GLOBAL_STATE.alloc.savings = GRANULAR_ALLOC.invest;
 }
 
 function analyzeHabits() {
     // 1. Validate
-    const total = GLOBAL_STATE.alloc.needs + GLOBAL_STATE.alloc.wants + GLOBAL_STATE.alloc.savings;
+    const total = Object.values(GRANULAR_ALLOC).reduce((a, b) => a + b, 0);
+
     if (total !== 100) {
-        alert("Please ensure sliders add up to exactly 100%.");
+        alert(`Please allocate exactly 100%. (Current: ${total}%)`);
         return;
     }
+
     if (GLOBAL_STATE.income < 1000) {
         alert("Please enter a valid monthly income.");
         return;
     }
 
-    // 2. Call K-means (Simulated or Real)
-    // We use the LOCAL FORENSICS ENGINE or API if available.
-    // For MVP Speed, let's use the local logic first, then async fetch backend if needed.
-
-    console.log("Analyzing Habits...", GLOBAL_STATE.alloc);
-
-    // Simulate API Call delay
+    // 2. K-Means
+    console.log("Analyzing Granular Habits...", GRANULAR_ALLOC);
     document.getElementById("total-check").innerText = "Analyzing Transaction Patterns...";
 
     setTimeout(() => {
-        // --- LOGIC STEP A: DETERMINE PERSONA ---
-        // We use the existing forensics logic but purely on Needs/Wants/Savings
-        // Mocking the inputs required by determinePersona
+        // Pass granular stats to forensics (if simplified, just pass N/W/S)
         const personaRes = FORENSICS_ENGINE.determinePersona(
             window.DATA_ENGINE,
-            "maharashtra", // Placeholder state (doesn't affect persona cluster much, mostly spending)
-            "29-39",       // Placeholder age
+            "maharashtra",
+            "29-39",
             GLOBAL_STATE.alloc.needs,
             GLOBAL_STATE.alloc.wants,
             GLOBAL_STATE.alloc.savings,
-            [], // No goals yet
-            {}, // No granular yet
-            0   // No debt input yet
+            [],
+            GRANULAR_ALLOC, // Pass granular object for future V2 logic
+            0
         );
 
         GLOBAL_STATE.persona = personaRes.key;
-        console.log("Persona Detected:", GLOBAL_STATE.persona);
-
-        // 3. Render Page 3
         renderPersonaPage(GLOBAL_STATE.persona, personaRes.clusterId || "#C16");
         goToPage(3);
     }, 800);
@@ -132,11 +164,13 @@ function renderPersonaPage(personaKey, clusterId) {
 
     document.getElementById("persona-name").innerText = pData.name.toUpperCase();
     document.getElementById("persona-desc").innerText = pData.quote;
-    document.getElementById("persona-cluster").innerText = clusterId || "CLUSTER-X";
+    // document.getElementById("persona-cluster").innerText = clusterId || "CLUSTER-X"; // Hidden per user request
 
-    // Image
+    // Image with Fallback and smooth load
     const container = document.getElementById("persona-image-container");
-    container.innerHTML = `<img src="${pData.img}" style="width:150px; height:150px; border-radius:50%; border:4px solid #fff; box-shadow:0 0 20px rgba(255,215,0,0.5);">`;
+    const imgPath = pData.img || "assets/mehta.png"; // Fallback
+
+    container.innerHTML = `<img src="${imgPath}" alt="${pData.name}" onerror="this.src='assets/mehta.png'">`;
 }
 
 // ==========================================
@@ -196,6 +230,12 @@ function generateStrategy() {
     // Trigger Async Loaders
     runAssetAllocationEngine();
     runTaxOptimizer();
+
+    // Trigger Insights & Scenarios (V14)
+    setTimeout(() => {
+        renderStrategyInsights(GLOBAL_STATE.persona);
+        updateScenarioAnalysis();
+    }, 100);
 }
 
 // ==========================================
@@ -206,12 +246,15 @@ document.addEventListener("DOMContentLoaded", () => {
     initUI();
 });
 
-// Helper: Populate States (copied from old logic but simplified)
+// Helper: Populate States
 function populateStates() {
     const select = document.getElementById('input-state');
     if (!select) return;
 
-    FALLBACK_STATES.forEach(state => {
+    // Use DATA_ENGINE source of truth
+    const states = window.DATA_ENGINE ? window.DATA_ENGINE.ALL_STATES : [];
+
+    states.forEach(state => {
         const option = document.createElement("option");
         option.value = state;
         option.innerText = state.replace(/-/g, ' ').toUpperCase();
@@ -316,40 +359,94 @@ function renderAllocationChart(data) {
 }
 
 function runTaxOptimizer() {
-    // Call Python Linear Solver
+    // 1. Calculate Targets
+    // Rule: Max 1.5L under 80C
+    const income = GLOBAL_STATE.income;
+    const invAmount = income * 0.2 * 12; // Annual Savings
+
+    const container = document.getElementById("tax-strategy-content");
+    container.innerHTML = `<div class="loading-text">Analyzing 80C & Tax Slabs...</div>`;
+
+    // 2. Prepare Payload for Backend
     const payload = {
-        investment_amount: GLOBAL_STATE.income * 0.2 * 12, // Approx annual savings
+        investment_amount: invAmount,
         risk_profile: 2
     };
 
-    const container = document.getElementById("tax-strategy-content");
+    // 3. Fallback Logic (Local Heuristic)
+    const runFallback = () => {
+        console.warn("Using Local Tax Heuristics.");
+        // Simple Logic: Fill 1.5L 80C first
+        // Split: ELSS (60%), PPF (40%) for younger; PPF (100%) for risk averse.
+
+        let elss = 0, ppf = 0, insurance = 0;
+        const limit80C = 150000;
+
+        // Capacity check
+        const capacity = Math.min(invAmount, limit80C);
+
+        if (GLOBAL_STATE.persona === "bhide" || GLOBAL_STATE.persona === "popatlal") {
+            ppf = capacity; // Safety first
+        } else {
+            elss = capacity * 0.6; // Growth
+            ppf = capacity * 0.4;
+        }
+
+        // Render Fallback
+        let html = `<div style="margin-bottom:10px; color:#27ae60; font-weight:bold;">Strategy: Maximize 80C (₹1.5L)</div>`;
+
+        html += `
+            <div class="tax-row">
+                <span>ELSS (Tax Saver Fund)</span>
+                <span>₹${(elss / 1000).toFixed(0)}k</span>
+            </div>
+            <div class="tax-row">
+                <span>PPF / EPF</span>
+                <span>₹${(ppf / 1000).toFixed(0)}k</span>
+            </div>
+             <div class="tax-row">
+                <span>Term Insurance</span>
+                <span>₹15k</span>
+            </div>
+        `;
+
+        html += `<div style="font-size:0.8em; color:#888; margin-top:5px;">Projected Tax Saved: ₹${(capacity * 0.3).toFixed(0)} (Old Regime)</div>`;
+        container.innerHTML = html;
+    };
+
+    // 4. Try Network call with Timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s Timeout
 
     fetch("https://gokuldham-backend.onrender.com/analyze/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
     })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("Server Error");
+            return res.json();
+        })
         .then(data => {
+            clearTimeout(timeoutId);
+            // Success Render
             let html = `<div style="margin-bottom:10px; color:#27ae60; font-weight:bold;">${data.message}</div>`;
-
-            // Loop allocation
             for (const [key, val] of Object.entries(data.allocation)) {
                 if (val && val !== "₹0") {
                     html += `
-                    <div class="tax-row">
-                        <span>${key}</span>
-                        <span>${val}</span>
-                    </div>
-                 `;
+                <div class="tax-row">
+                    <span>${key}</span>
+                    <span>${val}</span>
+                </div>`;
                 }
             }
-
             html += `<div style="font-size:0.8em; color:#888; margin-top:5px;">Projected 1Y Yield: ₹${data.projected_return_1y}</div>`;
             container.innerHTML = html;
         })
         .catch(e => {
-            container.innerHTML = `<div style="color:red">Tax Engine unavailable. Consult CA.</div>`;
+            // Run Fallback on ANY error (Network, Timeout, Server)
+            runFallback();
         });
 }
 
@@ -392,7 +489,8 @@ function sendMessage() {
         question: msg
     };
 
-    fetch("/api/inspector", { // Hits Vercel Function which hits Gemini
+    // Switch to Python Backend for Chat (More reliable than Vercel Node for this setup)
+    fetch("https://gokuldham-backend.onrender.com/inspector/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -411,4 +509,228 @@ function sendMessage() {
         .catch(e => {
             document.getElementById(loadingId).innerText = "Error contacting Inspector Pandey.";
         });
+}
+
+// ==========================================
+// 9. TAX EFFICIENCY ENGINE (NEW V15)
+// ==========================================
+function renderTaxWiseWithdrawal() {
+    const rules = window.DATA_ENGINE.TAX_RULES_2024;
+    if (!rules) return;
+
+    const container = document.getElementById("tax-withdrawal-content");
+    if (!container) return; // Need to create this DIV in HTML next
+
+    let html = `
+        <div style="font-family: 'Space Mono', monospace; font-size: 0.8rem; margin-bottom: 15px; color: #555;">
+            SMART REDEMPTION ORDER (To minimize tax):
+        </div>
+        <div class="withdrawal-grid">
+            <div class="w-card">
+                <div class="w-header equity">1. EQUITY (Long Term)</div>
+                <div class="w-body">
+                    <div class="w-row"><span>Wait:</span> <strong>> 1 Year</strong></div>
+                    <div class="w-row"><span>Tax:</span> <strong>12.5%</strong></div>
+                    <div class="w-note">${rules.equity.exemption}</div>
+                </div>
+            </div>
+            <div class="w-card">
+                <div class="w-header gold">2. GOLD (Long Term)</div>
+                <div class="w-body">
+                    <div class="w-row"><span>Wait:</span> <strong>> 2 Years</strong></div>
+                    <div class="w-row"><span>Tax:</span> <strong>12.5%</strong></div>
+                    <div class="w-note">New Rule (Budget '24)</div>
+                </div>
+            </div>
+            <div class="w-card">
+                <div class="w-header debt">3. DEBT (Emergency)</div>
+                <div class="w-body">
+                    <div class="w-row"><span>Wait:</span> <strong>Any Time</strong></div>
+                    <div class="w-row"><span>Tax:</span> <strong>Slab Rate</strong></div>
+                    <div class="w-note">Use for liquidity only</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background:#fff3cd; padding:10px; border-radius:4px; margin-top:15px; font-size:0.8rem; border-left:4px solid #f1c40f;">
+            <strong>💡 Pro Tip:</strong> If you need cash, sell assets with <em>Losses</em> first (Tax Harvesting), then Equity < ₹1.25L gain.
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+// ==========================================
+// 10. DYNAMIC REBALANCING LOGIC (V16)
+// ==========================================
+function updateRebalancingSchedule(tenureYears) {
+    const container = document.getElementById("rebalancing-content");
+    if (!container) return;
+
+    // Logic Factors
+    const pKey = GLOBAL_STATE.persona || "mehta";
+    const isHighRisk = ["jethalal", "babita", "roshan"].includes(pKey);
+    const isShortTerm = tenureYears < 5;
+
+    let frequency = "Yearly";
+    let logic = "Long-term compounding needs patience. Excessive churning hurts returns.";
+    let dateOffsetMonths = 12;
+
+    if (isShortTerm) {
+        frequency = "Quarterly";
+        logic = "Short tenure (< 5y) requires tight risk management to protect capital.";
+        dateOffsetMonths = 3;
+    } else if (isHighRisk) {
+        frequency = "Semi-Annually";
+        logic = "High-risk portfolio needs containment. Rebalance if equity deviates > 5%.";
+        dateOffsetMonths = 6;
+    }
+
+    const nextDate = new Date();
+    nextDate.setMonth(nextDate.getMonth() + dateOffsetMonths);
+
+    container.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <span style="font-size:0.9rem; color:#555;">Frequency:</span>
+            <span style="font-weight:bold; color:#d35400;">${frequency}</span>
+        </div>
+        <div class="tax-row" style="background:#fff3e0; border-left:4px solid #f39c12;">
+            <span>Next Review Date</span>
+            <span>${nextDate.toLocaleDateString()}</span>
+        </div>
+        <p style="font-size:0.8rem; color:#666; margin-top:10px; font-style:italic;">
+            <strong>Why?</strong> ${logic}
+        </p>
+    `;
+}
+
+// ==========================================
+// 8. SCENARIO ANALYSIS & INSIGHTS (NEW V14)
+// ==========================================
+
+function renderStrategyInsights(personaKey) {
+    const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['mehta'];
+
+    // 1. Mock Pros/Cons based on Persona Ruler
+    let pros = ["Customized for your risk profile", "High inflation-adjusted returns"];
+    let cons = ["Market volatility exposure", "Lock-in period for tax saving"];
+    let market = "Bullish (India Growth @ 7%)";
+
+    // Heuristics
+    if (pData.traits.includes("High Risk")) {
+        pros = ["Aggressive Wealth Creation", "Maximizes Compounding", "Tax Efficient (LTCG)"];
+        cons = ["High Short-term Volatility", "Not suitable for < 3yr goals"];
+    } else if (pData.traits.includes("Risk Averse")) {
+        pros = ["Capital Protection", "Steady Income Stream", "Low Volatility"];
+        cons = ["May barely beat inflation", "Lower final corpus"];
+    }
+
+    // 2. Inject
+    const prosContainer = document.getElementById("strategy-pros");
+    const consContainer = document.getElementById("strategy-cons");
+    const marketContainer = document.getElementById("market-assumption");
+
+    if (prosContainer) prosContainer.innerHTML = pros.map(i => `<li>${i}</li>`).join('');
+    if (consContainer) consContainer.innerHTML = cons.map(i => `<li>${i}</li>`).join('');
+    if (marketContainer) marketContainer.innerText = market;
+}
+
+let scenarioChartInstance = null;
+
+function updateScenarioAnalysis() {
+    // 1. Get Tenure
+    const tenureInput = document.getElementById("input-tenure");
+    if (!tenureInput) return;
+
+    const tenure = parseInt(tenureInput.value);
+    document.getElementById("tenure-val").innerText = `${tenure} Years`;
+
+    // 2. Assumptions (CAGR)
+    // Simplified: Assume 60/30/10 split if no algo run yet
+    // Equity: 12%, Debt: 7%, Gold: 8%
+    const wReturn = (0.6 * 12) + (0.3 * 7) + (0.1 * 8); // ~10.1%
+
+    const rates = {
+        worst: wReturn - 4, // ~6%
+        base: wReturn,      // ~10%
+        best: wReturn + 4   // ~14%
+    };
+
+    // 3. Compute Future Value (FV)
+    const principal = GLOBAL_STATE.income || 50000;
+    const sip = (GLOBAL_STATE.alloc.savings / 100) * principal; // Monthly SIP
+
+    // Future Value of SIP: P * [ (1+i)^n - 1 ] / i * (1+i)
+    const fv = (r, years) => {
+        const i = r / 12 / 100;
+        const n = years * 12;
+        return Math.round(sip * ((Math.pow(1 + i, n) - 1) / i) * (1 + i));
+    };
+
+    const data = [
+        fv(rates.worst, tenure),
+        fv(rates.base, tenure),
+        fv(rates.best, tenure)
+    ];
+
+    // 4. Render Chart
+    const ctx = document.getElementById('scenarioChart');
+    if (!ctx) return;
+
+    if (scenarioChartInstance) {
+        scenarioChartInstance.destroy();
+    }
+
+    scenarioChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Bear (-4%)', 'Base', 'Bull (+4%)'],
+            datasets: [{
+                label: `Projected Wealth (Units of ₹)`,
+                data: data,
+                backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71'],
+                borderRadius: 4,
+                barThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumSignificantDigits: 3 }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#666',
+                        callback: function (value) { return '₹' + (value / 100000).toFixed(0) + 'L'; }
+                    },
+                    grid: { color: '#eee' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#333', font: { weight: 'bold' } }
+                }
+            }
+        }
+    });
+
+    // TRIGGER DAISY CHAIN (Tax & Rebalancing)
+    if (typeof renderTaxWiseWithdrawal === "function") renderTaxWiseWithdrawal();
+    if (typeof updateRebalancingSchedule === "function") updateRebalancingSchedule(tenure);
 }
