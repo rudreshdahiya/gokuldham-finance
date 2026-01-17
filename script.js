@@ -758,7 +758,7 @@ function renderResultScreen(personaKey, aiSource, logicLog, prescription, needs,
     }
 
     // --- NEW: Client-Side Allocation Logic ---
-    let prescription = null;
+    prescription = null;
     try {
         const goalsSelected = selectedGoalPills.length > 0 ? selectedGoalPills : [goal]; // Fallback
         prescription = calculateBlendedAllocation(goalsSelected, persona);
