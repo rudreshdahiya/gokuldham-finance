@@ -8,7 +8,8 @@ let GLOBAL_STATE = {
     alloc: { needs: 50, wants: 30, savings: 20 },
     persona: null,
     demographics: { age: "29-39", state: "maharashtra", goals: [] },
-    recommendation: null
+    recommendation: null,
+    theme: localStorage.getItem('theme') || 'light' // Theme State
 };
 
 // ==========================================
@@ -18,12 +19,30 @@ let GLOBAL_STATE = {
 function initUI() {
     console.log("🚀 Initializing Google Bank UI...");
 
+    // 1. Apply Theme
+    document.body.setAttribute('data-theme', GLOBAL_STATE.theme);
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.innerText = GLOBAL_STATE.theme === 'dark' ? '🌙' : '☀️';
+
+    // 2. Navigation Init
     // Check for previous session? (Optional: Restore from local storage)
     // For MVP, start fresh or Page 1.
     goToPage(1);
 
     // Populate Dynamic Dropdowns (States)
     populateStates();
+}
+
+function toggleTheme() {
+    const current = document.body.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+
+    document.body.setAttribute('data-theme', next);
+    GLOBAL_STATE.theme = next;
+    localStorage.setItem('theme', next);
+
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.innerText = next === 'dark' ? '🌙' : '☀️';
 }
 
 function goToPage(pageNum) {
@@ -178,46 +197,96 @@ function renderPersonaPage(personaKey, clusterId) {
     const imgPath = pData.img || "assets/mehta.png";
     container.innerHTML = `<img src="${imgPath}" alt="${pData.name}" onerror="this.src='assets/mehta.png'">`;
 
-    // 3. WHY? (Reasoning)
-    // We get this from the last entry of the logic log, or generate a generic one.
-    // GLOBAL_STATE.personaData contains { key, log, effectiveSavings }
-    let reason = "Your spending habits match this profile.";
-    if (GLOBAL_STATE.personaData && GLOBAL_STATE.personaData.log && GLOBAL_STATE.personaData.log.length > 0) {
-        reason = GLOBAL_STATE.personaData.log[GLOBAL_STATE.personaData.log.length - 1];
-        // Clean up the log string for display
-        reason = reason.split("->")[0].trim(); // Take the part before "->"
-    }
+    // 3. REASONING LOGIC (Personalized)
+    const reason = generateReasoning(personaKey, GLOBAL_STATE.alloc);
 
     const statContainer = document.querySelector(".persona-stat");
     statContainer.innerHTML = `
         <div style="margin-bottom:15px;">
             <div style="font-size:0.7rem; font-weight:bold; color:var(--color-primary); letter-spacing:1px; margin-bottom:5px;">WHY THIS MATCH?</div>
-            <div style="font-family:var(--font-mono); font-size:0.85rem; color:#333;">"${reason}"</div>
+            <div style="font-family:var(--font-mono); font-size:0.85rem; color:var(--color-text-main);">"${reason}"</div>
         </div>
     `;
 
-    // 4. NEIGHBORS
+    // 4. NEIGHBORS (Closest Matches)
     const neighbors = PERSONA_TRIBES[personaKey] || ["mehta", "bhide"];
     let neighborsHtml = `<div style="display:flex; justify-content:center; gap:15px; margin-top:10px;">`;
 
     neighbors.forEach(nKey => {
         const nData = DATA_ENGINE.PERSONAS[nKey];
         if (nData) {
+            // Generate neighbor match reason (Simplified)
+            let matchType = "Similar Spender";
+            if (nData.ruler === pData.ruler) matchType = "Tribe Member";
+
             neighborsHtml += `
-            <div style="text-align:center; opacity:0.6;">
-                <img src="${nData.img}" style="width:40px; height:40px; border-radius:50%; border:2px solid #ddd;">
-                <div style="font-size:0.6rem; margin-top:3px; font-weight:bold;">${nData.name}</div>
+            <div style="text-align:center; opacity:0.8;">
+                <img src="${nData.img}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--color-border); box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                <div style="font-size:0.6rem; margin-top:4px; font-weight:bold; color:var(--color-text-main);">${nData.name}</div>
+                <div style="font-size:0.55rem; color:var(--color-text-muted);">${matchType}</div>
             </div>`;
         }
     });
     neighborsHtml += `</div>`;
 
     statContainer.innerHTML += `
-        <div style="border-top:1px dashed #ddd; margin-top:15px; padding-top:15px;">
-             <div style="font-size:0.7rem; font-weight:bold; color:#888; letter-spacing:1px; margin-bottom:10px;">CLOSEST MATCHES</div>
+        <div style="border-top:1px dashed var(--color-border); margin-top:15px; padding-top:15px;">
+             <div style="font-size:0.7rem; font-weight:bold; color:var(--color-text-muted); letter-spacing:1px; margin-bottom:10px;">CLOSEST MATCHES</div>
              ${neighborsHtml}
         </div>
     `;
+}
+
+function generateReasoning(personaKey, alloc) {
+    // 1. Extract Highs
+    const { needs, wants, savings } = alloc;
+    let highCat = "Balanced";
+    if (needs > 60) highCat = "Needs";
+    if (wants > 40) highCat = "Wants";
+    if (savings > 40) highCat = "Savings";
+
+    // 2. Specific Logic per Persona
+    // JETHALAL (Risk Taker)
+    if (personaKey === 'jethalal') {
+        if (wants > 40) return `You spend ${wants}% on Wants, just like Jethalal spends on Gada Electronics' unnecessary schemes.`;
+        if (savings < 20) return `Your low savings (${savings}%) reflect Jethalal's tendency to constantly run out of cash.`;
+        return `You live life king size, prioritizing business and fun logic over disciplined savings.`;
+    }
+
+    // BHIDE (Saver)
+    if (personaKey === 'bhide') {
+        if (savings > 30) return `Your disciplined ${savings}% savings rate would make Atmaram Bhide proud!`;
+        if (wants < 20) return `You keep your Wants low (${wants}%), acting as the 'Secretary' of your own wallet.`;
+        return `You prioritize financial discipline and 'Hamare Zamaane' ke values over loose spending.`;
+    }
+
+    // POPATLAL (Anxious Saver)
+    if (personaKey === 'popatlal') {
+        return `You are saving aggressively (${savings}%) essentially for a 'future event' (aka Shaadi) that hasn't happened yet.`;
+    }
+
+    // IYER (Scientist / Balanced)
+    if (personaKey === 'iyer') {
+        return `Your allocation (N:${needs}/W:${wants}/S:${savings}) is scientifically balanced, just like Iyer's logic.`;
+    }
+
+    // ROSHAN (Party / Wants)
+    if (personaKey === 'roshan') {
+        return `Your ${wants}% spending on Wants shows you love to party first and worry about accounts later!`;
+    }
+
+    // MEHTA (The Guide / Standard)
+    if (personaKey === 'mehta') {
+        return `You follow the 'Golden Mean'. Not too stingy, not too extravagant. A balanced diet for your wallet.`;
+    }
+
+    // BABITA (Luxury)
+    if (personaKey === 'babita') {
+        return `Your lifestyle demands high maintenance. ${wants}% on Wants aligns with high aesthetic standards.`;
+    }
+
+    // Default Fallback with data
+    return `Your ${highCat}-heavy approach (N:${needs}% / W:${wants}% / S:${savings}%) aligns perfectly with ${personaKey.toUpperCase()}'s psychology.`;
 }
 
 // ==========================================
@@ -516,25 +585,94 @@ function renderAllocationChart(data) {
 }
 // ...
 // ...
+// Personalized Strategy DNA: Pros, Risks, and Allocation Reasoning
 function renderStrategyInsights(personaKey) {
-    // ...
-    // ...
     const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['mehta'];
+    const goals = GLOBAL_STATE.demographics.goals || [];
+    const tenure = parseInt(document.getElementById("input-tenure").value) || 10;
+    const alloc = GLOBAL_STATE.recommendation.allocation; // {equity, debt, gold}
 
-    // Personalized Nudge based on Ruler/Traits
-    const nudge = `Since you are ruled by <strong>${pData.ruler}</strong> (` + pData.traits.join(", ") + `), your strategy balances your natural tendency to <em>${pData.role.split("The ")[1]}</em>.`;
+    // === ALLOCATION REASONING ===
+    const reasonDiv = document.getElementById('allocation-reasoning');
+    if (reasonDiv) {
+        let allocReason = `Your ${alloc.equity}/${alloc.debt}/${alloc.gold} split comes from the '9-Rule Matrix' (Risk × Horizon). `;
 
-    document.getElementById("strategy-pros").innerHTML = `<li>${nudge}</li><li><strong>Why this works:</strong> Matches your ${GLOBAL_STATE.demographics.goals.length} goals with a ${document.getElementById("input-tenure").value}Y Horizon.</li>`;
+        // Persona-specific nudge
+        if (personaKey === 'bhide' || personaKey === 'popatlal') {
+            allocReason += `As a risk-averse saver, we've capped Equity to protect your peace of mind.`;
+        } else if (personaKey === 'jethalal' || personaKey === 'roshan') {
+            allocReason += `Your risk appetite allows high Equity for wealth creation, but we've added Debt as a safety net.`;
+        } else allocReason += `Your balanced approach ensures steady growth without sleepless nights.`;
 
-    // Risk Warning personalized
-    let riskWarn = "Market Volatility";
-    if (pData.traits.includes("High Risk")) riskWarn = "Over-exposure to Sectoral Bets";
-    if (pData.traits.includes("Fearful")) riskWarn = "Inflation eroding idle cash";
+        reasonDiv.innerText = allocReason;
+    }
 
-    document.getElementById("strategy-cons").innerHTML = `<li><strong>Watch out for:</strong> ${riskWarn}.</li>`;
+    // === STRENGTHS (Pros) ===
+    const pros = [];
 
-    // Market Context
-    document.getElementById("market-assumption").innerHTML = `Bullish (Nifty PE 22.5)`;
+    // Goal-Specific Strengths
+    if (goals.includes("FIRE (Retire Early)") || goals.includes("SIP Portfolio")) {
+        pros.push(`<strong>Aligned with FIRE Goal:</strong> High Equity (${alloc.equity}%) accelerates wealth creation over ${tenure} years.`);
+    }
+    if (goals.includes("First Home Purchase")) {
+        pros.push(`<strong>Down Payment Focus:</strong> Debt allocation (${alloc.debt}%) provides liquidity when you need it.`);
+    }
+    if (goals.includes("Parental Medical Care")) {
+        pros.push(`<strong>Emergency Buffer:</strong> Gold + Debt (${alloc.debt + alloc.gold}%) ensures you can cover sudden medical expenses.`);
+    }
+
+    // Persona-Specific Strengths
+    if (pData.traits.includes("Disciplined")) {
+        pros.push(`<strong>SIP Discipline:</strong> Your ${pData.name}-like consistency turns average returns into compounding magic.`);
+    }
+    if (pData.traits.includes("High Risk")) {
+        pros.push(`<strong>Market Timing:</strong> Your risk appetite could capture 15%+ CAGR during bull runs.`);
+    }
+
+    // Fallback
+    if (pros.length === 0) {
+        pros.push(`Diversified across 3 asset classes to balance risk and reward.`);
+        pros.push(`Aligned with ${tenure}-year timeline and your ${goals.length} priority goals.`);
+    }
+
+    document.getElementById("strategy-pros").innerHTML = pros.map(p => `<li>${p}</li>`).join('');
+
+    // === WATCH OUT FOR (Risks) ===
+    const risks = [];
+
+    // Goal-Specific Risks
+    if (goals.includes("Luxury Car") || goals.includes("Destination Wedding")) {
+        risks.push(`<strong>Lifestyle Inflation:</strong> High-cost short-term goals (Wedding/Car) could derail your SIP discipline.`);
+    }
+    if (alloc.equity > 70) {
+        risks.push(`<strong>Market Volatility:</strong> High Equity (${alloc.equity}%) means 20-30% drawdowns during corrections are normal.`);
+    }
+    if (alloc.debt < 15 && tenure < 5) {
+        risks.push(`<strong>Liquidity Crunch:</strong> Low Debt allocation for short goals means you might need to sell Equity at a loss.`);
+    }
+
+    // Persona-Specific Risks
+    if (personaKey === 'jethalal') {
+        risks.push(`<strong>Impulse Spending:</strong> Like Jethalal's schemes, avoid dipping into SIPs for 'urgent business opportunities'.`);
+    }
+    if (personaKey === 'babita' || personaKey === 'roshan') {
+        risks.push(`<strong>Wants Overspending:</strong> Your lifestyle costs (${GLOBAL_STATE.alloc.wants}%) could eat into SIP capacity.`);
+    }
+    if (pData.traits.includes("Fearful")) {
+        risks.push(`<strong>Panic Selling:</strong> Market dips will test your nerves. Stick to the plan or switch to conservative mode.`);
+    }
+
+    // Fallback
+    if (risks.length === 0) {
+        risks.push(`Ensure SIP auto-debit to avoid skipping months during market dips.`);
+        risks.push(`Rebalance annually to maintain ${alloc.equity}/${alloc.debt}/${alloc.gold} ratio.`);
+    }
+
+    document.getElementById("strategy-cons").innerHTML = risks.map(r => `<li>${r}</li>`).join('');
+
+    // === MARKET CONTEXT ===
+    // TODO: Replace with live Nifty PE if API available
+    document.getElementById("market-assumption").innerHTML = `Bullish (Nifty PE ~22.5, India remains EM favorite)`;
 }
 
 function runTaxOptimizer() {
@@ -817,42 +955,76 @@ function renderStrategyInsights(personaKey) {
 let scenarioChartInstance = null;
 
 function updateScenarioAnalysis() {
-    // 1. Get Params
-    const tenure = parseInt(document.getElementById("input-tenure").value) || 10;
-    document.getElementById("tenure-val").innerText = tenure + " Years";
+    // 1. Get Params from UI
+    const tenureInput = document.getElementById("input-tenure");
+    const tenureVal = document.getElementById("tenure-val");
 
-    // Monthly SIP based on 20% savings of Income
+    // Fix NaN bug: Use value from input or default
+    const tenure = tenureInput ? (parseInt(tenureInput.value) || 10) : 10;
+    if (tenureVal) tenureVal.innerText = tenure + " Years";
+
+    // === PERSONALIZED SIP CALCULATION ===
+    // Use actual income and savings % from user input
     const income = GLOBAL_STATE.income || 50000;
-    const monthlySIP = Math.round(income * 0.2);
+    const savingsRate = (GLOBAL_STATE.alloc.savings || 20) / 100; // Convert % to decimal
+    const availableMonthlySIP = Math.round(income * savingsRate);
 
-    // Allocation Logic (or Default 50/30/20)
-    const alloc = GLOBAL_STATE.recommendation || { equity: 50, debt: 30, gold: 20 };
+    // Allocation from backend or fallback
+    const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
 
-    // 2. Returns Assumptions (Real Rates)
-    const R_EQUITY = 0.12;
-    const R_DEBT = 0.07;
-    const R_GOLD = 0.08;
+    // === GOAL-SPECIFIC CORPUS TARGET ===
+    const goals = GLOBAL_STATE.demographics.goals || [];
+    let targetCorpus = null; // In Lakhs
+    let targetGoalLabel = "";
 
-    // Weighted Avg Monthly Return
+    // Map big-ticket goals to corpus targets (Simplified)
+    const goalCorpusMap = {
+        "FIRE (Retire Early)": 375, // ₹3.75Cr minimum
+        "First Home Purchase": 80, // ₹80L down payment
+        "Global Education (Kids)": 120, // ₹1.2Cr
+        "Second Home (Hills)": 80,
+        "Luxury Car": 15,
+        "Destination Wedding": 15
+    };
+
+    // Find first matching goal with corpus target
+    for (let g of goals) {
+        if (goalCorpusMap[g]) {
+            targetCorpus = goalCorpusMap[g];
+            targetGoalLabel = g;
+            break;
+        }
+    }
+
+    // === RETURNS ASSUMPTIONS ===
+    // Realistic rates for Indian retail investors
+    const R_EQUITY = 0.12; // 12% historical Nifty 50
+    const R_DEBT = 0.07;   // 7% FD/Debt Funds
+    const R_GOLD = 0.08;   // 8% SGB
+
+    // Weighted Average Annual Return
     const wRateAnnual = ((alloc.equity * R_EQUITY) + (alloc.debt * R_DEBT) + (alloc.gold * R_GOLD)) / 100;
 
-    // 3. Scenarios (CAGR Deviations)
-    const deviation = 0.04; // +/- 4%
+    // === SCENARIO DEVIATIONS ===
+    const deviation = 0.04; // ±4% covers most market cycles
+    const bearRate = wRateAnnual - deviation;
+    const baseRate = wRateAnnual;
+    const bullRate = wRateAnnual + deviation;
 
-    // FV Calculation: P * [ (1+r)^n - 1 ] * (1+r)/r
-    function calculateCorpus(rateAnnual) {
+    // === FV CALCULATION (SIP Future Value) ===
+    function calculateCorpus(rateAnnual, monthlySIP) {
         const months = tenure * 12;
         const r = rateAnnual / 12;
         const corpus = monthlySIP * ((Math.pow(1 + r, months) - 1) * (1 + r) / r);
         return Math.round(corpus / 100000); // Return in Lakhs
     }
 
-    const investedL = Math.round((monthlySIP * 12 * tenure) / 100000);
-    const bearL = calculateCorpus(wRateAnnual - deviation);
-    const baseL = calculateCorpus(wRateAnnual);
-    const bullL = calculateCorpus(wRateAnnual + deviation);
+    const investedL = Math.round((availableMonthlySIP * 12 * tenure) / 100000);
+    const bearL = calculateCorpus(bearRate, availableMonthlySIP);
+    const baseL = calculateCorpus(baseRate, availableMonthlySIP);
+    const bullL = calculateCorpus(bullRate, availableMonthlySIP);
 
-    // 4. Render Chart
+    // === RENDER CHART ===
     const ctx = document.getElementById('scenarioChart');
     if (!ctx) return;
 
@@ -881,46 +1053,60 @@ function updateScenarioAnalysis() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                legend: { display: true },
                 tooltip: {
                     callbacks: {
                         label: function (context) {
-                            return context.dataset.label + ': ₹' + context.raw + ' Lakhs';
-                        },
-                        footer: function (tooltipItems) {
-                            const total = tooltipItems.reduce((a, e) => a + e.raw, 0);
-                            return 'Total Corpus: ₹' + total + ' Lakhs';
+                            const idx = context.dataIndex;
+                            const total = [bearL, baseL, bullL][idx];
+                            return context.dataset.label + ': ₹' + context.parsed.y + 'L (Total: ₹' + total + 'L)';
                         }
                     }
-                },
-                legend: { position: 'bottom' }
+                }
             },
             scales: {
                 y: {
-                    stacked: true,
-                    title: { display: true, text: 'Corpus (₹ Lakhs)' },
-                    ticks: { callback: v => '₹' + v + 'L' }
-                },
-                x: { stacked: true }
+                    beginAtZero: true,
+                    ticks: { callback: (v) => '₹' + v + 'L' }
+                }
             }
         }
     });
 
-    // 5. Context
-    const legendDiv = document.querySelector(".scenario-legend");
-    if (legendDiv) {
-        legendDiv.innerHTML = `
-            <div style="margin-top:15px; font-size:0.8rem; color:#666; text-align:left; background:#f9f9f9; padding:10px; border-radius:4px;">
-                <div><strong>Wealth Context:</strong></div>
-                <ul style="margin:5px 0 0 15px; padding:0;">
-                    <li>Invested: <strong>₹${investedL} Lakhs</strong> (via ₹${(monthlySIP / 1000).toFixed(1)}k SIP)</li>
-                    <li>Weighted Return: <strong>${(wRateAnnual * 100).toFixed(1)}%</strong> (based on your mix)</li>
-                    <li>Bull Case: <strong>₹${bullL} Lakhs</strong> @ ${(wRateAnnual * 100 + 4).toFixed(1)}%</li>
-                </ul>
-            </div>
-        `;
-    }
+    // === CONTEXTUAL WEALTH EXPLANATION ===
+    const legDiv = document.querySelector('.scenario-legend');
+    if (legDiv) {
+        let contextHtml = `<div style="text-align:left; margin-top:15px; padding:15px; background:var(--color-bg-card); border-radius:4px; border:1px solid var(--color-border); font-size:0.8rem; line-height:1.6; color:var(--color-text-main);">
+            <strong style="display:block; margin-bottom:8px; color:var(--color-primary);">📊 Wealth Context:</strong>
+            <ul style="margin:0; padding-left:20px;">
+                <li><strong>Your SIP Capacity:</strong> ₹${(availableMonthlySIP / 1000).toFixed(1)}k/month (${(savingsRate * 100).toFixed(0)}% of ₹${(income / 1000).toFixed(0)}k income)</li>
+                <li><strong>Invested Over ${tenure}Y:</strong> ₹${investedL}L Principal</li>`;
 
-    // TRIGGER DAISY CHAIN
-    if (typeof renderTaxWiseWithdrawal === "function") renderTaxWiseWithdrawal();
-    if (typeof updateRebalancingSchedule === "function") updateRebalancingSchedule(tenure);
+        // Goal-specific comparison
+        if (targetCorpus) {
+            const gap = targetCorpus - baseL;
+            if (gap > 0) {
+                contextHtml += `<li><strong style="color:#e74c3c;">Gap to "${targetGoalLabel}":</strong> Need ₹${targetCorpus}L, Base Case gives ₹${baseL}L. <em>Shortfall: ₹${gap}L</em>. Consider increasing SIP or tenure.</li>`;
+            } else {
+                contextHtml += `<li><strong style="color:#27ae60;">On Track for "${targetGoalLabel}":</strong> Target ₹${targetCorpus}L, Base Case ₹${baseL}L ✓</li>`;
+            }
+        }
+
+        contextHtml += `
+                <li><strong>Bear Case (${(bearRate * 100).toFixed(1)}% CAGR):</strong> Market crash years. Total ₹${bearL}L.</li>
+                <li><strong>Base Case (${(baseRate * 100).toFixed(1)}% CAGR):</strong> Historical avg. Total ₹${baseL}L.</li>
+                <li><strong>Bull Case (${(bullRate * 100).toFixed(1)}% CAGR):</strong> Strong growth cycle. Total ₹${bullL}L.</li>
+            </ul>
+            <div style="margin-top:10px; font-size:0.75rem; font-style:italic; color:var(--color-text-muted);">
+                Returns based on your ${alloc.equity}/${alloc.debt}/${alloc.gold} allocation mix. Equity@12%, Debt@7%, Gold@8% (historical averages).
+            </div>
+        </div>`;
+
+        legDiv.innerHTML = contextHtml;
+    }
 }
+
+// ==========================================
+// INITIALIZATION
+// ==========================================
+window.addEventListener("DOMContentLoaded", initUI);
