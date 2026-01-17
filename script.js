@@ -1071,7 +1071,15 @@ function sendMessage() {
             question: msg
         })
     })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                // Try to get error message from response
+                return res.json().then(data => {
+                    throw new Error(data.answer || `Server returned ${res.status}`);
+                });
+            }
+            return res.json();
+        })
         .then(data => {
             document.getElementById(loadingId).remove();
             // Format MD
@@ -1083,10 +1091,10 @@ function sendMessage() {
             console.error("Inspector Error:", e);
             document.getElementById(loadingId).innerHTML = `
                 <div style="color:#e74c3c; padding:10px; background:#fee; border-radius:4px; font-size:0.85rem;">
-                    <strong>⚠️ Cannot reach Inspector Pandey</strong><br>
+                    <strong>⚠️ Inspector Error</strong><br>
                     <div style="margin-top:5px; font-size:0.75rem; color:#666;">
-                        Likely cause: Backend is asleep or CORS issue.<br>
-                        <strong>Fix</strong>: Redeploy backend on Render manually.
+                        ${e.message}<br>
+                        <strong>Check</strong>: Vercel logs or GEMINI_API_KEY env variable.
                     </div>
                 </div>`;
         });
