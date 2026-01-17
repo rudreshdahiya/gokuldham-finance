@@ -208,22 +208,75 @@ function renderPersonaPage(personaKey, clusterId) {
         </div>
     `;
 
-    // 4. NEIGHBORS (Closest Matches)
+    // 4. NEIGHBORS (Closest Matches with Directional Hints)
     const neighbors = PERSONA_TRIBES[personaKey] || ["mehta", "bhide"];
     let neighborsHtml = `<div style="display:flex; justify-content:center; gap:15px; margin-top:10px;">`;
 
     neighbors.forEach(nKey => {
         const nData = DATA_ENGINE.PERSONAS[nKey];
         if (nData) {
-            // Generate neighbor match reason (Simplified)
-            let matchType = "Similar Spender";
-            if (nData.ruler === pData.ruler) matchType = "Tribe Member";
+            // === DIRECTIONAL COMPARISON LOGIC ===
+            // Compare user's N/W/S to neighbor's archetype
+            const userNeeds = GLOBAL_STATE.alloc.needs || 50;
+            const userWants = GLOBAL_STATE.alloc.wants || 30;
+            const userSavings = GLOBAL_STATE.alloc.savings || 20;
+
+            let directionHint = "";
+
+            // Heuristic: Match persona archetype to typical allocation
+            // (This is simplified - ideally from DATA_ENGINE.PERSONAS metadata)
+            const archetypeMap = {
+                // High Savers
+                "bhide": { needs: 45, wants: 20, savings: 35 },
+                "popatlal": { needs: 40, wants: 25, savings: 35 },
+                "champaklal": { needs: 50, wants: 15, savings: 35 },
+                "madhavi": { needs: 45, wants: 25, savings: 30 },
+
+                // Balanced
+                "mehta": { needs: 50, wants: 30, savings: 20 },
+                "sodhi": { needs: 45, wants: 35, savings: 20 },
+                "hathi": { needs: 55, wants: 25, savings: 20 },
+
+                // High Spenders (Wants)
+                "jethalal": { needs: 40, wants: 45, savings: 15 },
+                "babita": { needs: 35, wants: 50, savings: 15 },
+                "roshan": { needs: 40, wants: 45, savings: 15 },
+                "daya": { needs: 45, wants: 40, savings: 15 },
+
+                // Others
+                "iyer": { needs: 50, wants: 30, savings: 20 },
+                "anjali": { needs: 45, wants: 35, savings: 20 },
+                "komal": { needs: 50, wants: 25, savings: 25 },
+                "gogi": { needs: 40, wants: 50, savings: 10 }
+            };
+
+            const neighborAlloc = archetypeMap[nKey] || { needs: 50, wants: 30, savings: 20 };
+
+            // Calculate biggest difference
+            const savingsDiff = neighborAlloc.savings - userSavings;
+            const wantsDiff = neighborAlloc.wants - userWants;
+            const needsDiff = neighborAlloc.needs - userNeeds;
+
+            // Pick the most significant difference
+            if (Math.abs(savingsDiff) > Math.abs(wantsDiff) && Math.abs(savingsDiff) > Math.abs(needsDiff)) {
+                if (savingsDiff > 5) directionHint = `Saves ${Math.round(savingsDiff)}% more`;
+                else if (savingsDiff < -5) directionHint = `Saves ${Math.abs(Math.round(savingsDiff))}% less`;
+                else directionHint = "Similar Saver";
+            } else if (Math.abs(wantsDiff) > Math.abs(needsDiff)) {
+                if (wantsDiff > 5) directionHint = `Spends ${Math.round(wantsDiff)}% more on Wants`;
+                else if (wantsDiff < -5) directionHint = `Spends ${Math.abs(Math.round(wantsDiff))}% less on Wants`;
+                else directionHint = "Similar Lifestyle";
+            } else {
+                if (needsDiff > 5) directionHint = `${Math.round(needsDiff)}% more on Needs`;
+                else if (needsDiff < -5) directionHint = `${Math.abs(Math.round(needsDiff))}% less on Needs`;
+                else directionHint = "Near Twin";
+            }
 
             neighborsHtml += `
-            <div style="text-align:center; opacity:0.8;">
-                <img src="${nData.img}" style="width:40px; height:40px; border-radius:50%; border:2px solid var(--color-border); box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-                <div style="font-size:0.6rem; margin-top:4px; font-weight:bold; color:var(--color-text-main);">${nData.name}</div>
-                <div style="font-size:0.55rem; color:var(--color-text-muted);">${matchType}</div>
+            <div style="text-align:center; opacity:0.85;">
+                <img src="${nData.img}" style="width:45px; height:45px; border-radius:50%; border:2px solid var(--color-border); box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                <div style="font-size:0.65rem; margin-top:5px; font-weight:bold; color:var(--color-text-main);">${nData.name}</div>
+                <div style="font-size:0.55rem; color:var(--color-primary); font-weight:500; margin-top:2px;">${directionHint}</div>
             </div>`;
         }
     });
