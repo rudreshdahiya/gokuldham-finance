@@ -162,6 +162,10 @@ body {
     font-weight: 700;
     color: var(--color-text-main);
     text-transform: uppercase;
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* PAGE COUNTER - RIGHT SIDE TO AVOID TITLE CLASH */
@@ -171,13 +175,14 @@ body {
     top: 50%;
     transform: translateY(-50%);
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--color-text-muted);
     background: var(--color-bg);
-    padding: 4px 10px;
-    border-radius: 12px;
+    padding: 4px 8px;
+    border-radius: 10px;
     border: 1px solid var(--color-border);
+    white-space: nowrap;
 }
 
 /* BODY */
