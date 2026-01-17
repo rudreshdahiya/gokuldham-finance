@@ -1230,81 +1230,86 @@ function renderStrategyInsights(personaKey) {
 
 let scenarioChartInstance = null;
 
-function updateScenarioAnalysis() {
-    // 1. Get Params from UI
-    const tenureInput = document.getElementById("input-tenure");
-    const tenureVal = document.getElementById("tenure-val");
-
-    // Fix NaN bug: Use value from input or default
-    const tenure = tenureInput ? (parseInt(tenureInput.value) || 10) : 10;
-    if (tenureVal) tenureVal.innerText = tenure + " Years";
-
-    // === PERSONALIZED SIP CALCULATION ===
-    // Use actual income and savings % from user input
+// NEW: Goal Timeline Chart - Calculates YEARS to reach goal
+function updateGoalTimeline() {
+    // 1. Get User Inputs
     const income = GLOBAL_STATE.income || 50000;
-    const savingsRate = (GLOBAL_STATE.alloc.savings || 20) / 100; // Convert % to decimal
-    const availableMonthlySIP = Math.round(income * savingsRate);
+    const savingsRate = (GLOBAL_STATE.alloc.savings || 20) / 100;
+    const baseMonthlySIP = Math.round(income * savingsRate);
 
-    // Allocation from backend or fallback
-    const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
+    const extraSIPInput = document.getElementById("input-extra-sip");
+    const lumpsumInput = document.getElementById("input-lumpsum");
+    const extraSIP = extraSIPInput ? parseInt(extraSIPInput.value) || 0 : 0;
+    const lumpsum = lumpsumInput ? parseInt(lumpsumInput.value) || 0 : 0;
 
-    // === GOAL-SPECIFIC CORPUS TARGET ===
+    const totalMonthlySIP = baseMonthlySIP + extraSIP;
+
+    // 2. Goal Target Calculation (Average of selected goals)
     const goals = GLOBAL_STATE.demographics.goals || [];
-    let targetCorpus = null; // In Lakhs
-    let targetGoalLabel = "";
+    let targetCorpus = 50; // Default 50L
+    let targetGoalLabels = [];
 
-    // Map big-ticket goals to corpus targets (Simplified)
-    const goalCorpusMap = {
-        "FIRE (Retire Early)": 375, // ₹3.75Cr minimum
-        "First Home Purchase": 80, // ₹80L down payment
-        "Global Education (Kids)": 120, // ₹1.2Cr
-        "Second Home (Hills)": 80,
-        "Luxury Car": 15,
-        "Destination Wedding": 15
-    };
-
-    // Find first matching goal with corpus target
-    for (let g of goals) {
-        if (goalCorpusMap[g]) {
-            targetCorpus = goalCorpusMap[g];
-            targetGoalLabel = g;
-            break;
+    // Map goals to corpus from DATA_ENGINE
+    let corpusSum = 0;
+    let goalCount = 0;
+    for (let gLabel of goals) {
+        // Find goal by label in ALL_GOALS
+        for (let key in DATA_ENGINE.ALL_GOALS) {
+            const g = DATA_ENGINE.ALL_GOALS[key];
+            if (g.label === gLabel && g.corpus) {
+                corpusSum += g.corpus;
+                goalCount++;
+                targetGoalLabels.push(g.label);
+                break;
+            }
         }
     }
 
-    // === RETURNS ASSUMPTIONS ===
-    // Realistic rates for Indian retail investors
-    const R_EQUITY = 0.12; // 12% historical Nifty 50
-    const R_DEBT = 0.07;   // 7% FD/Debt Funds
-    const R_GOLD = 0.08;   // 8% SGB
+    if (goalCount > 0) {
+        targetCorpus = Math.round(corpusSum / goalCount);
+    }
 
-    // Weighted Average Annual Return
+    // Update UI
+    const targetLabel = document.getElementById("target-goal-label");
+    const targetCorpusEl = document.getElementById("target-corpus");
+    if (targetLabel) targetLabel.innerText = targetGoalLabels.length > 0 ? targetGoalLabels.join(" + ") : "Wealth Creation";
+    if (targetCorpusEl) targetCorpusEl.innerText = targetCorpus;
+
+    // 3. Returns Assumptions
+    const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
+    const R_EQUITY = 0.12, R_DEBT = 0.07, R_GOLD = 0.08;
     const wRateAnnual = ((alloc.equity * R_EQUITY) + (alloc.debt * R_DEBT) + (alloc.gold * R_GOLD)) / 100;
 
-    // === SCENARIO DEVIATIONS ===
-    const deviation = 0.04; // ±4% covers most market cycles
+    const deviation = 0.04;
     const bearRate = wRateAnnual - deviation;
     const baseRate = wRateAnnual;
     const bullRate = wRateAnnual + deviation;
 
-    // === FV CALCULATION (SIP Future Value) ===
-    function calculateCorpus(rateAnnual, monthlySIP) {
-        const months = tenure * 12;
-        const r = rateAnnual / 12;
-        const corpus = monthlySIP * ((Math.pow(1 + r, months) - 1) * (1 + r) / r);
-        return Math.round(corpus / 100000); // Return in Lakhs
+    // 4. Calculate YEARS to reach target corpus
+    // Formula: n = log((FV * r / PMT) + 1) / log(1+r)  [for SIP]
+    // With lumpsum: FV = Lumpsum * (1+r)^n + SIP * ((1+r)^n - 1) * (1+r) / r
+    // We'll use iterative approach for simplicity
+
+    function yearsToReachGoal(annualRate, monthlySIP, lumpsum, targetL) {
+        const targetAmount = targetL * 100000; // Convert to INR
+        const monthlyRate = annualRate / 12;
+        let corpus = lumpsum;
+        let months = 0;
+        const maxMonths = 50 * 12; // Cap at 50 years
+
+        while (corpus < targetAmount && months < maxMonths) {
+            corpus = corpus * (1 + monthlyRate) + monthlySIP;
+            months++;
+        }
+
+        return months >= maxMonths ? 50 : (months / 12).toFixed(1);
     }
 
-    const investedL = Math.round((availableMonthlySIP * 12 * tenure) / 100000);
-    const bearL = calculateCorpus(bearRate, availableMonthlySIP);
-    const baseL = calculateCorpus(baseRate, availableMonthlySIP);
-    const bullL = calculateCorpus(bullRate, availableMonthlySIP);
+    const bearYears = yearsToReachGoal(bearRate, totalMonthlySIP, lumpsum, targetCorpus);
+    const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, lumpsum, targetCorpus);
+    const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, lumpsum, targetCorpus);
 
-    // Calculate FD benchmark (6.5% fixed, tax-adjusted to ~4.5% post-tax for 30% bracket)
-    const FD_RATE = 0.045; // Post-tax FD rate
-    const fdL = calculateCorpus(FD_RATE, availableMonthlySIP);
-
-    // === RENDER CHART WITH HONEST BENCHMARK ===
+    // 5. Render Chart (Horizontal Bar - Years)
     const ctx = document.getElementById('scenarioChart');
     if (!ctx) return;
 
@@ -1313,143 +1318,83 @@ function updateScenarioAnalysis() {
     scenarioChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'bar',
         data: {
-            labels: ['Bank FD\n(Safe)', 'Bear\n(Poor)', 'Base\n(Expected)', 'Bull\n(Great)'],
-            datasets: [
-                {
-                    label: 'Principal Invested',
-                    data: [investedL, investedL, investedL, investedL],
-                    backgroundColor: '#bdc3c7',
-                    stack: 'Stack 0'
-                },
-                {
-                    label: 'Wealth Gained',
-                    data: [fdL - investedL, bearL - investedL, baseL - investedL, bullL - investedL],
-                    backgroundColor: ['#95a5a6', '#e74c3c', '#f1c40f', '#2ecc71'],
-                    stack: 'Stack 0'
-                }
-            ]
+            labels: ['🐻 Bear', '📊 Base', '🚀 Bull'],
+            datasets: [{
+                label: 'Years to Goal',
+                data: [bearYears, baseYears, bullYears],
+                backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71'],
+                borderRadius: 8
+            }]
         },
         options: {
+            indexAxis: 'y', // Horizontal bars
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: true },
+                legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: function (context) {
-                            const idx = context.dataIndex;
-                            const total = [fdL, bearL, baseL, bullL][idx];
-                            return context.dataset.label + ': ₹' + context.parsed.y + 'L (Total: ₹' + total + 'L)';
-                        }
+                        label: (ctx) => `${ctx.parsed.x} years to reach ₹${targetCorpus}L`
                     }
                 }
             },
             scales: {
-                y: {
+                x: {
                     beginAtZero: true,
-                    ticks: { callback: (v) => '₹' + v + 'L' }
+                    title: { display: true, text: 'Years' },
+                    ticks: { callback: (v) => v + 'Y' }
                 }
             }
         }
     });
 
-    // === SIMPLIFIED, USER-FRIENDLY WEALTH CONTEXT ===
+    // 6. Compounding Visualization
+    const baseMonths = parseFloat(baseYears) * 12;
+    const totalInvested = (totalMonthlySIP * baseMonths + lumpsum) / 100000; // In Lakhs
+    const finalCorpus = targetCorpus;
+    const multiplier = (totalInvested > 0) ? (finalCorpus / totalInvested).toFixed(1) : "∞";
+
+    const compInvested = document.getElementById("comp-invested");
+    const compReturns = document.getElementById("comp-returns");
+    const compMultiplier = document.getElementById("comp-multiplier");
+
+    if (compInvested) compInvested.innerText = totalInvested.toFixed(1);
+    if (compReturns) compReturns.innerText = finalCorpus;
+    if (compMultiplier) compMultiplier.innerText = multiplier;
+
+    // 7. Legend Context
     const legDiv = document.querySelector('.scenario-legend');
     if (legDiv) {
-        const userNeeds = GLOBAL_STATE.alloc.needs || 50;
-        const userWants = GLOBAL_STATE.alloc.wants || 30;
-        const pKey = GLOBAL_STATE.persona || "mehta";
-        const pData = DATA_ENGINE.PERSONAS[pKey] || DATA_ENGINE.PERSONAS['mehta'];
-        const primaryGoal = goals[0] || "wealth creation";
-
-        // Market cycle duration (realistic: 5-7 years max, not entire tenure)
-        const marketCycleDuration = Math.min(7, tenure);
-
-        let contextHtml = `<div style="background:var(--color-bg-card); border-radius:6px; border:1px solid var(--color-border); padding:15px; margin-top:15px;">`;
-
-        // === SECTION 1: YOUR NUMBERS (Clear & Simple) ===
-        contextHtml += `
-            <div style="margin-bottom:15px; padding-bottom:12px; border-bottom:1px dashed var(--color-border);">
-                <strong style="color:var(--color-primary); display:block; margin-bottom:8px;">💰 Your Starting Point</strong>
-                <div style="font-size:0.85rem; line-height:1.8; color:var(--color-text-main);">
-                    <div><strong>Monthly Income:</strong> ₹${(income / 1000).toFixed(0)}k</div>
-                    <div><strong>You Save:</strong> ${(savingsRate * 100).toFixed(0)}% (from your sliders: ${userNeeds}% Needs + ${userWants}% Wants = ${(savingsRate * 100).toFixed(0)}% left)</div>
-                    <div style="background:var(--color-bg); padding:8px; border-radius:4px; margin-top:5px;">
-                        <strong style="color:var(--color-accent);">→ Your Monthly SIP: ₹${(availableMonthlySIP / 1000).toFixed(1)}k</strong> (${(savingsRate * 100).toFixed(0)}% × ₹${(income / 1000).toFixed(0)}k)
+        legDiv.innerHTML = `
+            <div style="padding:10px; background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6;">
+                <div style="margin-bottom:8px;">
+                    <strong>📊 Your Timeline:</strong> At ₹${(totalMonthlySIP / 1000).toFixed(1)}k/month SIP${lumpsum > 0 ? ` + ₹${(lumpsum / 100000).toFixed(1)}L lumpsum` : ''}
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; text-align:center;">
+                    <div style="background:#ffebee; padding:8px; border-radius:4px;">
+                        <div style="font-size:1.2em; font-weight:bold; color:#e74c3c;">${bearYears}Y</div>
+                        <div style="font-size:0.7em;">Bear (${(bearRate * 100).toFixed(1)}%)</div>
+                    </div>
+                    <div style="background:#fffde7; padding:8px; border-radius:4px;">
+                        <div style="font-size:1.2em; font-weight:bold; color:#f39c12;">${baseYears}Y</div>
+                        <div style="font-size:0.7em;">Base (${(baseRate * 100).toFixed(1)}%)</div>
+                    </div>
+                    <div style="background:#e8f5e9; padding:8px; border-radius:4px;">
+                        <div style="font-size:1.2em; font-weight:bold; color:#27ae60;">${bullYears}Y</div>
+                        <div style="font-size:0.7em;">Bull (${(bullRate * 100).toFixed(1)}%)</div>
                     </div>
                 </div>
-            </div>`;
-
-        // === SECTION 2: GOAL PROGRESS (If applicable) ===
-        if (targetCorpus) {
-            const gap = targetCorpus - baseL;
-            contextHtml += `
-                <div style="margin-bottom:15px; padding-bottom:12px; border-bottom:1px dashed var(--color-border);">
-                    <strong style="color:var(--color-primary); display:block; margin-bottom:8px;">🎯 "${targetGoalLabel}" Progress</strong>
-                    <div style="font-size:0.85rem; line-height:1.8;">`;
-
-            if (gap > 0) {
-                const requiredMonthlySIP = (targetCorpus * 100000) / ((Math.pow(1 + baseRate / 12, tenure * 12) - 1) * (1 + baseRate / 12) / (baseRate / 12));
-                const additionalSIPNeeded = Math.round(requiredMonthlySIP - availableMonthlySIP);
-
-                contextHtml += `
-                    <div><strong>Target:</strong> ₹${targetCorpus}L</div>
-                    <div><strong>You'll Have:</strong> ₹${baseL}L (Base case)</div>
-                    <div style="color:#e74c3c;"><strong>Shortfall:</strong> ₹${gap}L</div>
-                    <div style="margin-top:8px; background:#fff3cd; padding:8px; border-radius:4px; border-left:3px solid #f39c12; font-size:0.8rem;">
-                        <strong>💡 To close gap:</strong> Increase SIP by ₹${(additionalSIPNeeded / 1000).toFixed(1)}k/month<br>
-                        <span style="font-size:0.75rem; color:#666;">Or reduce Wants from ${userWants}% → ${Math.max(15, userWants - 10)}%</span>
-                    </div>`;
-            } else {
-                contextHtml += `
-                    <div style="color:#27ae60;"><strong>✓ On Track!</strong></div>
-                    <div>Target: ₹${targetCorpus}L | You'll have: ₹${baseL}L</div>`;
-            }
-
-            contextHtml += `</div></div>`;
-        }
-
-        // === SECTION 3: MARKET SCENARIOS (Realistic cycles) ===
-        contextHtml += `
-            <div style="margin-bottom:15px; padding-bottom:12px; border-bottom:1px dashed var(--color-border);">
-                <strong style="color:var(--color-primary); display:block; margin-bottom:8px;">📈 Next ${marketCycleDuration} Years (Market Cycles)</strong>
-                <div style="font-size:0.75rem; color:var(--color-text-muted); font-style:italic; margin-bottom:8px;">
-                    Note: Markets cycle every 5-7 years. These scenarios show ${marketCycleDuration}Y outcomes, then rebalance.
-                </div>
-                <div style="font-size:0.85rem; line-height:1.8;">
-                    <div><strong>🐻 Bear (${(bearRate * 100).toFixed(1)}% CAGR):</strong> Crash/recession → ₹${bearL}L</div>
-                    <div><strong>📊 Base (${(baseRate * 100).toFixed(1)}% CAGR):</strong> Normal growth → ₹${baseL}L</div>
-                    <div><strong>🚀 Bull (${(bullRate * 100).toFixed(1)}% CAGR):</strong> Boom cycle → ₹${bullL}L</div>
-                </div>
-            </div>`;
-
-        // === SECTION 4: PERSONA PLAYBOOK (Simplified) ===
-        contextHtml += `
-            <div>
-                <strong style="color:var(--color-primary); display:block; margin-bottom:8px;">🎭 ${pData.name}'s Action Plan</strong>
-                <div style="font-size:0.8rem; line-height:1.7;">`;
-
-        // Persona-specific advice (concise)
-        if (pKey === "jethalal" || pKey === "roshan") {
-            contextHtml += `<div><strong>If market crashes:</strong> Increase SIP 30%, cut Wants ${userWants}%→${Math.max(15, userWants - 15)}%</div>`;
-            contextHtml += `<div><strong>If market booms:</strong> Lock in gains, don't upgrade lifestyle</div>`;
-        } else if (pKey === "popatlal" || pKey === "bhide") {
-            contextHtml += `<div><strong>If market crashes:</strong> DON'T panic sell! Maintain current SIP</div>`;
-            contextHtml += `<div><strong>If market booms:</strong> Stay disciplined, avoid FOMO</div>`;
-        } else {
-            contextHtml += `<div><strong>Strategy:</strong> Maintain ${(savingsRate * 100).toFixed(0)}% savings rate in all conditions</div>`;
-        }
-
-        contextHtml += `
+                <div style="margin-top:10px; font-size:0.75em; color:#666;">
+                    💡 Tip: Add ₹5k extra SIP or ₹1L lumpsum to see how your timeline changes!
                 </div>
             </div>
-            <div style="margin-top:12px; font-size:0.7rem; color:var(--color-text-muted); font-style:italic;">
-                Returns based on your ${alloc.equity}/${alloc.debt}/${alloc.gold} mix. Equity@12%, Debt@7%, Gold@8%.
-            </div>
-        </div>`;
-
-        legDiv.innerHTML = contextHtml;
+        `;
     }
+}
+
+// Alias for backwards compatibility
+function updateScenarioAnalysis() {
+    updateGoalTimeline();
 }
 
 // ==========================================

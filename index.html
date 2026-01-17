@@ -417,29 +417,75 @@
                 <!-- Card 2: Strategic DNA -->
                 <!-- Section Removed: Generic strengths/weaknesses -->
 
-                <!-- Card 3: Wealth Projection -->
+                <!-- Card 3: Goal Timeline (Redesigned) -->
                 <div class="card"
                     style="background:var(--color-bg-card); border-radius:var(--radius-card); padding:20px; box-shadow:var(--shadow-card); margin-bottom:20px; border:1px solid var(--color-border);">
-                    <h3 style="margin-top:0; font-size:var(--text-md); color:var(--color-text-main);">HOW YOUR WEALTH
-                        COULD GROW</h3>
-                    <p style="font-size:0.8rem; color:var(--color-text-muted); margin:0 0 15px 0;">Scenarios based on
-                        your SIP discipline and market conditions (Bear/Base/Bull).</p>
-                    <div class="scenario-controls" style="margin-bottom:15px;">
-                        <label
-                            style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.9rem;">Tenure:
-                            <span id="tenure-val">10 Years</span></label>
-                        <input type="range" id="input-tenure" min="3" max="30" value="10"
-                            style="width:100%; accent-color:var(--color-primary);" oninput="updateScenarioAnalysis()">
+                    <h3 style="margin-top:0; font-size:var(--text-md); color:var(--color-text-main);">⏳ TIME TO REACH
+                        YOUR GOAL</h3>
+                    <p style="font-size:0.8rem; color:var(--color-text-muted); margin:0 0 15px 0;">
+                        See how market conditions and your investment amount affect your goal timeline.
+                    </p>
+
+                    <!-- Goal Target Display -->
+                    <div id="goal-target-display"
+                        style="background:#f0f9ff; border:1px solid #3498db; border-radius:8px; padding:12px; margin-bottom:15px;">
+                        <div style="font-size:0.85rem; color:#2980b9;"><strong>🎯 Target Goal:</strong> <span
+                                id="target-goal-label">Loading...</span></div>
+                        <div style="font-size:1.2rem; font-weight:bold; color:#2c3e50;">₹<span
+                                id="target-corpus">--</span>L</div>
                     </div>
 
-                    <div class="chart-container" style="position: relative; height:250px; width:100%">
+                    <!-- Investment Controls -->
+                    <div class="investment-controls"
+                        style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:0.75rem; color:var(--color-text-muted);">Extra SIP (₹/month)</label>
+                            <input type="number" id="input-extra-sip" value="0" min="0" step="1000"
+                                style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"
+                                oninput="updateGoalTimeline()">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:0.75rem; color:var(--color-text-muted);">Lumpsum (₹
+                                One-time)</label>
+                            <input type="number" id="input-lumpsum" value="0" min="0" step="10000"
+                                style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"
+                                oninput="updateGoalTimeline()">
+                        </div>
+                    </div>
+
+                    <!-- Timeline Chart (Years to Goal) -->
+                    <div class="chart-container"
+                        style="position: relative; height:200px; width:100%; margin-bottom:15px;">
                         <canvas id="scenarioChart"></canvas>
                     </div>
 
-                    <div class="scenario-legend" style="text-align:center; font-size:0.8rem; margin-top:10px;">
-                        <span style="color:#e74c3c">Worst Case</span> •
-                        <span style="color:#f1c40f">Base Case</span> •
-                        <span style="color:#2ecc71">Best Case</span>
+                    <!-- Compounding Power Visualization -->
+                    <div id="compounding-viz"
+                        style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; padding:15px; color:#fff; margin-bottom:15px;">
+                        <div style="font-weight:bold; margin-bottom:8px;">💰 The Power of Compounding</div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+                            <div>
+                                <div style="opacity:0.8;">You Invest</div>
+                                <div style="font-size:1.1rem; font-weight:bold;">₹<span id="comp-invested">--</span>L
+                                </div>
+                            </div>
+                            <div style="font-size:2rem; align-self:center;">→</div>
+                            <div>
+                                <div style="opacity:0.8;">You Get (Base)</div>
+                                <div style="font-size:1.1rem; font-weight:bold;">₹<span id="comp-returns">--</span>L
+                                </div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="opacity:0.8;">Wealth Multiplier</div>
+                                <div style="font-size:1.2rem; font-weight:bold;"><span id="comp-multiplier">--</span>x
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Legend -->
+                    <div class="scenario-legend" style="font-size:0.8rem; line-height:1.8;">
+                        <!-- JS will inject timeline context here -->
                     </div>
                 </div>
 
