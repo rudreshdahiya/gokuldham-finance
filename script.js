@@ -294,9 +294,23 @@ function renderPersonaPage(personaKey, clusterId) {
     // 3. REASONING LOGIC (Personalized)
     const reason = generateReasoning(personaKey, GLOBAL_STATE.alloc);
 
+    // Build traits HTML
+    const traitsHtml = pData.traits ? pData.traits.map(t =>
+        `<span style="background:var(--color-bg); border:1px solid var(--color-border); padding:4px 10px; border-radius:15px; font-size:0.75rem; color:var(--color-text-main);">${t}</span>`
+    ).join('') : '';
+
     const statContainer = document.querySelector(".persona-stat");
     statContainer.innerHTML = `
-        <div style="margin-bottom:15px;">
+        <!-- Role & Traits -->
+        <div style="margin-bottom:15px; text-align:center;">
+            <div style="font-size:0.8rem; font-weight:600; color:${pData.color || 'var(--color-primary)'}; margin-bottom:8px;">${pData.role || ''}</div>
+            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px;">
+                ${traitsHtml}
+            </div>
+        </div>
+        
+        <!-- WHY THIS MATCH -->
+        <div style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--color-border);">
             <div style="font-size:0.7rem; font-weight:bold; color:var(--color-primary); letter-spacing:1px; margin-bottom:5px;">WHY THIS MATCH?</div>
             <div style="font-family:var(--font-mono); font-size:0.85rem; color:var(--color-text-main);">"${reason}"</div>
         </div>
