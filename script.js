@@ -1034,6 +1034,9 @@ function renderTaxWiseWithdrawal() {
     const hasShortGoal = tenure < 5 || goals.some(g => g.includes("Wedding") || g.includes("Car") || g.includes("Vacation"));
 
     let html = `
+        <div style="background:#e8f5e9; padding:10px; border-radius:4px; margin-bottom:15px; border-left:4px solid #27ae60;">
+            <strong style="color:#27ae60;">✓ For Your ${alloc.equity}/${alloc.debt}/${alloc.gold} Mix (Tax Bracket: ${taxBracket})</strong>
+        </div>
         <div style="font-family: 'Space Mono', monospace; font-size:0.75rem; margin-bottom: 15px; color:var(--color-text-muted); background:var(--color-bg); padding:8px; border-radius:4px;">
             SMART REDEMPTION ORDER (To minimize tax):
         </div>
@@ -1267,7 +1270,11 @@ function updateScenarioAnalysis() {
     const baseL = calculateCorpus(baseRate, availableMonthlySIP);
     const bullL = calculateCorpus(bullRate, availableMonthlySIP);
 
-    // === RENDER CHART ===
+    // Calculate FD benchmark (6.5% fixed, tax-adjusted to ~4.5% post-tax for 30% bracket)
+    const FD_RATE = 0.045; // Post-tax FD rate
+    const fdL = calculateCorpus(FD_RATE, availableMonthlySIP);
+
+    // === RENDER CHART WITH HONEST BENCHMARK ===
     const ctx = document.getElementById('scenarioChart');
     if (!ctx) return;
 
@@ -1276,18 +1283,18 @@ function updateScenarioAnalysis() {
     scenarioChartInstance = new Chart(ctx.getContext('2d'), {
         type: 'bar',
         data: {
-            labels: ['Bear (Poor)', 'Base (Expected)', 'Bull (Great)'],
+            labels: ['Bank FD\n(Safe)', 'Bear\n(Poor)', 'Base\n(Expected)', 'Bull\n(Great)'],
             datasets: [
                 {
                     label: 'Principal Invested',
-                    data: [investedL, investedL, investedL],
+                    data: [investedL, investedL, investedL, investedL],
                     backgroundColor: '#bdc3c7',
                     stack: 'Stack 0'
                 },
                 {
                     label: 'Wealth Gained',
-                    data: [bearL - investedL, baseL - investedL, bullL - investedL],
-                    backgroundColor: ['#e74c3c', '#f1c40f', '#2ecc71'],
+                    data: [fdL - investedL, bearL - investedL, baseL - investedL, bullL - investedL],
+                    backgroundColor: ['#95a5a6', '#e74c3c', '#f1c40f', '#2ecc71'],
                     stack: 'Stack 0'
                 }
             ]
@@ -1301,7 +1308,7 @@ function updateScenarioAnalysis() {
                     callbacks: {
                         label: function (context) {
                             const idx = context.dataIndex;
-                            const total = [bearL, baseL, bullL][idx];
+                            const total = [fdL, bearL, baseL, bullL][idx];
                             return context.dataset.label + ': ₹' + context.parsed.y + 'L (Total: ₹' + total + 'L)';
                         }
                     }
