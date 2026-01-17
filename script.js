@@ -1269,19 +1269,45 @@ function updateGoalTimeline() {
         targetCorpus = Math.round(corpusSum / goalCount);
     }
 
-    // Update UI
+    // 2b. Get State-Based Inflation Rate
+    const userState = GLOBAL_STATE.demographics?.state || "Maharashtra";
+    const stateInflation = (window.STATE_INFLATION && window.STATE_INFLATION[userState])
+        ? window.STATE_INFLATION[userState] / 100
+        : 0.06; // Default 6% if not found
+
+    // Adjust target corpus for inflation over average goal horizon
+    const avgGoalYears = goalCount > 0 ?
+        goals.reduce((sum, gLabel) => {
+            for (let key in DATA_ENGINE.ALL_GOALS) {
+                const g = DATA_ENGINE.ALL_GOALS[key];
+                if (g.label === gLabel && g.years) return sum + g.years;
+            }
+            return sum;
+        }, 0) / goalCount : 10;
+
+    // Inflation-adjusted target (future value of current goal)
+    const inflationAdjustedTarget = Math.round(targetCorpus * Math.pow(1 + stateInflation, avgGoalYears));
+
+    // Update UI with inflation info
     const targetLabel = document.getElementById("target-goal-label");
     const targetCorpusEl = document.getElementById("target-corpus");
-    if (targetLabel) targetLabel.innerText = targetGoalLabels.length > 0 ? targetGoalLabels.join(" + ") : "Wealth Creation";
-    if (targetCorpusEl) targetCorpusEl.innerText = targetCorpus;
+    if (targetLabel) {
+        const goalText = targetGoalLabels.length > 0 ? targetGoalLabels.join(" + ") : "Wealth Creation";
+        targetLabel.innerHTML = `${goalText} <span style="font-size:0.7em; color:#e74c3c;">(${(stateInflation * 100).toFixed(1)}% inflation in ${userState})</span>`;
+    }
+    if (targetCorpusEl) targetCorpusEl.innerText = inflationAdjustedTarget;
 
-    // 3. Returns Assumptions
+    // 3. Returns Assumptions (REAL RETURNS = Nominal - Inflation)
     const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
     const R_EQUITY = 0.12, R_DEBT = 0.07, R_GOLD = 0.08;
-    const wRateAnnual = ((alloc.equity * R_EQUITY) + (alloc.debt * R_DEBT) + (alloc.gold * R_GOLD)) / 100;
+    const nominalRate = ((alloc.equity * R_EQUITY) + (alloc.debt * R_DEBT) + (alloc.gold * R_GOLD)) / 100;
 
-    const deviation = 0.04;
-    const bearRate = wRateAnnual - deviation;
+    // Real rate (inflation-adjusted)
+    const realRate = nominalRate - stateInflation;
+    const wRateAnnual = Math.max(0.01, realRate); // At least 1% real return
+
+    const deviation = 0.03; // Lower deviation for real rates
+    const bearRate = Math.max(0.005, wRateAnnual - deviation);
     const baseRate = wRateAnnual;
     const bullRate = wRateAnnual + deviation;
 
@@ -1305,9 +1331,9 @@ function updateGoalTimeline() {
         return months >= maxMonths ? 50 : (months / 12).toFixed(1);
     }
 
-    const bearYears = yearsToReachGoal(bearRate, totalMonthlySIP, lumpsum, targetCorpus);
-    const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, lumpsum, targetCorpus);
-    const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, lumpsum, targetCorpus);
+    const bearYears = yearsToReachGoal(bearRate, totalMonthlySIP, lumpsum, inflationAdjustedTarget);
+    const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, lumpsum, inflationAdjustedTarget);
+    const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, lumpsum, inflationAdjustedTarget);
 
     // 5. Render Chart (Horizontal Bar - Years)
     const ctx = document.getElementById('scenarioChart');
