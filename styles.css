@@ -73,12 +73,14 @@ body {
     justify-content: center;
 }
 
-/* THEME TOGGLE BUTTON - FIXED TOP LEFT (ALL SCREENS) */
+/* THEME TOGGLE BUTTON - NEXT TO BACK BUTTON */
 .theme-toggle-btn {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 10000;
+    position: absolute;
+    top: 50%;
+    left: 55px;
+    /* Right after back button */
+    transform: translateY(-50%);
+    z-index: 100;
     width: 36px;
     height: 36px;
     border-radius: 50%;
