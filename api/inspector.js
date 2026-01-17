@@ -24,6 +24,7 @@ export default async function handler(req, res) {
         const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
         if (!GEMINI_API_KEY) {
+            console.error('GEMINI_API_KEY not found in environment');
             return res.status(500).json({
                 answer: "⚠️ API key not configured. Add GEMINI_API_KEY to Vercel environment variables."
             });
@@ -32,12 +33,12 @@ export default async function handler(req, res) {
         const prompt = `You are Inspector Pandey, a friendly financial advisor for Gokuldham Society members.
 
 User Context:
-- Persona: ${context.persona || 'Unknown'}
-- Income: ₹${context.income || 0}
-- Goals: ${context.goals?.join(', ') || 'None'}
-- Allocation: ${JSON.stringify(context.allocation || {})}
+- Persona: ${context?.persona || 'Unknown'}
+- Income: ₹${context?.income || 0}
+- Goals: ${context?.goals?.join(', ') || 'None'}
+- Allocation: ${JSON.stringify(context?.allocation || {})}
 
-Question: ${question}
+Question: ${question || 'No question provided'}
 
 Provide a helpful, personalized answer in 2-3 sentences. Be warm and reference their persona if relevant.`;
 
@@ -56,18 +57,29 @@ Provide a helpful, personalized answer in 2-3 sentences. Be warm and reference t
 
         const data = await response.json();
 
-        if (!data.candidates || !data.candidates[0]) {
-            throw new Error('No response from Gemini');
+        // Check for API errors
+        if (data.error) {
+            console.error('Gemini API error:', data.error);
+            return res.status(500).json({
+                answer: `API Error: ${data.error.message || 'Unknown error from Gemini'}`
+            });
         }
 
-        const answer = data.candidates[0].content.parts[0].text;
+        if (!data.candidates || !data.candidates[0]) {
+            console.error('No candidates in response:', JSON.stringify(data));
+            return res.status(500).json({
+                answer: "No response generated. The model may have blocked this request."
+            });
+        }
+
+        const answer = data.candidates[0].content?.parts?.[0]?.text || "I couldn't generate a response.";
 
         return res.status(200).json({ answer });
 
     } catch (error) {
-        console.error('Inspector error:', error);
+        console.error('Inspector error:', error.message, error.stack);
         return res.status(500).json({
-            answer: "Sorry, I'm having trouble connecting right now. Please try again in a moment."
+            answer: `Error: ${error.message}. Please try again.`
         });
     }
 }
