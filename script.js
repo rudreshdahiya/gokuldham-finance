@@ -518,6 +518,7 @@ function generateStrategy() {
     // Trigger Async Loaders
     runAssetAllocationEngine(tenure); // Pass calculated tenure
     runTaxOptimizer();
+    renderTaxWiseWithdrawal(); // NEW: Populate tax withdrawal guide
 
     // Trigger Insights & Scenarios
     setTimeout(() => {
