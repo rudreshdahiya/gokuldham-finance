@@ -31,6 +31,8 @@
 -   **Tags & Icons:** Expenses appear as transaction rows (e.g., "🥦 Groceries", "✈️ Travel"), tagged as Needs/Wants/Savings.
 -   **Expand-to-Edit:** Clicking a row expands it to reveal the allocation slider, mimicking a transaction detail view.
 -   **Mobile First:** Stacked layout optimized for thumb-interaction on phones.
+-   **Split View (Desktop):** A dual-pane layout with independent scrolling for inputs and a sticky "Visual Command Center" (Chart + Total) on the right.
+-   **Strict 100% Logic:** Smart sliders that strictly prevent users from exceeding 100% allocation, ensuring error-free input.
 
 ### **Screen 3: The Passport (Result)**
 -   **The Avatar:** A high-quality Voxel image of the user's Persona (e.g., Iyer, Popatlal).

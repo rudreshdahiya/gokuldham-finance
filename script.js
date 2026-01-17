@@ -3,11 +3,12 @@
 // ==========================================
 
 const FALLBACK_STATES = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
-    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
-    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
-    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
-    "Uttarakhand", "West Bengal", "Delhi", "Jammu & Kashmir", "Ladakh", "Puducherry"
+    "andaman-&-nicobar-islands", "andhra-pradesh", "arunachal-pradesh", "assam", "bihar",
+    "chandigarh", "chhattisgarh", "dadra-&-nagar-haveli-&-daman-&-diu", "delhi", "goa",
+    "gujarat", "haryana", "himachal-pradesh", "jammu-&-kashmir", "jharkhand", "karnataka",
+    "kerala", "ladakh", "lakshadweep", "madhya-pradesh", "maharashtra", "manipur", "meghalaya",
+    "mizoram", "nagaland", "odisha", "puducherry", "punjab", "rajasthan", "sikkim", "tamil-nadu",
+    "telangana", "tripura", "uttar-pradesh", "uttarakhand", "west-bengal"
 ];
 
 // USER STATE
@@ -26,24 +27,38 @@ let calculatedPersona = null;
 // ==========================================
 
 function initUI() {
-    // EVENT BINDINGS
-    // Explicitly bind the init button to bypass potential HTML inline issues
+    console.log("🚀 Initializing UI...");
+
+    // 1. Wait for DATA_ENGINE
+    if (!window.DATA_ENGINE) {
+        console.warn("⏳ DATA_ENGINE not ready. Retrying...");
+        setTimeout(initUI, 200);
+        return;
+    }
+
+    // 2. Input Listeners
+    // Explicitly bind the init button
     const initBtn = document.getElementById('btn-splash-init');
     if (initBtn) {
         initBtn.addEventListener('click', (e) => {
             console.log("Button Clicked via Listener");
             goToInput();
         });
-        // Force pointer events style for robustness
         initBtn.style.pointerEvents = "auto";
         initBtn.style.cursor = "pointer";
     }
 
-    // 5. Dynamic Data
+    document.getElementById("input-age").addEventListener("change", updateGoals);
+    document.getElementById("input-monthly-income").addEventListener("input", (e) => updateTotal(e, null));
+
+    // 3. Dynamic Data
     populateStates();
 
-    // Default Goals
+    // 4. Default Goals
     setTimeout(updateGoals, 100);
+
+    // 5. Force update total to apply 100% logic init
+    updateTotal(null);
 }
 
 function populateStates() {
@@ -210,6 +225,11 @@ window.hideGoalPrimer = function () {
 function initChart() {
     const ctx = document.getElementById('spendChart').getContext('2d');
 
+    // Register DataLabels if available
+    if (typeof ChartDataLabels !== 'undefined') {
+        Chart.register(ChartDataLabels);
+    }
+
     spendChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -253,8 +273,22 @@ function initChart() {
                         }
                     },
                     backgroundColor: 'rgba(0,0,0,0.9)',
-                    titleFont: { family: 'Orbitron' },
+                    titleFont: { family: 'Orbitron', size: 14 },
                     bodyFont: { family: 'Rajdhani', size: 14 }
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: { size: 16 },
+                    formatter: function (value, context) {
+                        // Find key
+                        const key = Object.keys(CATEGORY_COLORS)[context.dataIndex];
+                        // Find icon from EXPENSE_CATEGORIES
+                        const cat = EXPENSE_CATEGORIES.find(c => c.id === key);
+                        return value > 3 ? (cat ? cat.icon : '') : ''; // Only show if > 3%
+                    },
+                    anchor: 'center',
+                    align: 'center',
+                    offset: 0
                 }
             },
             animation: {
@@ -341,9 +375,27 @@ window.toggleTxnRow = function (e, id) {
 window.updateTotal = function (event, manualId) {
     const income = parseFloat(document.getElementById("input-monthly-income").value) || 0;
 
-    // If event comes from manual slider input, update the text immediately
+    // If event comes from manual slider input, enforce 100% Cap
     if (manualId) {
-        const slider = document.getElementById(`slider-${manualId}`);
+        let slider = document.getElementById(`slider-${manualId}`);
+        let currentVal = parseInt(slider.value) || 0;
+
+        // Calculate sum of ALL OTHER sliders
+        let othersTotal = 0;
+        const ids = EXPENSE_CATEGORIES.map(c => c.id);
+        ids.forEach(id => {
+            if (id !== manualId) {
+                const s = document.getElementById(`slider-${id}`);
+                othersTotal += s ? (parseInt(s.value) || 0) : 0;
+            }
+        });
+
+        // Strict Cap Logic
+        if (othersTotal + currentVal > 100) {
+            currentVal = 100 - othersTotal;
+            slider.value = currentVal; // Snap back
+        }
+
         const valSpan = document.getElementById(`val-${manualId}`);
         if (slider && valSpan) {
             valSpan.innerText = slider.value + '%';
