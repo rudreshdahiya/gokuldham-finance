@@ -552,11 +552,82 @@ function runAssetAllocationEngine(horizonInput) {
 
     console.log("Calling Prescription Engine...", presPayload);
 
-    // Fallback Mock in case backend is sleeping (common on Render free tier)
+    // === PERSONA-DRIVEN FALLBACK (The Magic!) ===
+    // Start with 9-rule matrix base
+    let baseEquity = 50, baseDebt = 30, baseGold = 20;
+
+    // Horizon adjustment
+    if (horizon < 5) { baseEquity = 40; baseDebt = 45; baseGold = 15; }
+    else if (horizon > 15) { baseEquity = 70; baseDebt = 20; baseGold = 10; }
+
+    // Risk adjustment
+    if (risk === 3) { baseEquity += 15; baseDebt -= 10; } // Aggressive
+    if (risk === 1) { baseEquity -= 15; baseDebt += 15; } // Conservative
+
+    // === PERSONA TRAIT MODIFIERS (Character-Specific Behavior) ===
+    const pData = DATA_ENGINE.PERSONAS[pKey] || DATA_ENGINE.PERSONAS['mehta'];
+
+    if (pKey === "jethalal") {
+        baseEquity += 10; // Risk-taker, chases high returns
+        baseGold -= 5;    // "Gold is for cowards"
+    }
+    if (pKey === "popatlal") {
+        baseDebt += 10;   // Anxious, needs safety
+        baseEquity -= 10; // Fear of market volatility
+    }
+    if (pKey === "babita") {
+        baseDebt += 5;    // Needs liquidity for lifestyle
+        baseEquity -= 5;
+    }
+    if (pKey === "bhide") {
+        baseDebt += 5;    // Disciplined but conservative
+        baseGold += 5;    // Trust in traditional assets
+        baseEquity -= 10;
+    }
+    if (pKey === "champaklal") {
+        baseDebt += 15;   // Maximum safety for retiree
+        baseEquity -= 15;
+    }
+
+    // === USER SPENDING BEHAVIOR MODIFIER ===
+    const userSavings = GLOBAL_STATE.alloc.savings || 20;
+    if (userSavings > 30) {
+        baseEquity += 5; // Reward high savers with growth
+        baseDebt -= 5;
+    } else if (userSavings < 15) {
+        baseEquity -= 5; // Low savers need safety buffer
+        baseDebt += 5;
+    }
+
+    // === GOAL-SPECIFIC ADJUSTMENTS ===
+    const goals = GLOBAL_STATE.demographics.goals || [];
+
+    if (goals.some(g => g.includes("Wedding") || g.includes("Car") || g.includes("Vacation"))) {
+        baseDebt += 10;   // Short-term goals need liquidity
+        baseEquity -= 10;
+    }
+    if (goals.includes("FIRE (Retire Early)") || goals.includes("SIP Portfolio")) {
+        baseEquity += 10; // Long-term wealth focus
+        baseDebt -= 5;
+        baseGold -= 5;
+    }
+    if (goals.includes("Parental Medical Care") || goals.includes("Emergency Fund")) {
+        baseDebt += 10;   // Immediate access critical
+        baseEquity -= 10;
+    }
+
+    // Clamp to valid ranges
+    baseEquity = Math.max(20, Math.min(85, baseEquity));
+    baseDebt = Math.max(10, Math.min(60, baseDebt));
+    baseGold = 100 - baseEquity - baseDebt; // Residual
+
     const mockPrescription = {
-        equity: 50, debt: 30, gold: 20,
+        equity: baseEquity,
+        debt: baseDebt,
+        gold: baseGold,
         confidence: "High",
-        reco: "Balanced Growth Strategy"
+        reco: `${pData.name}'s Strategy: ${baseEquity > 60 ? "Aggressive Growth" : baseEquity < 40 ? "Conservative Safety" : "Balanced Approach"}`,
+        allocation: { equity: baseEquity, debt: baseDebt, gold: baseGold } // For other functions
     };
 
     fetch("https://gokuldham-backend.onrender.com/analyze/prescription", {

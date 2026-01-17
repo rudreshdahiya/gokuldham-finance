@@ -314,21 +314,46 @@ const DATA_ENGINE_CORE = {
         "telangana", "tripura", "uttar-pradesh", "uttarakhand", "west-bengal"
     ],
 
-    // PHONEPE PULSE MULTIPLIERS (Based on 2024 Transaction Data)
-    // Logic: Multiplier = StateATV / NationalAvg (1350)
-    // High Mul (>1.0) = High Cost/Spending -> Reward Savings (Boost)
-    // Low Mul (<1.0) = Low Cost -> Penalize Savings (Dampen)
+    // COST OF LIVING MULTIPLIERS (Source: Numbeo + BhulekhIndia 2025)
+    // Weighted Index: Rent 30%, Food 25%, Transport 20%, Healthcare/Education 15%, Utilities 10%
+    // Baseline: National Average = 1.0
     STATE_MULTIPLIERS: {
-        "andaman-&-nicobar-islands": 1.21, "andhra-pradesh": 1.27, "arunachal-pradesh": 1.17,
-        "assam": 1.07, "bihar": 1.12, "chandigarh": 0.89, "chhattisgarh": 0.93,
-        "dadra-&-nagar-haveli-&-daman-&-diu": 0.68, "delhi": 0.94, "goa": 0.96,
-        "gujarat": 1.06, "haryana": 0.99, "himachal-pradesh": 0.90, "jammu-&-kashmir": 0.92,
-        "jharkhand": 0.97, "karnataka": 0.92, "kerala": 0.92, "ladakh": 1.50,
-        "lakshadweep": 1.18, "madhya-pradesh": 0.93, "maharashtra": 0.88, "manipur": 1.78,
-        "meghalaya": 1.35, "mizoram": 1.65, "nagaland": 1.74, "odisha": 0.99,
-        "puducherry": 0.95, "punjab": 1.16, "rajasthan": 1.08, "sikkim": 1.20,
-        "tamil-nadu": 1.05, "telangana": 1.08, "tripura": 1.19, "uttar-pradesh": 1.02,
-        "uttarakhand": 0.90, "west-bengal": 1.26
+        "andhra-pradesh": 1.05,
+        "arunachal-pradesh": 0.95,
+        "assam": 0.95,
+        "bihar": 0.75,
+        "chhattisgarh": 0.8,
+        "goa": 1.3,
+        "gujarat": 1.05,
+        "haryana": 1.15,
+        "himachal-pradesh": 1.0,
+        "jharkhand": 0.85,
+        "karnataka": 1.35,
+        "kerala": 1.05,
+        "madhya-pradesh": 0.85,
+        "maharashtra": 1.4,
+        "manipur": 0.9,
+        "meghalaya": 0.95,
+        "mizoram": 0.9,
+        "nagaland": 0.9,
+        "odisha": 0.8,
+        "punjab": 1.05,
+        "rajasthan": 0.95,
+        "sikkim": 1.1,
+        "tamil-nadu": 1.05,
+        "telangana": 1.2,
+        "tripura": 0.85,
+        "uttar-pradesh": 0.85,
+        "uttarakhand": 1.0,
+        "west-bengal": 1.0,
+        "andaman-and-nicobar-islands": 1.25,
+        "chandigarh": 1.25,
+        "dadra-and-nagar-haveli-and-daman-and-diu": 0.95,
+        "delhi": 1.35,
+        "jammu-and-kashmir": 1.1,
+        "ladakh": 1.2,
+        "lakshadweep": 1.15,
+        "puducherry": 1.05
     },
 
     // GAP ANALYSIS MAPPING (FALLBACK)
