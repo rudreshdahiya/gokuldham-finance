@@ -73,17 +73,16 @@ body {
     justify-content: center;
 }
 
-/* THEME TOGGLE BUTTON - TOP LEFT */
+/* THEME TOGGLE BUTTON - FIXED TOP LEFT (ALL SCREENS) */
 .theme-toggle-btn {
-    position: absolute;
-    top: 50%;
+    position: fixed;
+    top: 15px;
     left: 15px;
-    transform: translateY(-50%);
-    z-index: 100;
+    z-index: 10000;
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: transparent;
+    background: var(--color-bg-card);
     color: var(--color-text-main);
     border: 1px solid var(--color-border);
     cursor: pointer;
@@ -91,13 +90,14 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: all 0.2s ease;
 }
 
 .theme-toggle-btn:hover {
-    background: var(--color-bg);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     border-color: var(--color-primary);
-    transform: translateY(-50%) scale(1.05);
 }
 
 /* =========================================
