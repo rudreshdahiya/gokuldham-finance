@@ -81,14 +81,14 @@
             personaKey = "jethalal";
             logicLog.push(`Critical Priority: High Risk & Debt -> Jethalal`);
         }
-        else if (accumulatedCCTotal > 50) {
+        else if (accumulatedCCTotal > 55) {
             personaKey = "jethalal";
-            logicLog.push("Debt Trap (>50% load) -> Jethalal");
+            logicLog.push("Debt Trap (>55% load) -> Jethalal");
         }
-        else if (checkSavings < 25 && wants > 50) {
+        else if (checkSavings < 20 && wants > 55) {
             // Low savings but high wants is also Jethalal behavior, but we check if Wants>50 explicitly
             personaKey = "jethalal";
-            logicLog.push("Low Savings & High Wants -> Jethalal");
+            logicLog.push("Very Low Savings & High Wants -> Jethalal");
         }
         else if (needs > 70) {
             if (ageGroup === "60+") {
@@ -99,8 +99,8 @@
                 logicLog.push("High Needs (>70%) -> Abdul");
             }
         }
-        // 2. SAVING VECTORS (Savings Dominant > 40%)
-        else if (checkSavings > 40) {
+        // 2. SAVING VECTORS (Savings Dominant > 35%)
+        else if (checkSavings > 35) {
             // CHAMPAKLAL BOOST: Age 60+ Savers
             if (ageGroup === "60+") {
                 personaKey = "champaklal";
@@ -111,13 +111,13 @@
                 logicLog.push("Extreme Savings (>72%) -> Popatlal");
             }
             // SPECIFIC GOAL SPECIALISTS
-            else if ((hasGoal("wealth") || hasGoal("retirement")) && checkSavings >= 50) {
+            else if ((hasGoal("wealth") || hasGoal("retirement")) && checkSavings >= 45) {
                 personaKey = "iyer"; // The Investor
                 logicLog.push("High Savings + Wealth Goal -> Iyer");
-            } else if ((hasGoal("home") || hasGoal("asset")) && checkSavings >= 50) {
+            } else if ((hasGoal("home") || hasGoal("asset")) && checkSavings >= 45) {
                 personaKey = "sodhi"; // Real Estate
                 logicLog.push("High Savings + Asset Goal -> Sodhi");
-            } else if (hasGoal("safety") && checkSavings >= 50) {
+            } else if (hasGoal("safety") && checkSavings >= 45) {
                 personaKey = "bhide"; // Conservative
                 logicLog.push("High Savings + Safety Goal -> Bhide");
             } else {
@@ -126,8 +126,8 @@
                 logicLog.push("High Savings (General) -> Madhavi");
             }
         }
-        // 3. SPENDING VECTORS (Wants Dominant > 38%)
-        else if (wants > 38) {
+        // 3. SPENDING VECTORS (Wants Dominant > 35%)
+        else if (wants > 35) {
             // Granular Analysis
             const traits = [
                 { key: 'babita', val: granular.shop || 0, label: 'Shopping' },
@@ -140,7 +140,8 @@
             traits.sort((a, b) => b.val - a.val);
             let winner = traits[0];
 
-            if (winner.val > 18) {
+            if (winner.val > 10) { // Lowered form 18 to 10 to catch more specific spenders
+                personaKey = winner.key;
                 personaKey = winner.key;
                 logicLog.push(`Dominant Want: ${winner.label} -> ${winner.key}`);
             } else {

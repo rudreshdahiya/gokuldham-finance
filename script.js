@@ -84,7 +84,10 @@ function goToPage(pageNum) {
     }
 
     // Special Inits per Page
-    if (pageNum === 2) updateLedger(); // Init Sliders
+    if (pageNum === 2) {
+        syncGranularInputs(); // Force random values into DOM
+        updateLedger();
+    }
     if (pageNum === 4) updateGoals(); // Init Goals
     if (pageNum === 5) {
         // Force refresh Existing SIP from current Income/Savings state
@@ -115,6 +118,15 @@ let GRANULAR_ALLOC = {
     dining: 10, travel: 10, shopping: 10, // Wants
     invest: 20 // Savings
 };
+
+function syncGranularInputs() {
+    for (let key in GRANULAR_ALLOC) {
+        const el = document.getElementById("slider-" + key); // Corrected ID prefix
+        const valEl = document.getElementById("val-" + key);
+        if (el) el.value = GRANULAR_ALLOC[key];
+        if (valEl) valEl.innerText = GRANULAR_ALLOC[key] + "%";
+    }
+}
 
 function updateLedger(changedId, categoryKey) {
     // 1. Get Income
@@ -1625,8 +1637,29 @@ function updateScenarioAnalysis() {
 // INITIALIZATION
 // ==========================================
 window.addEventListener("DOMContentLoaded", () => {
+    randomizeGranularAlloc(); // Nudge logic: Equal chance start
     initUI();
 });
+
+// Randomize Granular Inputs (Sum to 100)
+function randomizeGranularAlloc() {
+    const categories = Object.keys(GRANULAR_ALLOC);
+    let remaining = 100;
+
+    // Generate random weights
+    const weights = categories.map(() => Math.random());
+    const sumWeights = weights.reduce((a, b) => a + b, 0);
+
+    // Distribute
+    categories.forEach((key, idx) => {
+        const val = Math.floor((weights[idx] / sumWeights) * 100);
+        GRANULAR_ALLOC[key] = val;
+        remaining -= val;
+    });
+
+    // Add remainder to random category (e.g., invest)
+    GRANULAR_ALLOC['invest'] += remaining;
+}
 
 // === GROWTH RACE ANIMATION (Canvas) ===
 let raceAnimId = null;
