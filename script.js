@@ -645,10 +645,11 @@ function renderAssetMixExplainer(personaKey) {
         logicText += ` We fine-tuned <strong>Equity to ${alloc.equity}%</strong> to balance growth with safety for <strong>${goal1}</strong>.`;
     }
 
-    // Add "How we got this" logic header
+    // Add "How we got this" logic header with Info Icon
     container.innerHTML = `
-        <div style="margin-bottom:12px; font-size:0.8rem; color:var(--color-primary); border-bottom:1px solid #eee; padding-bottom:5px;">
-             <strong>🧬 Strategy Logic:</strong> ${logicText}
+        <div style="margin-bottom:12px; font-size:0.8rem; color:var(--color-primary); border-bottom:1px solid #eee; padding-bottom:5px; display:flex; align-items:center; justify-content:space-between;">
+             <div><strong>🧬 Strategy Logic:</strong> ${logicText}</div>
+             <div onclick="openMethodologyModal()" style="cursor:pointer; font-size:1.1rem; opacity:0.8;" title="View Methodology">ℹ️</div>
         </div>
         <div style="margin-bottom:8px; line-height:1.4;">
             <span style="color:#90caf9; font-weight:bold;">● Equity (${alloc.equity}%):</span> Growth engine for your ${goals.length > 0 ? goals.join(" & ") : "goals"}.
@@ -661,6 +662,25 @@ function renderAssetMixExplainer(personaKey) {
         </div>
     `;
 }
+
+
+
+// --- METHODOLOGY MODAL FUNCTIONS ---
+window.openMethodologyModal = function () {
+    const m = document.getElementById("methodology-modal");
+    if (m) {
+        m.classList.remove("hidden");
+        m.style.display = "flex";
+    }
+};
+
+window.closeMethodologyModal = function () {
+    const m = document.getElementById("methodology-modal");
+    if (m) {
+        m.classList.add("hidden");
+        m.style.display = "none";
+    }
+};
 
 
 function updateGoalContext() {
