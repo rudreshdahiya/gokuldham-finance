@@ -293,10 +293,10 @@ function showNeighborPersona(personaKey) {
 
 
 const PERSONA_TRIBES = {
-    "jethalal": ["abdul", "bagha"], "abdul": ["jethalal", "bagha"], // Strugglers
-    "babita": ["roshan", "daya"], "roshan": ["babita", "tapu"], "daya": ["babita", "anjali"], "tapu": ["roshan", "babita"], "komal": ["roshan", "daya"], "anjali": ["daya", "babita"], // Spenders
-    "bhide": ["popatlal", "madhavi"], "popatlal": ["bhide", "champaklal"], "madhavi": ["bhide", "sodhi"], "iyer": ["sodhi", "bhide"], "sodhi": ["iyer", "madhavi"], "champaklal": ["popatlal", "bhide"], // Savers
-    "mehta": ["iyer", "bhide"], "bagha": ["jethalal", "popatlal"] // Balanced
+    "jethalal": ["abdul", "bagha"], "abdul": ["jethalal", "natukaka"], // Strugglers
+    "babita": ["roshan", "daya"], "roshan": ["babita", "tapu"], "daya": ["babita", "anjali"], "tapu": ["roshan", "gogi"], "komal": ["roshan", "hathi"], "anjali": ["daya", "mehta"], // Spenders
+    "bhide": ["popatlal", "madhavi"], "popatlal": ["bhide", "champaklal"], "madhavi": ["bhide", "sodhi"], "iyer": ["sodhi", "mehta"], "sodhi": ["iyer", "madhavi"], "champaklal": ["popatlal", "bhide"], // Savers
+    "mehta": ["iyer", "bhide"], "bagha": ["jethalal", "popatlal"], "natukaka": ["popatlal", "bagha"] // Balanced/others
 };
 
 function renderPersonaPage(personaKey, clusterId) {
@@ -462,36 +462,22 @@ function generateReasoning(personaKey, alloc) {
 // 4. PAGE 4: CONTEXT (DEMOGRAPHICS)
 // ==========================================
 
-// Helper: Populate States (Custom Searchable Dropdown)
+// Helper: Populate States (Standard Select)
 function populateStates() {
-    const list = document.getElementById('state-list-dropdown');
-    if (!list) return;
+    const select = document.getElementById('input-state');
+    if (!select) return;
 
     // Use DATA_ENGINE source of truth
     const states = window.DATA_ENGINE ? window.DATA_ENGINE.ALL_STATES : [];
 
-    // Clear list
-    list.innerHTML = '';
+    // Clear and Add Placeholder
+    select.innerHTML = '<option value="" disabled selected>Select your state...</option>';
 
     states.forEach(state => {
-        const div = document.createElement("div");
-        div.className = "state-option";
-        div.style.padding = "10px 15px";
-        div.style.cursor = "pointer";
-        div.style.borderBottom = "1px solid var(--color-border)";
-        div.style.color = "var(--color-text-main)";
-        div.style.fontSize = "0.9rem";
-
-        // Add hover effect via inline JS for simplicity or use CSS class
-        div.onmouseover = () => { div.style.background = "var(--color-bg)"; };
-        div.onmouseout = () => { div.style.background = "transparent"; };
-
-        div.innerText = state.replace(/-/g, ' ').toUpperCase();
-        div.dataset.value = state;
-
-        div.onclick = () => selectState(state, div.innerText);
-
-        list.appendChild(div);
+        const option = document.createElement("option");
+        option.value = state;
+        option.innerText = state.replace(/-/g, ' ').toUpperCase();
+        select.appendChild(option);
     });
 }
 
@@ -578,10 +564,15 @@ function updateGoals() {
     const container = document.getElementById("goal-pills-container");
     container.innerHTML = "";
 
-    // Reuse existing logic map
+    // Map Select Values to Data Keys
+    // HTML Options: "18-25", "26-35", "36-50", "50+"
+    // DATA Keys: "18-25", "22-28", "29-39", "40-60", "60+"
     let ageKey = "18-25";
-    if (["22-28", "29-39"].includes(age)) ageKey = "26-42";
-    if (["40-60", "60+"].includes(age)) ageKey = "43-58";
+
+    if (age === "26-35") ageKey = "29-39"; // Best Fit
+    else if (age === "36-50") ageKey = "40-60"; // Best Fit
+    else if (age === "50+") ageKey = "60+"; // Best Fit
+    else if (age === "18-25") ageKey = "18-25";
 
     // Use DATA_ENGINE
     // Use mapped key to filter
@@ -621,24 +612,36 @@ function renderAssetMixExplainer(personaKey) {
     const pData = DATA_ENGINE.PERSONAS[personaKey || 'mehta'];
     if (nameSpan) nameSpan.innerText = (pData.name || "YOU").toUpperCase();
 
-    // Context from User Alloc
+    // Context from User Alloc (Fallback to 50/30/20 only if null)
     const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
+    const goals = GLOBAL_STATE.demographics.goals || [];
+    const age = parseInt(document.getElementById("input-age")?.value) || 30;
 
-    // Dynamic Logic
-    let equityText = "wealth creation over 5+ years";
-    if (alloc.equity > 60) equityText = "maximizing long-term growth (Risk-Taker mode)";
-    if (alloc.equity < 40) equityText = "steady growth with lower volatility";
+    // Dynamic Reasoning Logic
+    let equityReason = "";
+    if (alloc.equity > 60) equityReason = `To grow wealth aggressively for long-term goals like <strong>${goals[0] || 'Early Retirement'}</strong>.`;
+    else if (alloc.equity < 40) equityReason = `To reduce risk, as your goal <strong>${goals[0] || 'Safety'}</strong> is near or you prefer stability.`;
+    else equityReason = `To balance growth with safety, ideal for <strong>${goals[0] || 'Wealth Creation'}</strong>.`;
 
-    let debtText = "safety and liquidity";
-    if (alloc.debt > 40) debtText = "preserving capital (Conservative mode)";
+    let debtReason = "To provide liquidity for emergencies.";
+    if (alloc.debt > 40) debtReason = `High allocation for safety and to fund short-term needs like <strong>${goals[1] || 'Upcoming Expenses'}</strong>.`;
 
-    let goldText = "inflation hedge";
-    if (alloc.gold > 15) goldText = "insurance against market crashes";
+    let goldReason = "As a hedge against inflation and currency risks.";
 
+    // Add "How we got this" logic header
     container.innerHTML = `
-        <div style="margin-bottom:6px;"><strong>Equity (${alloc.equity}%):</strong> ${equityText}.</div>
-        <div style="margin-bottom:6px;"><strong>Debt (${alloc.debt}%):</strong> ${debtText}.</div>
-        <div><strong>Gold (${alloc.gold}%):</strong> ${goldText}.</div>
+        <div style="margin-bottom:12px; font-size:0.8rem; color:var(--color-primary); border-bottom:1px solid #eee; padding-bottom:5px;">
+             <strong>🧬 Strategy Logic:</strong> Based on Age (${age}), Goals (${goals.length}), and Risk Profile.
+        </div>
+        <div style="margin-bottom:8px; line-height:1.4;">
+            <span style="color:#90caf9; font-weight:bold;">● Equity (${alloc.equity}%):</span> ${equityReason}
+        </div>
+        <div style="margin-bottom:8px; line-height:1.4;">
+            <span style="color:#ce93d8; font-weight:bold;">● Debt (${alloc.debt}%):</span> ${debtReason}
+        </div>
+        <div style="line-height:1.4;">
+             <span style="color:#fff59d; font-weight:bold;">● Gold (${alloc.gold}%):</span> ${goldReason}
+        </div>
     `;
 }
 
