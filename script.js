@@ -677,10 +677,83 @@ function renderAssetMixExplainer(personaKey) {
 // --- METHODOLOGY MODAL FUNCTIONS ---
 window.openMethodologyModal = function () {
     const m = document.getElementById("methodology-modal");
-    if (m) {
-        m.classList.remove("hidden");
-        m.style.display = "flex";
+    if (!m) return;
+
+    // 1. Gather Context
+    const ageVal = document.getElementById("input-age")?.value || "30";
+    // If it's a range like "20-30", show that.
+    const ageDisplay = ageVal.includes("-") ? ageVal : ageVal + "s";
+
+    const state = GLOBAL_STATE.demographics.state || "India";
+    const inflation = (window.STATE_INFLATION && window.STATE_INFLATION[state]) || 6.0;
+    const persona = (GLOBAL_STATE.persona || "You").toUpperCase();
+
+    // 2. Build Dynamic Content (High Contrast, Readable)
+    const contentHTML = `
+        <div style="font-family:sans-serif;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #333; padding-bottom:10px;">
+                <h3 style="margin:0; font-size:1.2rem; color:#fff;">🧬 Allocation Logic</h3>
+                <span onclick="closeMethodologyModal()" style="cursor:pointer; font-size:1.5rem; color:#888;">&times;</span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <!-- Step 1 -->
+                <div style="display:flex; gap:15px; align-items:flex-start;">
+                    <div style="background:#333; color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">1</div>
+                    <div>
+                        <strong style="color:#fff; display:block; margin-bottom:4px;">The Global Base</strong>
+                        <div style="color:#ccc; font-size:0.9rem;">We start everyone with a balanced <span style="color:#fff;">50/30/20</span> mix (Equity/Debt/Gold).</div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div style="display:flex; gap:15px; align-items:flex-start;">
+                    <div style="background:#333; color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">2</div>
+                    <div>
+                        <strong style="color:#fff; display:block; margin-bottom:4px;">Age Check (${ageDisplay})</strong>
+                        <div style="color:#ccc; font-size:0.9rem;">
+                            Your age range suggests you have <span style="color:#4caf50;">Time to Grow</span>. We adjust Equity accordingly.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div style="display:flex; gap:15px; align-items:flex-start;">
+                    <div style="background:#333; color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">3</div>
+                    <div>
+                        <strong style="color:#fff; display:block; margin-bottom:4px;">Persona Match (${persona})</strong>
+                        <div style="color:#ccc; font-size:0.9rem;">
+                            Based on your risk profile, we fine-tune the risk exposure.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div style="display:flex; gap:15px; align-items:flex-start;">
+                    <div style="background:#333; color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0;">4</div>
+                    <div>
+                        <strong style="color:#fff; display:block; margin-bottom:4px;">Reality Check (${state.toUpperCase()})</strong>
+                        <div style="color:#ccc; font-size:0.9rem;">
+                            Inflation in your state is <span style="color:#ffb74d;">${inflation}%</span>. We tweaked allocation to ensure you beat it.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="closeMethodologyModal()" style="width:100%; margin-top:25px; padding:12px; background:#2196f3; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">GOT IT</button>
+        </div>
+    `;
+
+    // 3. Inject and Show
+    const container = m.querySelector('.modal-content');
+    if (container) {
+        container.style.background = "#1a1a1a"; // Force dark readable bg
+        container.style.color = "#ffffff";
+        container.innerHTML = contentHTML;
     }
+
+    m.classList.remove("hidden");
+    m.style.display = "flex";
 };
 
 window.closeMethodologyModal = function () {
@@ -1498,14 +1571,8 @@ function updateGoalTimeline() {
     const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, totalCorpus, targetCorpus);
     const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, totalCorpus, targetCorpus);
 
-    // 5. UPDATE SCENARIO CARDS (No Chart)
-    const bearEl = document.getElementById('card-bear-years');
-    const baseEl = document.getElementById('card-base-years');
-    const bullEl = document.getElementById('card-bull-years');
-
-    if (bearEl) bearEl.innerText = bearYears + " Y";
-    if (baseEl) baseEl.innerText = baseYears + " Y";
-    if (bullEl) bullEl.innerText = bullYears + " Y";
+    // 5. UPDATE SCENARIO VISUAL (Canvas Race)
+    initGrowthRace(parseFloat(bearYears), parseFloat(baseYears), parseFloat(bullYears));
 
     // 6. IMPACT VISUALIZATION (Time Saved)
     const banner = document.getElementById('impact-banner');
@@ -1605,4 +1672,94 @@ function initNASAEffect() {
             background: { color: "#000000" }
         });
     }
+}
+
+// === GROWTH RACE ANIMATION (Canvas) ===
+let raceAnimId = null;
+
+function initGrowthRace(bearY, baseY, bullY) {
+    const canvas = document.getElementById("growthRaceCanvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+
+    // Cancel prev animation
+    if (raceAnimId) cancelAnimationFrame(raceAnimId);
+
+    // Setup: Distance to top is "Time".
+    // Goal line is at y = 40. Start at y = 200.
+    const startY = 190;
+    const goalY = 40;
+
+    // Max years (slowest) defines the baseline speed
+    const maxYears = Math.max(bearY, baseY, bullY);
+    const baseSpeed = 1.0;
+
+    const balls = [
+        { label: "Bear", color: "#ef9a9a", years: bearY, x: 50, y: startY, radius: 6, finished: false },
+        { label: "Base", color: "#ffe082", years: baseY, x: 160, y: startY, radius: 8, finished: false },
+        { label: "Bull", color: "#a5d6a7", years: bullY, x: 270, y: startY, radius: 6, finished: false }
+    ];
+
+    // Calculate speeds: Faster years = Higher speed
+    // Ratio = maxYears / thisYears
+    balls.forEach(b => {
+        b.speed = baseSpeed * (maxYears / b.years);
+        if (b.label === "Bull") b.speed *= 1.2; // Visual boost
+    });
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Goal Line
+        ctx.beginPath();
+        ctx.strokeStyle = "#444";
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(10, goalY);
+        ctx.lineTo(canvas.width - 10, goalY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#666";
+        ctx.font = "10px sans-serif";
+        ctx.fillText("FINISH LINE (Goal Reached)", canvas.width - 150, goalY - 10);
+
+        let allFinished = true;
+
+        balls.forEach(b => {
+            // Update
+            if (!b.finished) {
+                b.y -= b.speed;
+                // Compounding Growth (Size increase)
+                // Grow as it gets closer to top
+                const progress = (startY - b.y) / (startY - goalY);
+                b.radius = 6 + (progress * 14); // Grow from 6 to 20
+
+                if (b.y <= goalY) {
+                    b.y = goalY;
+                    b.finished = true;
+                }
+                allFinished = false;
+            }
+
+            // Draw Ball
+            ctx.beginPath();
+            ctx.fillStyle = b.color;
+            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Label if finished
+            if (b.finished) {
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 14px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(b.years.toFixed(1) + " Yr", b.x, b.y + b.radius + 15);
+            }
+        });
+
+        if (!allFinished) {
+            raceAnimId = requestAnimationFrame(draw);
+        }
+    }
+
+    draw();
 }
