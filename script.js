@@ -12,6 +12,13 @@ let GLOBAL_STATE = {
     theme: null // Will be set in initUI based on device preference
 };
 
+// --- STATE INFLATION DATA (2025 Estimates) ---
+window.STATE_INFLATION = {
+    "maharashtra": 6.8, "delhi": 7.2, "karnataka": 7.5, "tamil-nadu": 6.5,
+    "telangana": 7.0, "gujarat": 6.2, "uttar-pradesh": 6.0, "west-bengal": 6.3,
+    "rajasthan": 6.1, "kerala": 5.8, "default": 6.0
+};
+
 // Get device preference or stored preference
 function getPreferredTheme() {
     const stored = localStorage.getItem('theme');
@@ -620,16 +627,22 @@ function renderAssetMixExplainer(personaKey) {
     // Map Goal IDs to Labels if needed (or just use what we have if they are labels)
     // script.js line 715 sets .goals to labels. So 'goals' are labels.
     const goal1 = goals[0] || 'Wealth Creation';
+    const userState = GLOBAL_STATE.demographics.state || "default";
+    const localInflation = (window.STATE_INFLATION && window.STATE_INFLATION[userState]) || 6.0;
 
     // Logic Breakdown
     let logicText = `Based on your age (<strong>${age}</strong>), we started with a balanced mix.`;
 
+    if (localInflation > 7.0) {
+        logicText += ` Living in <strong>${userState.toUpperCase()}</strong> means facing high inflation (${localInflation}%), so we increased Equity to help you beat it.`;
+    }
+
     if (alloc.equity > 60) {
-        logicText += ` Since <strong>${goal1}</strong> is a long-term goal, we boosted <strong>Equity to ${alloc.equity}%</strong> to beat inflation.`;
+        logicText += ` Since <strong>${goal1}</strong> is a long-term goal, we prioritized <strong>Equity (${alloc.equity}%)</strong> for maximum growth.`;
     } else if (alloc.equity < 40) {
-        logicText += ` But because <strong>${goal1}</strong> is short-term or you prefer safety, we lowered Equity to <strong>${alloc.equity}%</strong>.`;
+        logicText += ` But because <strong>${goal1}</strong> is short-term or you prefer safety, we kept Equity modest at <strong>${alloc.equity}%</strong>.`;
     } else {
-        logicText += ` We kept <strong>Equity at ${alloc.equity}%</strong> to balance growth with safety for <strong>${goal1}</strong>.`;
+        logicText += ` We fine-tuned <strong>Equity to ${alloc.equity}%</strong> to balance growth with safety for <strong>${goal1}</strong>.`;
     }
 
     // Add "How we got this" logic header
@@ -833,6 +846,18 @@ function runAssetAllocationEngine(horizonInput) {
     if (goals.includes("Parental Medical Care") || goals.includes("Emergency Fund")) {
         baseDebt += 10;   // Immediate access critical
         baseEquity -= 10;
+    }
+
+    // === INFLATION ADJUSTMENT (State Specific) ===
+    const userState = GLOBAL_STATE.demographics.state || "default";
+    const localInflation = (window.STATE_INFLATION && window.STATE_INFLATION[userState]) || 6.0;
+
+    if (localInflation > 7.0) {
+        baseEquity += 5; // Beat high inflation
+        baseDebt -= 5;
+    } else if (localInflation < 6.0) {
+        baseEquity -= 5; // Can afford to be safer
+        baseDebt += 5;
     }
 
     // Clamp to valid ranges
