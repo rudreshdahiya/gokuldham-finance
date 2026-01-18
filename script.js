@@ -617,30 +617,34 @@ function renderAssetMixExplainer(personaKey) {
     const goals = GLOBAL_STATE.demographics.goals || [];
     const age = parseInt(document.getElementById("input-age")?.value) || 30;
 
-    // Dynamic Reasoning Logic
-    let equityReason = "";
-    if (alloc.equity > 60) equityReason = `To grow wealth aggressively for long-term goals like <strong>${goals[0] || 'Early Retirement'}</strong>.`;
-    else if (alloc.equity < 40) equityReason = `To reduce risk, as your goal <strong>${goals[0] || 'Safety'}</strong> is near or you prefer stability.`;
-    else equityReason = `To balance growth with safety, ideal for <strong>${goals[0] || 'Wealth Creation'}</strong>.`;
+    // Map Goal IDs to Labels if needed (or just use what we have if they are labels)
+    // script.js line 715 sets .goals to labels. So 'goals' are labels.
+    const goal1 = goals[0] || 'Wealth Creation';
 
-    let debtReason = "To provide liquidity for emergencies.";
-    if (alloc.debt > 40) debtReason = `High allocation for safety and to fund short-term needs like <strong>${goals[1] || 'Upcoming Expenses'}</strong>.`;
+    // Logic Breakdown
+    let logicText = `Based on your age (<strong>${age}</strong>), we started with a balanced mix.`;
 
-    let goldReason = "As a hedge against inflation and currency risks.";
+    if (alloc.equity > 60) {
+        logicText += ` Since <strong>${goal1}</strong> is a long-term goal, we boosted <strong>Equity to ${alloc.equity}%</strong> to beat inflation.`;
+    } else if (alloc.equity < 40) {
+        logicText += ` But because <strong>${goal1}</strong> is short-term or you prefer safety, we lowered Equity to <strong>${alloc.equity}%</strong>.`;
+    } else {
+        logicText += ` We kept <strong>Equity at ${alloc.equity}%</strong> to balance growth with safety for <strong>${goal1}</strong>.`;
+    }
 
     // Add "How we got this" logic header
     container.innerHTML = `
         <div style="margin-bottom:12px; font-size:0.8rem; color:var(--color-primary); border-bottom:1px solid #eee; padding-bottom:5px;">
-             <strong>🧬 Strategy Logic:</strong> Based on Age (${age}), Goals (${goals.length}), and Risk Profile.
+             <strong>🧬 Strategy Logic:</strong> ${logicText}
         </div>
         <div style="margin-bottom:8px; line-height:1.4;">
-            <span style="color:#90caf9; font-weight:bold;">● Equity (${alloc.equity}%):</span> ${equityReason}
+            <span style="color:#90caf9; font-weight:bold;">● Equity (${alloc.equity}%):</span> Growth engine for your ${goals.length > 0 ? goals.join(" & ") : "goals"}.
         </div>
         <div style="margin-bottom:8px; line-height:1.4;">
-            <span style="color:#ce93d8; font-weight:bold;">● Debt (${alloc.debt}%):</span> ${debtReason}
+            <span style="color:#ce93d8; font-weight:bold;">● Debt (${alloc.debt}%):</span> Stability reserve for emergencies.
         </div>
         <div style="line-height:1.4;">
-             <span style="color:#fff59d; font-weight:bold;">● Gold (${alloc.gold}%):</span> ${goldReason}
+             <span style="color:#fff59d; font-weight:bold;">● Gold (${alloc.gold}%):</span> Inflation hedge.
         </div>
     `;
 }
