@@ -26,10 +26,8 @@
     <!-- ==============================================
          Page 1: INTRO (Splash) - Refactored V2.0
          ============================================== -->
-    <div id="ui-page-1" class="ui-screen active" style="position:relative; overflow:hidden;">
-        <div id="tsparticles"
-            style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;"></div>
-        <div class="std-container" style="position:relative; z-index:1;">
+    <div id="ui-page-1" class="ui-screen active">
+        <div class="std-container">
             <!-- 1. HEADER -->
             <header class="std-header">
                 <div class="std-header-left">
@@ -517,15 +515,7 @@
 
 
 
-                <!-- Card 6: Rebalancing -->
-                <div class="card"
-                    style="background:var(--color-bg-card); border-radius:var(--radius-card); padding:20px; box-shadow:var(--shadow-card); margin-bottom:20px; border:1px solid var(--color-border);">
-                    <h3 style="margin-top:0; font-size:var(--text-md); color:var(--color-text-main);">REBALANCING
-                        SCHEDULE</h3>
-                    <div id="rebalancing-content" style="color:var(--color-text-main);">
-                        <!-- Injected JS -->
-                    </div>
-                </div>
+
 
                 <div style="text-align:center; margin-top:30px; margin-bottom: 20px;">
                     <button class="btn-text" onclick="localStorage.clear(); location.reload();"

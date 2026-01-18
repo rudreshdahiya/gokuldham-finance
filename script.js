@@ -83,12 +83,6 @@ function goToPage(pageNum) {
         target.classList.add('active'); // Ensure active class is set
     }
 
-    // Manage Particle Effect (Only on Page 1)
-    const particleContainer = document.getElementById("tsparticles");
-    if (particleContainer) {
-        particleContainer.style.display = (pageNum === 1) ? "block" : "none";
-    }
-
     // Special Inits per Page
     if (pageNum === 2) updateLedger(); // Init Sliders
     if (pageNum === 4) updateGoals(); // Init Goals
@@ -1627,52 +1621,12 @@ function updateScenarioAnalysis() {
 // ==========================================
 // INITIALIZATION
 // ==========================================
+// ==========================================
+// INITIALIZATION
+// ==========================================
 window.addEventListener("DOMContentLoaded", () => {
     initUI();
-    initNASAEffect(); // Start Starfield
 });
-
-function initNASAEffect() {
-    if (window.tsParticles) {
-        tsParticles.load("tsparticles", {
-            fpsLimit: 60,
-            particles: {
-                number: { value: 60, density: { enable: true, area: 800 } },
-                color: { value: "#ffffff" },
-                shape: { type: "circle" },
-                opacity: {
-                    value: 0.8,
-                    random: true,
-                    animation: { enable: true, speed: 1, minimumValue: 0.1, sync: false }
-                },
-                size: {
-                    value: 2,
-                    random: true,
-                    animation: { enable: false }
-                },
-                move: {
-                    enable: true,
-                    speed: 0.2, // Slow movement like distant stars
-                    direction: "none",
-                    random: true,
-                    straight: false,
-                    outModes: { default: "out" },
-                }
-            },
-            interactivity: {
-                events: {
-                    onHover: { enable: true, mode: "bubble" },
-                    resize: true
-                },
-                modes: {
-                    bubble: { distance: 100, size: 4, duration: 2, opacity: 0.8 }
-                }
-            },
-            detectRetina: true,
-            background: { color: "#000000" }
-        });
-    }
-}
 
 // === GROWTH RACE ANIMATION (Canvas) ===
 let raceAnimId = null;
