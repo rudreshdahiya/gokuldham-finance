@@ -1069,21 +1069,7 @@ function runTaxOptimizer() {
 
 function renderRebalancing(data) {
     const container = document.getElementById("rebalancing-content");
-    container.innerHTML = `
-        <p style="color:var(--color-text-main);">Your portfolio drifts with market volatility. Review every <strong>6 months</strong> or when deviation > 5%.</p>
-        <div class="tax-row" style="background:#fff3e0; border-left:4px solid #f39c12; color:#e65100;">
-            <span>Next Review Date</span>
-            <span>${new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toLocaleDateString()}</span>
-        </div>
-        <div style="margin-top:15px; background:var(--color-bg); padding:10px; border-radius:6px; font-size:0.85rem; color:var(--color-text-main);">
-            <strong>📌 How to Rebalance:</strong>
-            <ol style="margin:5px 0 0 15px; padding:0;">
-                <li style="margin-bottom:4px;">Check Current % vs Target %.</li>
-                <li style="margin-bottom:4px;">Sell <span style="color:#e74c3c;">Overweight</span> assets (Sell High).</li>
-                <li>Buy <span style="color:#27ae60;">Underweight</span> assets (Buy Low).</li>
-            </ol>
-        </div>
-    `;
+    if (container) container.innerHTML = ""; // Feature Removed per User Feedback
 }
 
 // ==========================================
@@ -1454,57 +1440,42 @@ function updateGoalTimeline() {
     const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, totalCorpus, targetCorpus);
     const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, totalCorpus, targetCorpus);
 
-    // 5. Render Chart (Horizontal Bar - Years)
-    const ctx = document.getElementById('scenarioChart');
-    if (!ctx) return;
+    // 5. UPDATE SCENARIO CARDS (No Chart)
+    const bearEl = document.getElementById('card-bear-years');
+    const baseEl = document.getElementById('card-base-years');
+    const bullEl = document.getElementById('card-bull-years');
 
-    if (window.scenarioChartInstance) {
-        window.scenarioChartInstance.destroy();
+    if (bearEl) bearEl.innerText = bearYears + " Y";
+    if (baseEl) baseEl.innerText = baseYears + " Y";
+    if (bullEl) bullEl.innerText = bullYears + " Y";
+
+    // 6. IMPACT VISUALIZATION (Time Saved)
+    const banner = document.getElementById('impact-banner');
+    if (banner) {
+        // Calculate Base Years WITHOUT Extra investment
+        // existingSIP is already defined in updated scope or we re-parse
+        const pureExistingSIP = existingSIPInput ? parseInt(existingSIPInput.value) || 0 : 0;
+        const pureExistingCorpus = existingCorpusInput ? parseInt(existingCorpusInput.value) || 0 : 0;
+
+        // Scenario A: Only Existing
+        const yearsA = yearsToReachGoal(baseRate, pureExistingSIP, pureExistingCorpus, targetCorpus);
+
+        // Scenario B: With Extra (Already calculated as baseYears)
+        const yearsB = baseYears;
+
+        // Delta
+        const yearsSaved = (parseFloat(yearsA) - parseFloat(yearsB)).toFixed(1);
+        const extraAdded = (parseInt(extraSIPInput?.value) || 0) + (parseInt(lumpsumInput?.value) || 0);
+
+        if (extraAdded > 0 && yearsSaved > 0) {
+            banner.style.display = 'block';
+            banner.innerHTML = `🚀 Adding <strong>₹${(extraAdded / 1000).toFixed(1)}k</strong> saved you <strong>${yearsSaved} Years</strong> of waiting!`;
+        } else {
+            banner.style.display = 'none';
+        }
     }
 
-    // Chart Colors (Pastel V3)
-    // Bear: Deep Orange 200, Base: Amber 200, Bull: Green 200
-    window.scenarioChartInstance = new Chart(ctx.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: ['🐻 Bear', '📊 Base', '🚀 Bull'],
-            datasets: [{
-                label: 'Years to Goal',
-                data: [bearYears, baseYears, bullYears],
-                backgroundColor: ['#ffab91', '#ffe082', '#a5d6a7'],
-                borderColor: ['#ff8a65', '#ffd54f', '#81c784'],
-                borderWidth: 1,
-                borderRadius: 6,
-                barThickness: 25
-            }]
-        },
-        options: {
-            indexAxis: 'y', // Horizontal bars
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => `${ctx.parsed.x} years to reach ₹${targetCorpus}L (Real Value)`
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    title: { display: true, text: 'Years' },
-                    ticks: { callback: (v) => v + 'Y' },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
-                },
-                y: {
-                    grid: { display: false }
-                }
-            }
-        }
-    });
-
-    // 6. Compounding Visualization
+    // 7. Compounding Visualization
     const baseMonths = parseFloat(baseYears) * 12;
     const totalInvested = (totalMonthlySIP * baseMonths + lumpsum) / 100000; // In Lakhs
     const finalCorpus = targetCorpus;
@@ -1518,34 +1489,9 @@ function updateGoalTimeline() {
     if (compReturns) compReturns.innerText = finalCorpus;
     if (compMultiplier) compMultiplier.innerText = multiplier;
 
-    // 7. Legend Context
+    // Remove old Legend container if empty
     const legDiv = document.querySelector('.scenario-legend');
-    if (legDiv) {
-        legDiv.innerHTML = `
-            <div style="padding:10px; background:var(--color-bg-card); border-radius:6px; border:1px solid var(--color-border); margin-top:10px;">
-                <div style="margin-bottom:8px; font-size:0.9rem;">
-                    <strong>📊 Your Timeline (Real Terms):</strong> At ₹${(totalMonthlySIP / 1000).toFixed(1)}k/month SIP
-                </div>
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; text-align:center;">
-                    <div style="background:#ffebee; padding:8px; border-radius:4px;">
-                        <div style="font-size:1.1em; font-weight:bold; color:#e57373;">${bearYears}Y</div>
-                        <div style="font-size:0.7em;">Bear (${(bearRate * 100).toFixed(1)}%)</div>
-                    </div>
-                    <div style="background:#fff8e1; padding:8px; border-radius:4px;">
-                        <div style="font-size:1.1em; font-weight:bold; color:#fbc02d;">${baseYears}Y</div>
-                        <div style="font-size:0.7em;">Base (${(baseRate * 100).toFixed(1)}%)</div>
-                    </div>
-                    <div style="background:#e8f5e9; padding:8px; border-radius:4px;">
-                        <div style="font-size:1.1em; font-weight:bold; color:#66bb6a;">${bullYears}Y</div>
-                        <div style="font-size:0.7em;">Bull (${(bullRate * 100).toFixed(1)}%)</div>
-                    </div>
-                </div>
-                <div style="margin-top:10px; font-size:0.75em; color:#666;">
-                    💡 Tip: Add ₹5k extra SIP or ₹1L lumpsum to see how your timeline changes!
-                </div>
-            </div>
-        `;
-    }
+    if (legDiv) legDiv.innerHTML = "";
 }
 
 // Alias for backwards compatibility

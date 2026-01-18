@@ -479,14 +479,42 @@
                         </div>
                     </div>
 
-                    <!-- Total Investment Summary -->
-                    <div id="total-investment-summary" class="investment-summary">
-                        <!-- JS will inject summary -->
+                    <!-- Impact Banner (Time Saved) -->
+                    <div id="impact-banner"
+                        style="display:none; margin-bottom:15px; padding:12px; background:linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius:8px; border-left:4px solid #2ecc71; animation: fadeIn 0.5s;">
+                        <!-- JS injects: "🚀 Adding ₹5k saved you 1.2 Years!" -->
                     </div>
 
-                    <!-- Timeline Chart (Horizontal Bar) -->
-                    <div class="chart-container" style="position: relative; height:180px; width:100%; margin:15px 0;">
-                        <canvas id="scenarioChart"></canvas>
+                    <!-- Timeline Scenario Cards (No Graph) -->
+                    <div id="scenario-cards-container"
+                        style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin:15px 0;">
+                        <!-- Bear Card -->
+                        <div class="scenario-card"
+                            style="background:#ffebee; border:1px solid #ffcdd2; padding:15px; border-radius:8px; text-align:center;">
+                            <div style="font-size:0.7rem; color:#c62828; font-weight:bold; margin-bottom:5px;">BEAR 🐻
+                            </div>
+                            <div id="card-bear-years" style="font-size:1.4rem; font-weight:800; color:#b71c1c;">-- Y
+                            </div>
+                            <div style="font-size:0.6rem; color:#e57373;">(Return 8%)</div>
+                        </div>
+                        <!-- Base Card -->
+                        <div class="scenario-card"
+                            style="background:#fff8e1; border:1px solid #ffecb3; padding:15px; border-radius:8px; text-align:center; transform:scale(1.05); box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="font-size:0.7rem; color:#f57f17; font-weight:bold; margin-bottom:5px;">BASE 📊
+                            </div>
+                            <div id="card-base-years" style="font-size:1.6rem; font-weight:800; color:#e65100;">-- Y
+                            </div>
+                            <div style="font-size:0.6rem; color:#ffb74d;">(Return 12%)</div>
+                        </div>
+                        <!-- Bull Card -->
+                        <div class="scenario-card"
+                            style="background:#e8f5e9; border:1px solid #c8e6c9; padding:15px; border-radius:8px; text-align:center;">
+                            <div style="font-size:0.7rem; color:#2e7d32; font-weight:bold; margin-bottom:5px;">BULL 🚀
+                            </div>
+                            <div id="card-bull-years" style="font-size:1.4rem; font-weight:800; color:#1b5e20;">-- Y
+                            </div>
+                            <div style="font-size:0.6rem; color:#81c784;">(Return 15%)</div>
+                        </div>
                     </div>
 
                     <!-- Timeline Details -->
