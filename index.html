@@ -26,8 +26,10 @@
     <!-- ==============================================
          Page 1: INTRO (Splash) - Refactored V2.0
          ============================================== -->
-    <div id="ui-page-1" class="ui-screen active">
-        <div class="std-container">
+    <div id="ui-page-1" class="ui-screen active" style="position:relative; overflow:hidden;">
+        <div id="tsparticles"
+            style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;"></div>
+        <div class="std-container" style="position:relative; z-index:1;">
             <!-- 1. HEADER -->
             <header class="std-header">
                 <div class="std-header-left">
@@ -613,6 +615,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
     <script src="data_engine.js"></script>
     <script src="macro_data.js"></script>
     <script src="telemetry.js"></script>
