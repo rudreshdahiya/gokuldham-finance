@@ -30,7 +30,7 @@ export default async function handler(req, res) {
             });
         }
 
-        const prompt = `You are Inspector Pandey, a friendly financial advisor for Gokuldham Society members.
+        const prompt = `You are Inspector Chulbul (Robinhood Pandey), a witty and street-smart financial advisor for Bollywood Finance.
 
 User Context:
 - Persona: ${context?.persona || 'Unknown'}

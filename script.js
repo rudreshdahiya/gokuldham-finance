@@ -125,6 +125,14 @@ function syncGranularInputs() {
         const valEl = document.getElementById("val-" + key);
         if (el) el.value = GRANULAR_ALLOC[key];
         if (valEl) valEl.innerText = GRANULAR_ALLOC[key] + "%";
+
+        // Sync Amount on Init
+        const amtEl = document.getElementById("amt-" + key);
+        if (amtEl) {
+            const income = parseFloat(document.getElementById("input-income")?.value) || 50000;
+            const amt = Math.round((income * GRANULAR_ALLOC[key]) / 100);
+            amtEl.innerText = `(₹${amt.toLocaleString()})`;
+        }
     }
 }
 
@@ -136,8 +144,15 @@ function updateLedger(changedId, categoryKey) {
     if (changedId && categoryKey) {
         const val = parseInt(document.getElementById(changedId).value);
         GRANULAR_ALLOC[categoryKey] = val;
-        // Update Label
+        // Update Label and Amount
         document.getElementById(`val-${categoryKey}`).innerText = val + "%";
+
+        // Update Amount Display
+        const amtEl = document.getElementById(`amt-${categoryKey}`);
+        if (amtEl) {
+            const amt = Math.round((GLOBAL_STATE.income * val) / 100);
+            amtEl.innerText = `(₹${amt.toLocaleString()})`;
+        }
     }
 
     // 3. Calculate Totals
@@ -210,16 +225,21 @@ function analyzeHabits() {
     document.getElementById("total-check").innerText = "Analyzing Transaction Patterns...";
 
     setTimeout(() => {
-        // Pass granular stats to forensics (if simplified, just pass N/W/S)
+        // Pass granular stats to forensics
+        // V14 Update: Now passing ANNUAL Salary (Income * 12) for improved PPP calculation
+        const annualSalary = (GLOBAL_STATE.income || 0) * 12;
+        const userState = GLOBAL_STATE.demographics?.state || "maharashtra";
+
         const personaRes = FORENSICS_ENGINE.determinePersona(
             window.DATA_ENGINE,
-            "maharashtra",
-            "29-39",
+            annualSalary, // NEW ARGUMENT 2
+            userState,
+            GLOBAL_STATE.demographics?.age || "25-35",
             GLOBAL_STATE.alloc.needs,
             GLOBAL_STATE.alloc.wants,
             GLOBAL_STATE.alloc.savings,
-            [],
-            GRANULAR_ALLOC, // Pass granular object for future V2 logic
+            GLOBAL_STATE.demographics?.goals || [],
+            GRANULAR_ALLOC,
             0
         );
 
@@ -239,7 +259,7 @@ function showNeighborPersona(personaKey) {
     if (!personaData) return;
 
     // Get user's persona for comparison
-    const userPersonaKey = GLOBAL_STATE.persona || 'mehta';
+    const userPersonaKey = GLOBAL_STATE.persona || 'shyam';
     const userPersona = DATA_ENGINE.PERSONAS[userPersonaKey];
 
     // Find similarities and differences in traits
@@ -315,14 +335,25 @@ function showNeighborPersona(personaKey) {
 
 
 const PERSONA_TRIBES = {
-    "jethalal": ["abdul", "bagha"], "abdul": ["jethalal", "natukaka"], // Strugglers
-    "babita": ["roshan", "daya"], "roshan": ["babita", "tapu"], "daya": ["babita", "anjali"], "tapu": ["roshan", "gogi"], "komal": ["roshan", "hathi"], "anjali": ["daya", "mehta"], // Spenders
-    "bhide": ["popatlal", "madhavi"], "popatlal": ["bhide", "champaklal"], "madhavi": ["bhide", "sodhi"], "iyer": ["sodhi", "mehta"], "sodhi": ["iyer", "madhavi"], "champaklal": ["popatlal", "bhide"], // Savers
-    "mehta": ["iyer", "bhide"], "bagha": ["jethalal", "popatlal"], "natukaka": ["popatlal", "bagha"] // Balanced/others
+    // High Spenders / Status
+    "poo": ["chatur", "raj"], "chatur": ["poo", "raj"], "raj": ["chatur", "poo"],
+
+    // Impulsive / Travel
+    "bunny": ["geet", "rani"], "geet": ["bunny", "munna"], "rani": ["bunny", "simran"],
+
+    // Social / Risk
+    "munna": ["circuit", "veeru"], "veeru": ["munna", "raju"], "circuit": ["munna", "pushpa"],
+
+    // Strugglers / Schemers
+    "raju": ["shyam", "baburao"], "baburao": ["raju", "shyam"], "pushpa": ["circuit", "raju"],
+
+    // Balanced / Savers
+    "shyam": ["baburao", "raju"], "simran": ["rani", "shyam"],
+    "farhan": ["rancho", "raju"], "rancho": ["farhan", "chatur"]
 };
 
 function renderPersonaPage(personaKey, clusterId) {
-    const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['mehta'];
+    const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['shyam'];
 
     // 1. Basic Info
     document.getElementById("persona-name").innerText = pData.name.toUpperCase();
@@ -330,76 +361,62 @@ function renderPersonaPage(personaKey, clusterId) {
 
     // 2. Image
     const container = document.getElementById("persona-image-container");
-    const imgPath = pData.img || "assets/mehta.png";
+    const imgPath = pData.img || "assets/shyam.png";
     container.innerHTML = `<img src="${imgPath}" alt="${pData.name}" 
         style="width:140px; height:140px; border-radius:50%; object-fit:cover; border:4px solid var(--color-bg-card); box-shadow:0 8px 16px rgba(0,0,0,0.15); background:var(--color-bg);"
-        onerror="this.src='assets/mehta.png'">`;
+        onerror="this.src='assets/shyam.png'">`;
 
-    // 3. REASONING LOGIC (Personalized)
+    // 3. REASONING LOGIC
     const reason = generateReasoning(personaKey, GLOBAL_STATE.alloc);
 
-    // Build traits HTML
+    // Traits HTML
     const traitsHtml = pData.traits ? pData.traits.map(t =>
         `<span style="background:var(--color-bg); border:1px solid var(--color-border); padding:4px 10px; border-radius:15px; font-size:0.75rem; color:var(--color-text-main);">${t}</span>`
     ).join('') : '';
 
-    const statContainer = document.querySelector(".persona-stat");
-    statContainer.innerHTML = `
-        <!-- Role & Traits -->
-        <div style="margin-bottom:15px; text-align:center;">
-            <div style="font-size:0.8rem; font-weight:600; color:${pData.color || 'var(--color-primary)'}; margin-bottom:8px;">${pData.role || ''}</div>
-            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px;">
-                ${traitsHtml}
-            </div>
-        </div>
-        
-        <!-- WHY THIS MATCH -->
-        <div style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--color-border);">
-            <div style="font-size:0.7rem; font-weight:bold; color:var(--color-primary); letter-spacing:1px; margin-bottom:5px;">WHY THIS MATCH?</div>
-            <div style="font-family:var(--font-mono); font-size:0.85rem; color:var(--color-text-main);">"${reason}"</div>
+    // Finance Story
+    const storyHTML = `
+        <div style="margin:15px 0; font-size:0.9rem; color:var(--color-text-main); font-style:italic; line-height:1.5; border-left:3px solid ${pData.color}; padding-left:12px; text-align:left;">
+            "${pData.finance_story}"
         </div>
     `;
 
-    // 4. NEIGHBORS (Closest Matches with Directional Hints)
-    const neighbors = PERSONA_TRIBES[personaKey] || ["mehta", "bhide"];
+    // 4. NEIGHBORS (Closest Matches)
+    const neighbors = PERSONA_TRIBES[personaKey] || ["shyam", "baburao"];
     let neighborsHtml = `<div style="display:flex; justify-content:center; gap:15px; margin-top:10px;">`;
 
     neighbors.forEach(nKey => {
         const nData = DATA_ENGINE.PERSONAS[nKey];
         if (nData) {
             // === DIRECTIONAL COMPARISON LOGIC ===
-            // Compare user's N/W/S to neighbor's archetype
             const userNeeds = GLOBAL_STATE.alloc.needs || 50;
             const userWants = GLOBAL_STATE.alloc.wants || 30;
             const userSavings = GLOBAL_STATE.alloc.savings || 20;
 
             let directionHint = "";
 
-            // Heuristic: Match persona archetype to typical allocation
-            // (This is simplified - ideally from DATA_ENGINE.PERSONAS metadata)
             const archetypeMap = {
                 // High Savers
-                "bhide": { needs: 45, wants: 20, savings: 35 },
-                "popatlal": { needs: 40, wants: 25, savings: 35 },
-                "champaklal": { needs: 50, wants: 15, savings: 35 },
-                "madhavi": { needs: 45, wants: 25, savings: 30 },
+                "baburao": { needs: 50, wants: 10, savings: 40 },
+                "simran": { needs: 45, wants: 15, savings: 40 },
+                "rancho": { needs: 30, wants: 20, savings: 50 },
+                "rani": { needs: 40, wants: 30, savings: 30 },
 
                 // Balanced
-                "mehta": { needs: 50, wants: 30, savings: 20 },
-                "sodhi": { needs: 45, wants: 35, savings: 20 },
-                "hathi": { needs: 55, wants: 25, savings: 20 },
+                "shyam": { needs: 50, wants: 30, savings: 20 },
+                "farhan": { needs: 45, wants: 35, savings: 20 },
+                "circuit": { needs: 55, wants: 35, savings: 10 },
 
-                // High Spenders (Wants)
-                "jethalal": { needs: 40, wants: 45, savings: 15 },
-                "babita": { needs: 35, wants: 50, savings: 15 },
-                "roshan": { needs: 40, wants: 45, savings: 15 },
-                "daya": { needs: 45, wants: 40, savings: 15 },
-
-                // Others
-                "iyer": { needs: 50, wants: 30, savings: 20 },
-                "anjali": { needs: 45, wants: 35, savings: 20 },
-                "komal": { needs: 50, wants: 25, savings: 25 },
-                "gogi": { needs: 40, wants: 50, savings: 10 }
+                // High Spenders
+                "poo": { needs: 30, wants: 60, savings: 10 },
+                "bunny": { needs: 30, wants: 60, savings: 10 },
+                "geet": { needs: 40, wants: 50, savings: 10 },
+                "raj": { needs: 35, wants: 55, savings: 10 },
+                "chatur": { needs: 35, wants: 50, savings: 15 },
+                "munna": { needs: 40, wants: 50, savings: 10 },
+                "veeru": { needs: 40, wants: 50, savings: 10 },
+                "raju": { needs: 40, wants: 50, savings: 10 },
+                "pushpa": { needs: 60, wants: 30, savings: 10 }
             };
 
             const neighborAlloc = archetypeMap[nKey] || { needs: 50, wants: 30, savings: 20 };
@@ -409,7 +426,6 @@ function renderPersonaPage(personaKey, clusterId) {
             const wantsDiff = neighborAlloc.wants - userWants;
             const needsDiff = neighborAlloc.needs - userNeeds;
 
-            // Pick the most significant difference
             if (Math.abs(savingsDiff) > Math.abs(wantsDiff) && Math.abs(savingsDiff) > Math.abs(needsDiff)) {
                 if (savingsDiff > 5) directionHint = `Saves ${Math.round(savingsDiff)}% more`;
                 else if (savingsDiff < -5) directionHint = `Saves ${Math.abs(Math.round(savingsDiff))}% less`;
@@ -425,23 +441,48 @@ function renderPersonaPage(personaKey, clusterId) {
             }
 
             neighborsHtml += `
-            <div style="text-align:center; opacity:0.85; cursor:pointer;" 
-                 onclick="showNeighborPersona('${nKey}')" 
-                 title="Click to explore ${nData.name}">
+            <div style="text-align:center; opacity:0.85; cursor:pointer;"
+                onclick="showNeighborPersona('${nKey}')"
+                title="Click to explore ${nData.name}">
                 <img src="${nData.img}" style="width:45px; height:45px; border-radius:50%; border:2px solid var(--color-border); box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-                <div style="font-size:0.65rem; margin-top:5px; font-weight:bold; color:var(--color-text-main);">${nData.name}</div>
+                <div style="font-size:0.65rem; margin-top:5px; font-weight:bold; color:var(--color-text-main);">${nData.name.split(' ')[0]}</div>
                 <div style="font-size:0.55rem; color:var(--color-primary); font-weight:500; margin-top:2px;">${directionHint}</div>
             </div>`;
         }
     });
     neighborsHtml += `</div>`;
 
-    statContainer.innerHTML += `
+    const statContainer = document.querySelector(".persona-stat");
+    statContainer.innerHTML = `
+        <div style="margin-bottom:15px; text-align:center;">
+            <div style="font-size:0.8rem; font-weight:600; color:${pData.color || 'var(--color-primary)'}; margin-bottom:8px;">${pData.role || ''}</div>
+            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px;">
+                ${traitsHtml}
+            </div>
+        </div>
+        
+        ${storyHTML}
+        ${renderLevelUpPath(personaKey)}
+
+        <div style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--color-border);">
+            <div style="font-size:0.7rem; font-weight:bold; color:var(--color-primary); letter-spacing:1px; margin-bottom:5px;">WHY THIS MATCH?</div>
+            <div style="font-family:var(--font-mono); font-size:0.85rem; color:var(--color-text-main);">"${reason}"</div>
+        </div>
+
+        <div style="text-align:center; margin-top:20px;">
+            <button onclick="sharePersona('${personaKey}')" style="background:var(--color-accent); color:#000; border:none; padding:12px 25px; border-radius:30px; font-weight:bold; cursor:pointer; font-size:0.9rem; box-shadow:0 4px 15px var(--color-accent-glow); transition:transform 0.2s;">
+                 📤 SHARE RESULT
+            </button>
+        </div>
+
         <div style="border-top:1px dashed var(--color-border); margin-top:15px; padding-top:15px;">
              <div style="font-size:0.7rem; font-weight:bold; color:var(--color-text-muted); letter-spacing:1px; margin-bottom:10px;">CLOSEST MATCHES</div>
              ${neighborsHtml}
         </div>
     `;
+
+    // WOW Effect
+    setTimeout(triggerConfetti, 500);
 }
 
 function generateReasoning(personaKey, alloc) {
@@ -478,6 +519,59 @@ function generateReasoning(personaKey, alloc) {
     if (savings > 40) highCat = "Savings-driven";
 
     return `Your ${highCat} approach (N:${needs}% / W:${wants}% / S:${savings}%) matches ${pData?.name || personaKey}'s financial psychology.`;
+}
+
+// ==========================================
+// UTILS: SHARE & CONFETTI
+// ==========================================
+function triggerConfetti() {
+    if (typeof confetti === 'function') {
+        const pData = GLOBAL_STATE.persona ? DATA_ENGINE.PERSONAS[GLOBAL_STATE.persona] : null;
+        const color = pData ? pData.color : '#FFD700';
+
+        // Burst 1
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#FF69B4', '#FFD700', '#00CED1', '#DC143C', color]
+        });
+
+        // Burst 2 (Delayed)
+        setTimeout(() => {
+            confetti({
+                particleCount: 50,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: [color, '#ffffff']
+            });
+            confetti({
+                particleCount: 50,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: [color, '#ffffff']
+            });
+        }, 500);
+    }
+}
+
+function sharePersona(key) {
+    const pData = DATA_ENGINE.PERSONAS[key];
+    const text = `🎬 I am ${pData.name} in Bollywood Finance!\n\n"${pData.quote}"\n\nFind out your financial personality here: ` + window.location.href;
+
+    if (navigator.share) {
+        navigator.share({
+            title: 'My Bollywood Finance Persona',
+            text: text,
+            url: window.location.href
+        }).catch((e) => console.log('Share failed:', e));
+    } else {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied to clipboard! Share it with friends.");
+        });
+    }
 }
 
 // ==========================================
@@ -631,7 +725,7 @@ function renderAssetMixExplainer(personaKey) {
 
     if (!container) return;
 
-    const pData = DATA_ENGINE.PERSONAS[personaKey || 'mehta'];
+    const pData = DATA_ENGINE.PERSONAS[personaKey || 'shyam'];
     if (nameSpan) nameSpan.innerText = (pData.name || "YOU").toUpperCase();
 
     // Context from User Alloc (Fallback to 50/30/20 only if null)
@@ -876,7 +970,7 @@ function runAssetAllocationEngine(horizonInput) {
 
     // Heuristic Risk Score
     let risk = 2; // Moderate
-    const pKey = GLOBAL_STATE.persona || "mehta";
+    const pKey = GLOBAL_STATE.persona || "shyam";
     if (["jethalal", "babita", "roshan", "daya", "tapu"].includes(pKey)) risk = 3;
     if (["bhide", "popatlal", "champaklal", "abdul"].includes(pKey)) risk = 1;
 
@@ -905,7 +999,7 @@ function runAssetAllocationEngine(horizonInput) {
     if (risk === 1) { baseEquity -= 15; baseDebt += 15; } // Conservative
 
     // === PERSONA TRAIT MODIFIERS (Character-Specific Behavior) ===
-    const pData = DATA_ENGINE.PERSONAS[pKey] || DATA_ENGINE.PERSONAS['mehta'];
+    const pData = DATA_ENGINE.PERSONAS[pKey] || DATA_ENGINE.PERSONAS['shyam'];
 
     if (pKey === "jethalal") {
         baseEquity += 10; // Risk-taker, chases high returns
@@ -1063,7 +1157,7 @@ function renderAllocationChart(data) {
 // ...
 // Personalized Strategy DNA: Pros, Risks, and Allocation Reasoning
 function renderStrategyInsights(personaKey) {
-    const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['mehta'];
+    const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['shyam'];
     const goals = GLOBAL_STATE.demographics.goals || [];
     const tenure = parseInt(document.getElementById("input-tenure").value) || 10;
     const alloc = GLOBAL_STATE.recommendation.allocation; // {equity, debt, gold}
@@ -1295,8 +1389,8 @@ function updateRebalancingSchedule(tenureYears) {
     if (!container) return;
 
     // === PERSONALIZATION INPUTS ===
-    const pKey = GLOBAL_STATE.persona || "mehta";
-    const pData = DATA_ENGINE.PERSONAS[pKey] || DATA_ENGINE.PERSONAS['mehta'];
+    const pKey = GLOBAL_STATE.persona || "shyam";
+    const pData = DATA_ENGINE.PERSONAS[pKey] || DATA_ENGINE.PERSONAS['shyam'];
     const alloc = GLOBAL_STATE.recommendation?.allocation || { equity: 50, debt: 30, gold: 20 };
     const isHighRisk = ["jethalal", "babita", "roshan", "daya"].includes(pKey);
     const isLowRisk = ["bhide", "popatlal", "champaklal", "madhavi"].includes(pKey);
@@ -1369,7 +1463,7 @@ function updateRebalancingSchedule(tenureYears) {
 // ==========================================
 
 function renderStrategyInsights(personaKey) {
-    const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['mehta'];
+    const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['shyam'];
 
     // 1. Mock Pros/Cons based on Persona Ruler
     let pros = ["Customized for your risk profile", "High inflation-adjusted returns"];
@@ -1577,8 +1671,9 @@ function updateGoalTimeline() {
     const baseYears = yearsToReachGoal(baseRate, totalMonthlySIP, totalCorpus, targetCorpus);
     const bullYears = yearsToReachGoal(bullRate, totalMonthlySIP, totalCorpus, targetCorpus);
 
-    // 5. UPDATE SCENARIO VISUAL (Canvas Race)
-    initGrowthRace(parseFloat(bearYears), parseFloat(baseYears), parseFloat(bullYears));
+    // 5. UPDATE SCENARIO VISUAL (Wealth Chart)
+    const annualSIP = totalMonthlySIP * 12;
+    renderWealthChart(totalMonthlySIP, totalCorpus, Math.max(bearYears, baseYears, bullYears));
 
     // 6. IMPACT VISUALIZATION (Time Saved)
     const banner = document.getElementById('impact-banner');
@@ -1749,4 +1844,136 @@ function initGrowthRace(bearY, baseY, bullY) {
     }
 
     draw();
+}
+
+// === WEALTH CHART (Motilal Style) ===
+let wealthChartInstance = null;
+
+function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
+    const ctx = document.getElementById('wealthChart')?.getContext('2d');
+    if (!ctx) return;
+
+    if (wealthChartInstance) wealthChartInstance.destroy();
+
+    // Generate Data Points
+    const labels = [];
+    const investedData = [];
+    const estimatedData = [];
+    const rate = 0.12; // 12% Benchmark
+    
+    // Determine max years for graph
+    const maxYears = Math.min(30, Math.ceil(yearsInfo || 20) + 5); 
+
+    let multipliersFound = { "1.4x": false, "2x": false, "3x": false, "5x": false, "10x": false };
+    const points = [];
+
+    for (let i = 0; i <= maxYears; i++) {
+        labels.push(i + "y");
+        
+        // Linear Investment
+        const invested = initialCorpus + (monthlySIP * 12 * i);
+        investedData.push(invested);
+
+        // Compound Growth (Future Value)
+        const pComp = initialCorpus * Math.pow(1 + rate, i);
+        const sipComp = (monthlySIP * 12) * (Math.pow(1 + rate, i) - 1) / rate;
+        
+        const estimated = Math.round(pComp + sipComp);
+        estimatedData.push(estimated);
+
+        // Check for Multipliers
+        const ratio = estimated / (invested || 1);
+        if (ratio >= 1.4 && !multipliersFound["1.4x"]) { points.push({x: i, y: estimated, label: "1.4X"}); multipliersFound["1.4x"] = true; }
+        else if (ratio >= 2.0 && !multipliersFound["2x"]) { points.push({x: i, y: estimated, label: "2X"}); multipliersFound["2x"] = true; }
+        else if (ratio >= 3.0 && !multipliersFound["3x"]) { points.push({x: i, y: estimated, label: "3X"}); multipliersFound["3x"] = true; }
+        else if (ratio >= 5.0 && !multipliersFound["5x"]) { points.push({x: i, y: estimated, label: "5X"}); multipliersFound["5x"] = true; }
+        else if (ratio >= 10.0 && !multipliersFound["10x"]) { points.push({x: i, y: estimated, label: "10X"}); multipliersFound["10x"] = true; }
+    }
+
+    try {
+        wealthChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Estimated Value (12%)',
+                        data: estimatedData,
+                        borderColor: '#f1c40f', // Motilal Gold
+                        backgroundColor: 'rgba(241, 196, 15, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Invested Amount',
+                        data: investedData,
+                        borderColor: '#e67e22', // Orange
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        tension: 0,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: '#888' } },
+                    tooltip: { 
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) {
+                                    label += '₹' + (context.parsed.y / 100000).toFixed(2) + 'L';
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#666' } },
+                    y: { 
+                        grid: { color: '#333' }, 
+                        ticks: { 
+                            color: '#666',
+                            callback: function(value) { return '₹' + (value/100000).toFixed(0) + 'L'; }
+                        } 
+                    }
+                }
+            },
+            plugins: [{
+                id: 'customLabels',
+                afterDraw: (chart) => {
+                    const ctx = chart.ctx;
+                    points.forEach(p => {
+                        const meta = chart.getDatasetMeta(0);
+                        if(p.x < meta.data.length && meta.data[p.x]) {
+                            const x = meta.data[p.x].x;
+                            const y = meta.data[p.x].y;
+                            
+                            ctx.fillStyle = "#f1c40f";
+                            ctx.beginPath();
+                            ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                            ctx.fill();
+                            
+                            const textMetrics = ctx.measureText(p.label);
+                            ctx.fillStyle = "rgba(255,255,255,0.9)";
+                            ctx.fillRect(x - textMetrics.width/2 - 2, y - 22, textMetrics.width + 4, 12);
+
+                            ctx.fillStyle = "black";
+                            ctx.font = "bold 10px Arial";
+                            ctx.textAlign = "center";
+                            ctx.fillText(p.label, x, y - 12);
+                        }
+                    });
+                }
+            }]
+        });
+    } catch(e) { console.error(e); }
 }

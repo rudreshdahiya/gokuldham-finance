@@ -4,13 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gokuldham Bank - Smart Ledger</title>
+    <title>Jigri Financial - Your Money Partner</title>
     <link rel="stylesheet" href="styles.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap"
         rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
@@ -153,7 +154,11 @@
                     <div class="slider-group" style="margin-bottom:15px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                             <label>🍽️ Dining / Fun</label>
-                            <span id="val-dining" style="font-family:var(--font-mono); font-weight:bold;">10%</span>
+                            <div>
+                                <span id="amt-dining"
+                                    style="font-size:0.8rem; color:var(--color-text-muted); margin-right:5px;">(₹5,000)</span>
+                                <span id="val-dining" style="font-family:var(--font-mono); font-weight:bold;">10%</span>
+                            </div>
                         </div>
                         <input type="range" id="slider-dining" min="0" max="100" value="10" class="slider"
                             style="width:100%; accent-color:var(--color-primary);"
@@ -162,7 +167,11 @@
                     <div class="slider-group" style="margin-bottom:15px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                             <label>🚕 Travel / Uber</label>
-                            <span id="val-travel" style="font-family:var(--font-mono); font-weight:bold;">10%</span>
+                            <div>
+                                <span id="amt-travel"
+                                    style="font-size:0.8rem; color:var(--color-text-muted); margin-right:5px;">(₹5,000)</span>
+                                <span id="val-travel" style="font-family:var(--font-mono); font-weight:bold;">10%</span>
+                            </div>
                         </div>
                         <input type="range" id="slider-travel" min="0" max="100" value="10" class="slider"
                             style="width:100%; accent-color:var(--color-primary);"
@@ -171,7 +180,12 @@
                     <div class="slider-group" style="margin-bottom:15px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                             <label>🛍️ Shopping</label>
-                            <span id="val-shopping" style="font-family:var(--font-mono); font-weight:bold;">10%</span>
+                            <div>
+                                <span id="amt-shopping"
+                                    style="font-size:0.8rem; color:var(--color-text-muted); margin-right:5px;">(₹5,000)</span>
+                                <span id="val-shopping"
+                                    style="font-family:var(--font-mono); font-weight:bold;">10%</span>
+                            </div>
                         </div>
                         <input type="range" id="slider-shopping" min="0" max="100" value="10" class="slider"
                             style="width:100%; accent-color:var(--color-primary);"
@@ -188,7 +202,11 @@
                     <div class="slider-group" style="margin-bottom:15px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                             <label>📈 Investments (SIP)</label>
-                            <span id="val-invest" style="font-family:var(--font-mono); font-weight:bold;">20%</span>
+                            <div>
+                                <span id="amt-invest"
+                                    style="font-size:0.8rem; color:var(--color-text-muted); margin-right:5px;">(₹10,000)</span>
+                                <span id="val-invest" style="font-family:var(--font-mono); font-weight:bold;">20%</span>
+                            </div>
                         </div>
                         <input type="range" id="slider-invest" min="0" max="100" value="20" class="slider"
                             style="width:100%; accent-color:var(--color-primary);"
@@ -348,6 +366,10 @@
                             style="margin-top:10px; font-size:0.8rem; color:#555; font-style:italic; display:none;">
                             Goal Insight will appear here...
                         </div>
+                        <div
+                            style="margin-top:15px; font-size:0.7rem; color:var(--color-text-muted); text-align:center; font-style:italic;">
+                            TIMELINES AND AMOUNTS ARE AVERAGES BASED ON TYPICAL USER DATA
+                        </div>
                     </div>
                 </main>
 
@@ -490,12 +512,11 @@
                     <div
                         style="background:#121212; border-radius:12px; padding:15px; border:1px solid #333; margin-bottom:15px; position:relative;">
                         <h3
-                            style="color:#eee; font-size:0.8rem; margin-top:0; margin-bottom:10px; display:flex; justify-content:space-between;">
-                            <span>📈 COMPOUNDING RACE</span>
-                            <span style="font-weight:normal; opacity:0.7;">(Fast = Good)</span>
+                            style="color:var(--color-text-main); font-size:0.8rem; margin-top:0; margin-bottom:10px; display:flex; justify-content:space-between;">
+                            <span>📈 WEALTH PROJECTION</span>
+                            <span style="font-weight:normal; opacity:0.7;">(Compounding Effect)</span>
                         </h3>
-                        <canvas id="growthRaceCanvas" width="320" height="220"
-                            style="width:100%; height:220px; display:block; background:#1e1e1e; border-radius:8px;"></canvas>
+                        <canvas id="wealthChart" style="width:100%; height:250px; display:block;"></canvas>
 
                         <!-- Legend -->
                         <div style="display:flex; justify-content:space-around; margin-top:10px; font-size:0.75rem;">
@@ -551,7 +572,7 @@
                 </div>
                 <!-- Persona Avatar + Status -->
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="assets/inspector_avatar.png" onerror="this.src='assets/mehta.png'"
+                    <img src="assets/inspector_avatar.png" onerror="this.src='assets/shyam.png'"
                         style="width:30px; height:30px; border-radius:50%; border:1px solid #fff;">
                     <div style="text-align:left;">
                         <div class="std-title" style="font-size:0.9rem; line-height:1;">INSPECTOR</div>
@@ -570,7 +591,7 @@
                 <!-- Welcome Message -->
                 <div class="chat-msg system"
                     style="align-self: flex-start; background:#fff; padding:12px 16px; border-radius: 0px 12px 12px 12px; font-size:0.9rem; color:#333; box-shadow:0 1px 3px rgba(0,0,0,0.05); max-width:85%;">
-                    <strong>Inspector Pandey here!</strong><br>
+                    <strong>Inspector Chulbul here!</strong><br>
                     I have analyzed your portfolio. I can explain the tax efficiency strategy or why your asset
                     allocation looks risky. Ask me anything!
                 </div>

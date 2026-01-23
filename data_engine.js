@@ -127,178 +127,168 @@ const DATA_ENGINE_CORE = {
     },
 
     // ===================================
-    // 3. THE 16 TMKOC PERSONAS (WITH FINANCE STORIES)
+    // 3. THE 16 BOLLYWOOD PERSONAS (WITH FINANCE STORIES)
     // ===================================
     PERSONAS: {
-        "jethalal": {
-            name: "Jethalal Gada",
-            role: "The Optimistic Businessman",
-            traits: ["Cash Rich", "Asset Poor", "High Risk"],
-            ruler: "Mars (Power)",
-            quote: "Tapu ke papa, business badhana hai!",
-            color: "#FF5733",
-            img: "assets/jethalal.png",
-            finance_story: "Jethalal keeps most money in business, rarely diversifying. He chases high returns, takes risks, but forgets insurance & retirement. High equity works because he has years to recover from losses. But he needs more safety net!"
-        },
-        "bhide": {
-            name: "Aatmaram Bhide",
-            role: "The Disciplined Teacher",
-            traits: ["Saver", "Risk Averse", "FD Lover"],
-            ruler: "Jupiter (Wisdom)",
-            quote: "Hamare zamane mein savings karte thay!",
-            color: "#FFC300",
-            img: "assets/bhide.png",
-            finance_story: "Bhide parks everything in FDs and PPF. Safe? Yes. Growing? Barely beating inflation. He needs more equity exposure to actually grow wealth, but his fear of losses keeps him in 'safe' products that erode purchasing power."
-        },
-        "popatlal": {
-            name: "Popatlal",
-            role: "The Anxious Hoarder",
-            traits: ["Fearful", "Cash Hoarder", "Zero Growth"],
-            ruler: "Saturn (Delay)",
-            quote: "Duniya hil jayegi, par mera paisa nahi hilega!",
-            color: "#C70039",
-            img: "assets/popatlal.png",
-            finance_story: "Fear of losing money keeps Popatlal in savings accounts earning 4%. Inflation at 6% means he's actually LOSING 2% every year! He needs to overcome fear and start with balanced funds to at least beat inflation."
-        },
-        "babita": {
-            name: "Babita Ji",
-            role: "The Luxury Icon",
-            traits: ["High Spender", "Aesthetics", "Impulse"],
+        "poo": {
+            name: "Poo (K3G)",
+            role: "The Shopping Queen",
+            traits: ["High Spender", "Status Obsessed", "Fashion First"],
             ruler: "Venus (Beauty)",
-            quote: "Ye dress discount mein mila!",
-            color: "#DAF7A6",
-            img: "assets/babita.png",
-            finance_story: "Babita spends first, saves later (if anything is left). Her 'wants' category dominates. She needs automated SIPs that deduct BEFORE she can spend. Low savings means she needs higher equity to catch up on lost time."
+            quote: "PHAT! Good looks, good looks, and good looks.",
+            color: "#FF69B4",
+            img: "assets/poo.png",
+            finance_story: "Poo treats her credit card like a magic wand. She spends first and thinks never. Every sale is 'essential,' every brand is an 'investment.' She needs a strict 'Wants Budget Cap' before her wardrobe net worth exceeds her actual net worth."
         },
-        "iyer": {
-            name: "Krishnan Iyer",
-            role: "The Tech Investor",
-            traits: ["Data Driven", "Crypto/Tech", "Systematic"],
-            ruler: "Mercury (Intellect)",
-            quote: "Rocket science logic lagaya hai maine.",
-            color: "#33FFBD",
-            img: "assets/iyer.png",
-            finance_story: "Iyer loves spreadsheets and tracks every rupee. He diversifies well but overcomplicates with too many funds. His tech/crypto bets are high-risk. Needs more boring, large-cap stability to balance his experimental tendencies."
+        "bunny": {
+            name: "Bunny (YJHD)",
+            role: "The Wanderlust Spender",
+            traits: ["Travel Addict", "Experience Chaser", "FOMO"],
+            ruler: "Jupiter (Expansion)",
+            quote: "Main udna chahta hoon... EMI pe!",
+            color: "#00CED1",
+            img: "assets/bunny.png",
+            finance_story: "Bunny's passport has more stamps than his bank has zeros. He funds trips on credit, believing experiences are priceless. True, but so are EMI interest rates! He needs to start a 'Travel Fund SIP' instead of flying on debt."
         },
-        "sodhi": {
-            name: "Roshan Singh Sodhi",
-            role: "The Asset Builder",
-            traits: ["Real Estate", "Optimist", "High Growth"],
-            ruler: "Mars (Land)",
-            quote: "Property ke daam kabhi neeche nahi jaate!",
-            color: "#FF9800",
-            img: "assets/sodhi.png",
-            finance_story: "Sodhi believes only in 'zameen' (land). All his money is in illiquid real estate. He needs financial assets for liquidity—what if he needs ₹5L urgently? Can't sell half a plot! REITs give him real estate exposure with liquidity."
+        "geet": {
+            name: "Geet (Jab We Met)",
+            role: "The Impulsive Spender",
+            traits: ["Spontaneous", "Heart Over Head", "No Planning"],
+            ruler: "Moon (Mood)",
+            quote: "Main apni favourite hoon - aur mere kharche bhi!",
+            color: "#FF6347",
+            img: "assets/geet.png",
+            finance_story: "Geet doesn't budget, she vibes. Train tickets bought on feelings, shopping done on moods. She needs automated SIPs that deduct salary BEFORE she can impulsively spend it. Her optimism is an asset, but her planning is a liability."
         },
-        "daya": {
-            name: "Daya Bhabhi",
-            role: "The Family Spender",
-            traits: ["Generous", "Travel Lover", "Charity"],
-            ruler: "Jupiter + Venus",
-            quote: "Hey Maa Mataji! Sabka bhala karo.",
-            color: "#E91E63",
-            img: "assets/daya.png",
-            finance_story: "Daya gives generously to family and temple. She needs her own emergency fund FIRST before helping others. Her travel expenses are fine if budgeted. She should automate savings before the 'want to help everyone' kicks in."
+        "raj": {
+            name: "Raj (DDLJ)",
+            role: "The Rich Lifestyle",
+            traits: ["High Income", "Lifestyle Inflation", "Generous"],
+            ruler: "Sun (Royalty)",
+            quote: "Bade bade deshon mein aisi spending hoti hai.",
+            color: "#FFD700",
+            img: "assets/raj.png",
+            finance_story: "Raj earns in dollars (or behaves like it) and spends like there's no tomorrow. Euro trips, fancy gifts, no concept of 'budget.' His high income masks his low savings rate. He needs to convert cash flow into wealth before the music stops."
         },
-        "tapu": {
-            name: "Tapu",
-            role: "The Gen-Z Gambler",
-            traits: ["Speculative", "Zero Savings", "FOMO"],
-            ruler: "Rahu (Chaos)",
-            quote: "Crypto is the future, Dadaji!",
-            color: "#900C3F",
-            img: "assets/tapu.png",
-            finance_story: "Tapu chases every trending stock and crypto. He has FOMO (Fear Of Missing Out) and no emergency fund. Young age is his advantage—but he needs 80% in boring index funds and only 20% for 'play money' speculation."
+        "pushpa": {
+            name: "Pushpa (Pushpa)",
+            role: "The Self-Made Hustler",
+            traits: ["Survivor", "Hard Worker", "Rising Power"],
+            ruler: "Mars (Grit)",
+            quote: "Jhukega nahi saala, invest karega!",
+            color: "#8B4513",
+            img: "assets/pushpa.png",
+            finance_story: "Pushpa started with nothing and is grinding his way up. He knows the value of every rupee because he earned it hard. But he trusts only cash and power. He needs to trust financial systems (Mutual Funds) to make his money grown without him working."
         },
-        "anjali": {
-            name: "Anjali Mehta",
-            role: "The Health & Insurance Freak",
-            traits: ["Protection", "Conservative", "Health First"],
-            ruler: "Moon (Care)",
-            quote: "Paisa aur Sehat, dono control mein chahiye.",
-            color: "#2ECC71",
-            img: "assets/anjali.png",
-            finance_story: "Anjali over-insures everything. She has 3 health policies but no wealth creation plan. Her money is protected, not growing. She needs to redirect some premium to equity SIPs after essential coverage is done."
+        "raju": {
+            name: "Raju (Hera Pheri)",
+            role: "The Schemer",
+            traits: ["Get Rich Quick", "High Risk", "Zero Savings"],
+            ruler: "Rahu (Illusion)",
+            quote: "21 din mein paisa double!",
+            color: "#FF4500",
+            img: "assets/raju.png",
+            finance_story: "Raju dreams of millions but has ₹0 in savings. Every scheme is 'pakka,' every tip is 'insider.' He needs to stop gambling on shortcuts and start a simple, boring SIP. Wealth takes time, Raju bhai!"
         },
-        "mehta": {
-            name: "Taarak Mehta",
-            role: "The Advisor (Analysis Paralysis)",
-            traits: ["Overthinking", "Balanced", "Slow Action"],
-            ruler: "Mercury (Writer)",
-            quote: "Har pehlu ko sochna padta hai Jethalal.",
-            color: "#5DADE2",
-            img: "assets/mehta.png",
-            finance_story: "Mehta researches endlessly but rarely invests. His balanced approach is good, but 'waiting for the right time' costs him years of compounding. He knows what to do—needs to just START with a SIP and course-correct later."
+        "baburao": {
+            name: "Baburao Ganpatrao Apte",
+            role: "The Frugal Legend",
+            traits: ["Ultra Saver", "Cash Only", "Risk Averse"],
+            ruler: "Saturn (Scarcity)",
+            quote: "Utha le re baba... mere kharche utha le!",
+            color: "#808080",
+            img: "assets/baburao.png",
+            finance_story: "Baburao counts every paisa. His 'Star Garage' runs on minimal expenses. He is proof that low income + high savings = survival. However, hoarding cash under the mattress loses value to inflation. He needs to trust iconic Debt Funds."
         },
-        "komal": {
-            name: "Komal Hathi",
-            role: "The Comfort Seeker",
-            traits: ["Foodie", "Comfort First", "Instant Joy"],
-            ruler: "Jupiter (Abundance)",
-            quote: "Oh c'mon Hans! Thoda khaane do.",
-            color: "#9C27B0",
-            img: "assets/komal.png",
-            finance_story: "Komal's lifestyle inflation is real—Swiggy, Zomato, OTT subscriptions add up. She prioritizes instant comfort over future goals. Needs a 'Wants Budget Cap' and auto-invest the rest. Small wins today = big corpus tomorrow."
+        "shyam": {
+            name: "Shyam (Hera Pheri)",
+            role: "The Steady Worker",
+            traits: ["Honest Income", "Balanced", "Risk Aware"],
+            ruler: "Mercury (Reason)",
+            quote: "Seedha kaam, seedhi zindagi.",
+            color: "#4682B4",
+            img: "assets/shyam.png",
+            finance_story: "Shyam doesn't dream of schemes, he wants a stable life. Fixed job, fixed salary. He is the ideal candidate for a classic 50-30-20 rule. He just needs to nudge his risk appetite slightly to beat inflation over the long term."
         },
-        "madhavi": {
-            name: "Madhavi Bhide",
-            role: "The Efficient Side-Hustler",
-            traits: ["Entrepreneurial", "Saver", "Balanced"],
-            ruler: "Venus (Business)",
-            quote: "Achaar papad se bhi empire banta hai.",
-            color: "#F4D03F",
-            img: "assets/madhavi.png",
-            finance_story: "Madhavi's side income from achaar-papad is smart! She reinvests profits and saves consistently. Her mix of business income + savings works well. A slightly higher equity tilt can accelerate her wealth creation."
+        "chatur": {
+            name: "Chatur 'Silencer'",
+            role: "The Status Flexer",
+            traits: ["NRI Show-Off", "Competitive", "Asset Rich"],
+            ruler: "Mars (Status)",
+            quote: "Top performance, top tax bracket!",
+            color: "#800080",
+            img: "assets/chatur.png",
+            finance_story: "Chatur's net worth is in his car, watch, and house to impress others. He creates 'Status Wealth' not 'Real Wealth.' He needs to stop competing with others and start compounding for his own freedom."
         },
-        "champaklal": {
-            name: "Champak Chacha",
-            role: "The Debt Avenger",
-            traits: ["Debt Hater", "Traditional", "No Credit"],
-            ruler: "Sun (Authority)",
-            quote: "Udhaar maangna paap hai!",
-            color: "#D35400",
-            img: "assets/champaklal.png",
-            finance_story: "Champaklal hates debt—even good debt like home loans. He pays everything in cash. While being debt-free is good, he misses tax benefits of home loan interest (Section 24b). His gold bias is cultural; some is fine, not 30%!"
+        "rancho": {
+            name: "Rancho",
+            role: "The Minimalist Genius",
+            traits: ["Anti-Status", "Simple Living", "Wealth Wisdom"],
+            ruler: "Jupiter (Knowledge)",
+            quote: "Success ke peeche mat bhago, excellence ka peecha karo.",
+            color: "#228B22",
+            img: "assets/rancho.png",
+            finance_story: "Rancho doesn't care about money symbols because he understands value. He drives a scooter but owns the school. Minimal wants, maximum contentment. He is already FIRE (Financial Independence), he just works for fun."
         },
-        "natukaka": {
-            name: "Natu Kaka",
-            role: "The Pension Seeker",
-            traits: ["Loyal", "Safety First", "Low Income"],
-            ruler: "Ketu (Routine)",
-            quote: "Pagar kab badhegi sethji?",
-            color: "#7F8C8D",
-            img: "assets/natukaka.png",
-            finance_story: "Natukaka's low income means every rupee counts. He needs maximum safety—PPF, Senior Citizen Savings, FDs. High equity is not for him; capital protection is priority. Small consistent savings over decades still build a decent corpus."
+        "farhan": {
+            name: "Farhan Qureshi",
+            role: "The Passion Chaser",
+            traits: ["Balanced", "Dreams > Money", "Late Bloomer"],
+            ruler: "Venus (Art)",
+            quote: "Jeb mein paise kam hai, par dil mein sukoon hai.",
+            color: "#20B2AA",
+            img: "assets/farhan.png",
+            finance_story: "Farhan chose passion (photography) over a high-paying engineer job. He earns less but lives more. His finances need to support his uneven income streams. A strong Emergency Fund is critical for his freelance lifestyle."
         },
-        "bagha": {
-            name: "Bagha",
-            role: "The Experimental Follower",
-            traits: ["Random", "Gullible", "Weird Bets"],
-            ruler: "Rahu (Confusion)",
-            quote: "Jaisi jiski soch!",
-            color: "#8E44AD",
-            img: "assets/bagha.png",
-            finance_story: "Bagha follows whoever sounds confident last. He's invested in random schemes, chit funds, and 'tips' from strangers. He needs ONE simple index fund and discipline to NOT touch it. Following crowd = losing money."
+        "simran": {
+            name: "Simran (DDLJ)",
+            role: "The Traditional Saver",
+            traits: ["Family First", "Safety Seeker", "Gold Lover"],
+            ruler: "Moon (Tradition)",
+            quote: "Baoji ne kaha jee le zindagi... par budget mein.",
+            color: "#DDA0DD",
+            img: "assets/simran.png",
+            finance_story: "Simran saves for family security, not personal luxury. She sacrifices her wants for the family's needs. Gold and FDs feel safe to her. She needs a gentle push into Index Funds to ensure her savings actually grow for the next generation."
         },
-        "roshan": {
-            name: "Mrs. Roshan",
-            role: "The Emotional Spender",
-            traits: ["Social", "Heart-driven", "Generous"],
-            ruler: "Venus (Love)",
-            quote: "Oh ji, party karte hai!",
-            color: "#F1948A",
-            img: "assets/roshan.png",
-            finance_story: "Roshan's social spending is high—parties, gifts, appearances matter. She needs a 'Social Fund' budget so it doesn't eat into savings. Emotions drive her spending; she should decide budgets BEFORE the party invitation comes."
+        "munna": {
+            name: "Munna Bhai",
+            role: "The Social Spender",
+            traits: ["Heart of Gold", "Friends First", "Impulsive"],
+            ruler: "Mars (Heart)",
+            quote: "Jadoo ki jhappi... aur chai-sutta sabke liye!",
+            color: "#DC143C",
+            img: "assets/munna.png",
+            finance_story: "Munna spends on people, not things. Treats, parties, helping friends in need. His heart is big, but so are his expenses. He needs a 'Social Budget' to limit his generosity before he gives it all away."
         },
-        "abdul": {
-            name: "Abdul",
-            role: "The Gig Survivor",
-            traits: ["Cash Flow Focus", "Survival", "No Assets"],
-            ruler: "Saturn (Service)",
-            quote: "Sabka kaam karta hoon, par apna account khali hai.",
-            color: "#2C3E50",
-            img: "assets/abdul.png",
-            finance_story: "Abdul's gig income is irregular—good months and bad months. He needs a bigger emergency fund (6 months expenses) FIRST. Once stable, start small SIPs. Variable income = need extra cash buffer before investing."
+        "circuit": {
+            name: "Circuit",
+            role: "The Loyal Follower",
+            traits: ["Dependent", "No Ambition", "Day-to-Day"],
+            ruler: "Ketu (Detachment)",
+            quote: "Bhai ne bola karne ka, toh karne ka.",
+            color: "#696969",
+            img: "assets/circuit.png",
+            finance_story: "Circuit has no personal financial goals because he thinks 'Bhai' will handle everything. He lives day-to-day. He needs to start thinking about his own future. Even a small ₹500 SIP is a start towards independence."
+        },
+        "rani": {
+            name: "Rani (Queen)",
+            role: "The Independent Traveler",
+            traits: ["Smart Spender", "Self-Discovery", "Budget Travel"],
+            ruler: "Mercury (Freedom)",
+            quote: "Mera sense of humour bohot achha hai, finances bhi!",
+            color: "#9370DB",
+            img: "assets/rani.png",
+            finance_story: "Rani turned her life around with a solo trip. She learned to manage money globally, spending on experiences but staying in hostels. She is financially smart but needs to translate that travel confidence into investment confidence."
+        },
+        "veeru": {
+            name: "Veeru (Sholay)",
+            role: "The Risk Taker",
+            traits: ["Gambler", "Impulsive", "High Spirits"],
+            ruler: "Rahu (Risk)",
+            quote: "Aaj Basanti nahi, aaj lottery nachegi!",
+            color: "#B22222",
+            img: "assets/veeru.png",
+            finance_story: "Veeru loves risk. Cards, bets, lotteries. He dreams of the one big win. He needs to redirect that adrenaline into 'High Risk High Reward' Small Cap funds instead of losing it in gambling. Equity is the casino where the house doesn't always win!"
         }
     },
 

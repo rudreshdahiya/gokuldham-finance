@@ -1,4 +1,4 @@
-/* GOKULDHAM SOCIETY - HUMAN CENTERED DESIGN UPDATE */
+/* JIGRI FINANCIAL - HUMAN CENTERED DESIGN UPDATE */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
 
@@ -19,6 +19,7 @@
     /* Text on Primary */
     --color-border: #d0d0d0;
     --color-accent: #2ecc71;
+    --color-accent-glow: rgba(46, 204, 113, 0.4);
     /* Success Green */
     --color-danger: #e74c3c;
     --color-gold: #f1c40f;
@@ -712,8 +713,8 @@ input[type=range]::-webkit-slider-thumb {
 
 /* PAGE 3: PERSONA REVEAL REFACTOR */
 .persona-card {
-    background: #111;
-    color: #fff;
+    background: var(--color-bg-card);
+    color: var(--color-text-main);
     text-align: center;
     border: 1px solid #333;
     padding-top: 40px;
