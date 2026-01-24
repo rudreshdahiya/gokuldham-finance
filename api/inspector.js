@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
         const embedModel = genAI.getGenerativeModel({ model: "embedding-001" });
-        const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const chatModel = genAI.getGenerativeModel({ model: "gemini-pro" });
 
         // --- RAG STEP 1: RETRIEVE KNOWLEDGE ---
         let infoBlock = "";
