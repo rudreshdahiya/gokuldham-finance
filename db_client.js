@@ -36,3 +36,9 @@ async function saveUserSession(data) {
         console.error("Error saving session:", err);
     }
 }
+
+// Expose to Window
+if (typeof window !== 'undefined') {
+    window.initSupabase = initSupabase;
+    window.saveUserSession = saveUserSession;
+}

@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
         const embedModel = genAI.getGenerativeModel({ model: "embedding-001" });
-        const chatModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const chatModel = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
 
         // --- RAG STEP 1: RETRIEVE KNOWLEDGE ---
         let infoBlock = "";
@@ -43,13 +43,34 @@ export default async function handler(req, res) {
         }
 
         // --- RAG STEP 2: GENERATE WITH CONTEXT ---
+
+        // --- DYNAMIC PERSONA PROMPT ---
+        const userPersona = context.persona || "shyam";
+        let advisorPersona = "Jigri Advisor";
+        let vibe = "Friendly and Professional";
+
+        // Match Advisor Persona to User Persona (The "Mirror" Effect)
+        if (["baburao", "raju", "shyam"].includes(userPersona)) {
+            advisorPersona = "Baburao Style";
+            vibe = "Chaotic, funny, frantic, using slang like 'Are baba!', 'Khopdi tod!', 'Paisa hi paisa hoga!'";
+        } else if (["pushpa", "circuit", "munna"].includes(userPersona)) {
+            advisorPersona = "Bhai Style";
+            vibe = "Tapori, bold, confident, calling user 'Bhai' or 'Biddu'.";
+        } else if (["poo", "chatur", "raj"].includes(userPersona)) {
+            advisorPersona = "High Society";
+            vibe = "Sassy, using Hinglish, maybe a bit snobbish but helpful.";
+        }
+
         const systemPrompt = `
-        You are 'Jigri Advisor', a friendly, Bollywood-savvy Indian financial expert.
+        You are acting as: ${advisorPersona}.
+        VIBE: ${vibe}
+        
+        CONTEXT:
+        The user is identified as: '${userPersona.toUpperCase()}'.
         
         ${infoBlock ? infoBlock : ""}
         
         USER PROFILE:
-        - Persona: ${context.persona || "Unknown"}
         - Income: ₹${context.income || 0}
         - Goals: ${JSON.stringify(context.goals || [])}
         - State: ${context.demographics?.state || "India"}
@@ -69,7 +90,7 @@ export default async function handler(req, res) {
            - Answer the financial question using the EXPERT GUIDELINES above.
            - Cite rules naturally.
         
-        Keep the Bollywood tone alive!
+        IMPORTANT: Speak EXACTLY like ${advisorPersona}. Use catchphrases like ${advisorPersona === 'Baburao Style' ? '"Utha le re baba!"' : '"Tension nahi lene ka!"'}. Be funny but helpful.
         `;
 
         const result = await chatModel.generateContent(systemPrompt);

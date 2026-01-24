@@ -18,16 +18,23 @@ async function startAdvisorChat(userContext) {
 
 
     try {
-        const response = await fetch('/api/inspector', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                context: context,
-                question: "Analyze my profile and give me a brutally honest critique in Bollywood style."
-            })
-        });
-
-        const data = await response.json();
+        // 1. Try Server API
+        let data;
+        try {
+            const response = await fetch('/api/inspector', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    context,
+                    question: "Analyze my profile and give me a brutally honest critique in Bollywood style."
+                })
+            });
+            if (!response.ok) throw new Error("API Route Failed");
+            data = await response.json();
+        } catch (apiError) {
+            console.warn("Inspector API failed, trying Client-Side...", apiError);
+            data = await runClientSideGemini(context, "Analyze my profile and give me a brutally honest critique in Bollywood style.");
+        }
 
         if (data.error) {
             appendMessage("system", "⚠️ Connection Error: " + data.error);
@@ -49,6 +56,25 @@ function getAppRecommendations() {
     sendUserMessage();
 }
 
+
+async function runClientSideGemini(context, question) {
+    if (!CONFIG.GEMINI_API_KEY) {
+        throw new Error("Missing API Key in CONFIG.");
+    }
+    const genAI = new GoogleGenerativeAI(CONFIG.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
+
+    const systemPrompt = `
+        You are 'Jigri Advisor', a friendly Indian financial expert.
+        USER: ${JSON.stringify(context)}
+        QUESTION: ${question}
+        Keep it brief and helpful.
+    `;
+
+    const result = await model.generateContent(systemPrompt);
+    const response = await result.response;
+    return { answer: response.text() };
+}
 
 async function sendUserMessage() {
     const input = document.getElementById("chat-input-box");
@@ -74,16 +100,22 @@ async function sendUserMessage() {
     };
 
     try {
-        const response = await fetch('/api/inspector', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                context: context,
-                question: msg
-            })
-        });
+        // 1. Try Server API (Production)
+        let data;
+        try {
+            const response = await fetch('/api/inspector', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ context, question: msg })
+            });
+            if (!response.ok) throw new Error("API Failure");
+            data = await response.json();
+        } catch (apiError) {
+            // 2. Fallback to Client Side (Local Testing)
+            console.warn("API Failed, switching to Client-Side Gemini:", apiError);
+            data = await runClientSideGemini(context, msg);
+        }
 
-        const data = await response.json();
         document.getElementById(loadingId).remove();
 
         if (data.error) {
@@ -94,7 +126,7 @@ async function sendUserMessage() {
 
     } catch (e) {
         document.getElementById(loadingId).remove();
-        appendMessage("system", "⚠️ Connection failed.");
+        appendMessage("system", "⚠️ Connection failed: " + e.message);
     }
 }
 
