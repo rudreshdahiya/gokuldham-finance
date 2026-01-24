@@ -61,8 +61,11 @@ async function runClientSideGemini(context, question) {
     if (!CONFIG.GEMINI_API_KEY) {
         throw new Error("Missing API Key in CONFIG.");
     }
-    const genAI = new GoogleGenerativeAI(CONFIG.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
+    if (!window.GoogleGenerativeAI) {
+        throw new Error("GoogleGenerativeAI SDK not loaded yet. Please wait a moment and try again.");
+    }
+    const genAI = new window.GoogleGenerativeAI(CONFIG.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const systemPrompt = `
         You are 'Jigri Advisor', a friendly Indian financial expert.

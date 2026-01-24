@@ -11,12 +11,12 @@ export default async function handler(req, res) {
     const { context, question } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    if (!apiKey) return res.status(500).json({ error: 'Server Config Error' });
+    if (!apiKey) return res.status(401).json({ error: 'Missing GEMINI_API_KEY in Vercel Environment Variables' });
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
         const embedModel = genAI.getGenerativeModel({ model: "embedding-001" });
-        const chatModel = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
+        const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         // --- RAG STEP 1: RETRIEVE KNOWLEDGE ---
         let infoBlock = "";
