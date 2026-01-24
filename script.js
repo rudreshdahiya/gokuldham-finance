@@ -310,7 +310,8 @@ function analyzeHabits() {
             console.log("Persona Result:", personaRes);
 
             GLOBAL_STATE.persona = personaRes.key;
-            renderPersonaPage(GLOBAL_STATE.persona, personaRes.clusterId || "#C16");
+            GLOBAL_STATE.personaResult = personaRes; // Store full result for behavioral display
+            renderPersonaPage(GLOBAL_STATE.persona, personaRes);
             goToPage(3);
         }, 800);
     } catch (e) {
@@ -422,7 +423,57 @@ const PERSONA_TRIBES = {
     "farhan": ["rancho", "raju"], "rancho": ["farhan", "chatur"]
 };
 
-function renderPersonaPage(personaKey, clusterId) {
+// ===================================
+// BEHAVIORAL DIMENSIONS VISUALIZATION
+// Shows 6 dimensions with academic labels (Kahneman, Markowitz style)
+// ===================================
+function renderBehavioralDimensions(userVector) {
+    if (!userVector || userVector.length !== 6) return '';
+
+    const dimensions = [
+        { label: 'Risk Appetite', icon: '🎲', color: '#e74c3c', academic: 'Markowitz Risk Tolerance' },
+        { label: 'Future Focus', icon: '⏳', color: '#3498db', academic: 'Time Preference (Laibson)' },
+        { label: 'Social Spending', icon: '👥', color: '#9b59b6', academic: 'Social Capital Investment' },
+        { label: 'Status Seeking', icon: '👑', color: '#f39c12', academic: 'Conspicuous Consumption (Veblen)' },
+        { label: 'Money Anxiety', icon: '😰', color: '#95a5a6', academic: 'Loss Aversion (Kahneman)' },
+        { label: 'Saving Power', icon: '🐷', color: '#27ae60', academic: 'Savings Discipline' }
+    ];
+
+    let html = `
+        <div style="margin:20px 0; padding:15px; background:var(--color-bg-secondary); border-radius:12px; border:1px solid var(--color-border);">
+            <div style="font-size:0.7rem; font-weight:bold; color:var(--color-primary); letter-spacing:1px; margin-bottom:12px; text-align:center;">
+                📊 YOUR BEHAVIORAL PROFILE
+            </div>
+    `;
+
+    dimensions.forEach((dim, i) => {
+        const value = Math.round(userVector[i]);
+        const level = value > 70 ? 'High' : value > 40 ? 'Moderate' : 'Low';
+
+        html += `
+            <div style="margin-bottom:10px;" title="${dim.academic}">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-size:0.75rem; color:var(--color-text-main);">${dim.icon} ${dim.label}</span>
+                    <span style="font-size:0.7rem; color:${dim.color}; font-weight:bold;">${level}</span>
+                </div>
+                <div style="height:6px; background:var(--color-bg); border-radius:3px; overflow:hidden;">
+                    <div style="width:${value}%; height:100%; background:${dim.color}; border-radius:3px; transition:width 0.5s;"></div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `
+            <div style="font-size:0.6rem; color:var(--color-text-muted); text-align:center; margin-top:10px; font-style:italic;">
+                Based on behavioral finance research (Kahneman & Tversky, Markowitz)
+            </div>
+        </div>
+    `;
+
+    return html;
+}
+
+function renderPersonaPage(personaKey, personaResult) {
     const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['shyam'];
 
     // 1. Basic Info
@@ -522,6 +573,10 @@ function renderPersonaPage(personaKey, clusterId) {
     });
     neighborsHtml += `</div>`;
 
+    // Get user vector for behavioral display
+    const userVector = personaResult?.userVector || GLOBAL_STATE.personaResult?.userVector;
+    const behavioralHTML = renderBehavioralDimensions(userVector);
+
     const statContainer = document.querySelector(".persona-stat");
     statContainer.innerHTML = `
         <div style="margin-bottom:15px; text-align:center;">
@@ -532,17 +587,14 @@ function renderPersonaPage(personaKey, clusterId) {
         </div>
         
         ${storyHTML}
+        
+        ${behavioralHTML}
+        
         ${renderLevelUpPath(personaKey)}
 
         <div style="margin-top:15px; padding-top:15px; border-top:1px dashed var(--color-border);">
             <div style="font-size:0.7rem; font-weight:bold; color:var(--color-primary); letter-spacing:1px; margin-bottom:5px;">WHY THIS MATCH?</div>
             <div style="font-family:var(--font-mono); font-size:0.85rem; color:var(--color-text-main);">"${reason}"</div>
-        </div>
-
-        <div style="text-align:center; margin-top:20px;">
-            <button onclick="sharePersona('${personaKey}')" style="background:var(--color-accent); color:#000; border:none; padding:12px 25px; border-radius:30px; font-weight:bold; cursor:pointer; font-size:0.9rem; box-shadow:0 4px 15px var(--color-accent-glow); transition:transform 0.2s;">
-                 📤 SHARE RESULT
-            </button>
         </div>
 
         <div style="border-top:1px dashed var(--color-border); margin-top:15px; padding-top:15px;">
