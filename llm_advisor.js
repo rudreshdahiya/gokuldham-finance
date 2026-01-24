@@ -61,11 +61,10 @@ async function runClientSideGemini(context, question) {
     if (!CONFIG.GEMINI_API_KEY) {
         throw new Error("Missing API Key in CONFIG.");
     }
-    if (!window.GoogleGenerativeAI) {
-        throw new Error("GoogleGenerativeAI SDK not loaded yet. Please wait a moment and try again.");
-    }
-    const genAI = new window.GoogleGenerativeAI(CONFIG.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    // Use direct REST API instead of SDK for maximum compatibility
+    const MODEL = "gemini-2.0-flash";
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
 
     const systemPrompt = `
         You are 'Jigri Advisor', a friendly Indian financial expert.
@@ -74,9 +73,25 @@ async function runClientSideGemini(context, question) {
         Keep it brief and helpful.
     `;
 
-    const result = await model.generateContent(systemPrompt);
-    const response = await result.response;
-    return { answer: response.text() };
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{ text: systemPrompt }]
+            }]
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Gemini API Error:", response.status, errorData);
+        throw new Error(`Gemini API failed: ${response.status} - ${errorData?.error?.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
+    return { answer };
 }
 
 async function sendUserMessage() {
