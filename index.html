@@ -57,9 +57,32 @@
 
                 <!-- Tagline -->
                 <p
-                    style="color:var(--color-text-muted); font-size:1.1rem; font-weight:500; max-width:300px; line-height:1.4;">
+                    style="color:var(--color-text-muted); font-size:1.1rem; font-weight:500; max-width:300px; line-height:1.4; margin-bottom:25px;">
                     The First Truly Personalized Indian Bank
                 </p>
+
+                <!-- Context Cards -->
+                <div style="display:flex; flex-direction:column; gap:12px; max-width:320px; text-align:left;">
+                    <div
+                        style="background:var(--color-bg-secondary); padding:12px 16px; border-radius:12px; border-left:3px solid #FFD700;">
+                        <span style="font-size:1.2rem;">🎭</span>
+                        <span style="font-size:0.85rem; color:var(--color-text-muted); margin-left:8px;">Discover your
+                            <strong>financial personality</strong> through a Bollywood character</span>
+                    </div>
+                    <div
+                        style="background:var(--color-bg-secondary); padding:12px 16px; border-radius:12px; border-left:3px solid #00CED1;">
+                        <span style="font-size:1.2rem;">📊</span>
+                        <span style="font-size:0.85rem; color:var(--color-text-muted); margin-left:8px;">Get a
+                            <strong>personalized investment plan</strong> based on YOUR behavior, not generic
+                            advice</span>
+                    </div>
+                    <div
+                        style="background:var(--color-bg-secondary); padding:12px 16px; border-radius:12px; border-left:3px solid #FF69B4;">
+                        <span style="font-size:1.2rem;">🤖</span>
+                        <span style="font-size:0.85rem; color:var(--color-text-muted); margin-left:8px;">Chat with an AI
+                            advisor who <strong>speaks like your character</strong></span>
+                    </div>
+                </div>
             </main>
 
             <!-- 3. FOOTER -->
@@ -298,13 +321,30 @@
             </main>
 
             <!-- 3. FOOTER -->
-            <footer class="std-footer" style="flex-direction:column; gap:10px; height:auto; padding:15px;">
-                <button class="std-cta" onclick="goToPage(4)">
-                    BUILD MY PLAN
+            <footer class="std-footer" style="flex-direction:column; gap:15px; height:auto; padding:15px;">
+                <!-- Share Options -->
+                <div style="display:flex; gap:10px; justify-content:center; width:100%;">
+                    <button onclick="shareToWhatsApp()"
+                        style="flex:1; padding:12px; background:#25D366; color:#fff; border:none; border-radius:8px; font-weight:bold; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span style="font-size:1.2rem;">💬</span> WhatsApp
+                    </button>
+                    <button onclick="shareToStory()"
+                        style="flex:1; padding:12px; background:linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color:#fff; border:none; border-radius:8px; font-weight:bold; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span style="font-size:1.2rem;">📸</span> Story
+                    </button>
+                    <button onclick="copyShareLink()"
+                        style="flex:1; padding:12px; background:var(--color-bg-secondary); color:var(--color-text-main); border:1px solid var(--color-border); border-radius:8px; font-weight:bold; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span style="font-size:1.2rem;">🔗</span> Copy
+                    </button>
+                </div>
+
+                <!-- Primary CTA -->
+                <button class="std-cta" onclick="goToPage(4)" style="width:100%;">
+                    BUILD MY PLAN →
                 </button>
                 <div onclick="goToPage(2)"
                     style="font-size:0.75rem; color:var(--color-text-muted); text-decoration:underline; cursor:pointer;">
-                    Rewind Transaction
+                    ← Rewind Transaction
                 </div>
             </footer>
         </div>

@@ -174,9 +174,11 @@ function syncGranularInputs() {
 
 function updateLedger(changedId, categoryKey) {
     // 1. Get Income
-    GLOBAL_STATE.income = parseFloat(document.getElementById("input-income").value) || 0;
+    const newIncome = parseFloat(document.getElementById("input-income").value) || 0;
+    const incomeChanged = newIncome !== GLOBAL_STATE.income;
+    GLOBAL_STATE.income = newIncome;
 
-    // 2. Update State from Input
+    // 2. Update State from Input (if slider was changed)
     if (changedId && categoryKey) {
         const val = parseInt(document.getElementById(changedId).value);
         GRANULAR_ALLOC[categoryKey] = val;
@@ -188,6 +190,17 @@ function updateLedger(changedId, categoryKey) {
         if (amtEl) {
             const amt = Math.round((GLOBAL_STATE.income * val) / 100);
             amtEl.innerText = `(₹${amt.toLocaleString()})`;
+        }
+    }
+
+    // 3. If income changed, update ALL amount displays
+    if (incomeChanged || !changedId) {
+        for (const key in GRANULAR_ALLOC) {
+            const amtEl = document.getElementById(`amt-${key}`);
+            if (amtEl) {
+                const amt = Math.round((GLOBAL_STATE.income * GRANULAR_ALLOC[key]) / 100);
+                amtEl.innerText = `(₹${amt.toLocaleString()})`;
+            }
         }
     }
 
@@ -2026,6 +2039,69 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
             }]
         });
     } catch (e) { console.error(e); }
+}
+
+// ==========================================
+// SHARE FUNCTIONS
+// ==========================================
+
+function shareToWhatsApp() {
+    const persona = GLOBAL_STATE.persona || 'shyam';
+    const pData = DATA_ENGINE.PERSONAS[persona] || DATA_ENGINE.PERSONAS['shyam'];
+    const name = pData.name;
+    const role = pData.role;
+
+    const text = `🎭 I just discovered my Financial Personality on Open Ledger!\n\nI'm a *${name}* - ${role}!\n\nFind out yours 👉 ${window.location.origin}`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, '_blank');
+}
+
+function shareToStory() {
+    // Use html2canvas to capture the persona card
+    const card = document.querySelector('.persona-card');
+    if (!card) {
+        alert("Please wait for the page to load fully.");
+        return;
+    }
+
+    html2canvas(card, { backgroundColor: '#1a1a2e' }).then(canvas => {
+        canvas.toBlob(blob => {
+            // Check if Web Share API with files is supported
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'persona.png', { type: 'image/png' })] })) {
+                navigator.share({
+                    files: [new File([blob], 'my-financial-personality.png', { type: 'image/png' })],
+                    title: 'My Financial Personality',
+                    text: `I'm a ${GLOBAL_STATE.persona} on Open Ledger!`
+                }).catch(err => console.log('Share cancelled'));
+            } else {
+                // Fallback: Download the image
+                const link = document.createElement('a');
+                link.download = 'my-financial-personality.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                alert("Image downloaded! You can share it to your Instagram Story manually.");
+            }
+        });
+    });
+}
+
+function copyShareLink() {
+    const persona = GLOBAL_STATE.persona || 'shyam';
+    const shareUrl = `${window.location.origin}?ref=${persona}`;
+
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        // Show feedback
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span style="font-size:1.2rem;">✓</span> Copied!';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+        }, 2000);
+    }).catch(err => {
+        // Fallback
+        prompt("Copy this link:", shareUrl);
+    });
 }
 
 // Initialize App
