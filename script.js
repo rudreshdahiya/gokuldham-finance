@@ -243,46 +243,67 @@ function updateLedger(changedId, categoryKey) {
 }
 
 function analyzeHabits() {
-    // 1. Validate
-    const total = Object.values(GRANULAR_ALLOC).reduce((a, b) => a + b, 0);
+    console.log("Analyze Triggered");
+    try {
+        // 1. Validate
+        const total = Object.values(GRANULAR_ALLOC).reduce((a, b) => a + b, 0);
 
-    if (total !== 100) {
-        alert(`Please allocate exactly 100%. (Current: ${total}%)`);
-        return;
+        if (total !== 100) {
+            alert(`Please allocate exactly 100%. (Current: ${total}%)`);
+            return;
+        }
+
+        if (GLOBAL_STATE.income < 1000) {
+            alert("Please enter a valid monthly income.");
+            return;
+        }
+
+        // 2. K-Means
+        console.log("Analyzing Granular Habits...", GRANULAR_ALLOC);
+        document.getElementById("total-check").innerText = "Analyzing Transaction Patterns...";
+
+        setTimeout(() => {
+            // Check dependency
+            if (typeof FORENSICS_ENGINE === 'undefined') {
+                alert("Critical Error: Core Engine Missing. Please refresh.");
+                console.error("FORENSICS_ENGINE is undefined");
+                return;
+            }
+
+            // Pass granular stats to forensics
+            const annualSalary = (GLOBAL_STATE.income || 0) * 12;
+            const userState = GLOBAL_STATE.demographics?.state || "maharashtra";
+
+            console.log("Params:", annualSalary, userState);
+
+            const personaRes = FORENSICS_ENGINE.determinePersona(
+                window.DATA_ENGINE,
+                annualSalary,
+                userState,
+                GLOBAL_STATE.demographics?.age || "25-35",
+                GLOBAL_STATE.alloc.needs,
+                GLOBAL_STATE.alloc.wants,
+                GLOBAL_STATE.alloc.savings,
+                GLOBAL_STATE.demographics?.goals || [],
+                GRANULAR_ALLOC,
+                0
+            );
+
+            if (!personaRes) {
+                alert("Error: Persona calculation failed.");
+                return;
+            }
+
+            console.log("Persona Result:", personaRes);
+
+            GLOBAL_STATE.persona = personaRes.key;
+            renderPersonaPage(GLOBAL_STATE.persona, personaRes.clusterId || "#C16");
+            goToPage(3);
+        }, 800);
+    } catch (e) {
+        console.error("Crash in analyzeHabits:", e);
+        alert("System Error: " + e.message);
     }
-
-    if (GLOBAL_STATE.income < 1000) {
-        alert("Please enter a valid monthly income.");
-        return;
-    }
-
-    // 2. K-Means
-    console.log("Analyzing Granular Habits...", GRANULAR_ALLOC);
-    document.getElementById("total-check").innerText = "Analyzing Transaction Patterns...";
-
-    setTimeout(() => {
-        // Pass granular stats to forensics
-        // V14 Update: Now passing ANNUAL Salary (Income * 12) for improved PPP calculation
-        const annualSalary = (GLOBAL_STATE.income || 0) * 12;
-        const userState = GLOBAL_STATE.demographics?.state || "maharashtra";
-
-        const personaRes = FORENSICS_ENGINE.determinePersona(
-            window.DATA_ENGINE,
-            annualSalary, // NEW ARGUMENT 2
-            userState,
-            GLOBAL_STATE.demographics?.age || "25-35",
-            GLOBAL_STATE.alloc.needs,
-            GLOBAL_STATE.alloc.wants,
-            GLOBAL_STATE.alloc.savings,
-            GLOBAL_STATE.demographics?.goals || [],
-            GRANULAR_ALLOC,
-            0
-        );
-
-        GLOBAL_STATE.persona = personaRes.key;
-        renderPersonaPage(GLOBAL_STATE.persona, personaRes.clusterId || "#C16");
-        goToPage(3);
-    }, 800);
 }
 
 // ==========================================
@@ -1409,6 +1430,25 @@ function sendMessage() {
 }
 
 // ==========================================
+// 8.B LEVEL UP PATH (Recovered)
+// ==========================================
+function renderLevelUpPath(personaKey) {
+    // Simple placeholder to prevent ReferneceError
+    // Logic: Just show a generic motivator
+    return `
+        <div style="margin-top:10px; padding:10px; background:rgba(0,0,0,0.03); border-radius:4px; border:1px solid var(--color-border); font-size:0.7rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+               <strong>🚀 Next Level:</strong>
+               <span style="color:var(--color-primary); font-weight:bold;">Wealth Compounder</span>
+            </div>
+            <div style="margin-top:4px; color:var(--color-text-muted);">
+               optimize your <strong>Needs vs Wants</strong> ratio to unlock higher tiers.
+            </div>
+        </div>
+    `;
+}
+
+// ==========================================
 // 9. TAX EFFICIENCY ENGINE (PERSONALIZED)
 // ==========================================
 function renderTaxWiseWithdrawal() {
@@ -1498,33 +1538,7 @@ function updateRebalancingSchedule(tenureYears) {
 // 8. SCENARIO ANALYSIS & INSIGHTS (NEW V14)
 // ==========================================
 
-function renderStrategyInsights(personaKey) {
-    const pData = DATA_ENGINE.PERSONAS[personaKey] || DATA_ENGINE.PERSONAS['shyam'];
-
-    // 1. Mock Pros/Cons based on Persona Ruler
-    let pros = ["Customized for your risk profile", "High inflation-adjusted returns"];
-    let cons = ["Market volatility exposure", "Lock-in period for tax saving"];
-    let market = "Bullish (India Growth @ 7%)";
-
-    // Heuristics
-    if (pData.traits.includes("High Risk")) {
-        pros = ["Aggressive Wealth Creation", "Maximizes Compounding", "Tax Efficient (LTCG)"];
-        cons = ["High Short-term Volatility", "Not suitable for < 3yr goals"];
-    } else if (pData.traits.includes("Risk Averse")) {
-        pros = ["Capital Protection", "Steady Income Stream", "Low Volatility"];
-        cons = ["May barely beat inflation", "Lower final corpus"];
-    }
-
-    // 2. Inject
-    const prosContainer = document.getElementById("strategy-pros");
-    const consContainer = document.getElementById("strategy-cons");
-    const marketContainer = document.getElementById("market-assumption");
-
-    if (prosContainer) prosContainer.innerHTML = pros.map(i => `<li>${i}</li>`).join('');
-    if (consContainer) consContainer.innerHTML = cons.map(i => `<li>${i}</li>`).join('');
-    if (marketContainer) marketContainer.innerText = market;
-}
-
+// function renderStrategyInsights(personaKey) { ... removed duplicate ... }
 let scenarioChartInstance = null;
 
 // NEW: Goal Timeline Chart - Calculates YEARS to reach goal
@@ -2013,3 +2027,6 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
         });
     } catch (e) { console.error(e); }
 }
+
+// Initialize App
+window.addEventListener('DOMContentLoaded', initUI);
