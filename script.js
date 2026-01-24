@@ -55,6 +55,22 @@ function initUI() {
 
     // Populate Dynamic Dropdowns (States)
     populateStates();
+
+    // Detect OS for RAG Context
+    GLOBAL_STATE.demographics.os = getMobileOS();
+    console.log("Device OS Detected:", GLOBAL_STATE.demographics.os);
+}
+
+function getMobileOS() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (/android/i.test(userAgent)) {
+        return "Android";
+    }
+    // iOS detection from: http://stackoverflow.com/a/9039885/177710
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        return "iOS";
+    }
+    return "Web/Desktop";
 }
 
 function toggleTheme() {
@@ -101,6 +117,26 @@ function goToPage(pageNum) {
         }
 
         updateGoalTimeline(); // Init Chart & Summary
+
+        // --- DATABASE LOGGING (ANALYTICS) ---
+        // Log the session info to Supabase
+        const sessionData = {
+            user_profile: {
+                income: GLOBAL_STATE.income || 0,
+                alloc: GLOBAL_STATE.alloc,
+                demographics: GLOBAL_STATE.demographics,
+                persona: GLOBAL_STATE.persona
+            },
+            selected_goals: GLOBAL_STATE.demographics.goals || [],
+            rule_recommendation: GLOBAL_STATE.recommendation || {},
+            final_llm_recommendation: null // Will be updated on Page 6
+        };
+        // Use timeout to not block UI rendering
+        setTimeout(() => {
+            if (typeof saveUserSession === 'function') {
+                saveUserSession(sessionData);
+            }
+        }, 2000);
     }
 }
 
@@ -1860,16 +1896,16 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
     const investedData = [];
     const estimatedData = [];
     const rate = 0.12; // 12% Benchmark
-    
+
     // Determine max years for graph
-    const maxYears = Math.min(30, Math.ceil(yearsInfo || 20) + 5); 
+    const maxYears = Math.min(30, Math.ceil(yearsInfo || 20) + 5);
 
     let multipliersFound = { "1.4x": false, "2x": false, "3x": false, "5x": false, "10x": false };
     const points = [];
 
     for (let i = 0; i <= maxYears; i++) {
         labels.push(i + "y");
-        
+
         // Linear Investment
         const invested = initialCorpus + (monthlySIP * 12 * i);
         investedData.push(invested);
@@ -1877,17 +1913,17 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
         // Compound Growth (Future Value)
         const pComp = initialCorpus * Math.pow(1 + rate, i);
         const sipComp = (monthlySIP * 12) * (Math.pow(1 + rate, i) - 1) / rate;
-        
+
         const estimated = Math.round(pComp + sipComp);
         estimatedData.push(estimated);
 
         // Check for Multipliers
         const ratio = estimated / (invested || 1);
-        if (ratio >= 1.4 && !multipliersFound["1.4x"]) { points.push({x: i, y: estimated, label: "1.4X"}); multipliersFound["1.4x"] = true; }
-        else if (ratio >= 2.0 && !multipliersFound["2x"]) { points.push({x: i, y: estimated, label: "2X"}); multipliersFound["2x"] = true; }
-        else if (ratio >= 3.0 && !multipliersFound["3x"]) { points.push({x: i, y: estimated, label: "3X"}); multipliersFound["3x"] = true; }
-        else if (ratio >= 5.0 && !multipliersFound["5x"]) { points.push({x: i, y: estimated, label: "5X"}); multipliersFound["5x"] = true; }
-        else if (ratio >= 10.0 && !multipliersFound["10x"]) { points.push({x: i, y: estimated, label: "10X"}); multipliersFound["10x"] = true; }
+        if (ratio >= 1.4 && !multipliersFound["1.4x"]) { points.push({ x: i, y: estimated, label: "1.4X" }); multipliersFound["1.4x"] = true; }
+        else if (ratio >= 2.0 && !multipliersFound["2x"]) { points.push({ x: i, y: estimated, label: "2X" }); multipliersFound["2x"] = true; }
+        else if (ratio >= 3.0 && !multipliersFound["3x"]) { points.push({ x: i, y: estimated, label: "3X" }); multipliersFound["3x"] = true; }
+        else if (ratio >= 5.0 && !multipliersFound["5x"]) { points.push({ x: i, y: estimated, label: "5X" }); multipliersFound["5x"] = true; }
+        else if (ratio >= 10.0 && !multipliersFound["10x"]) { points.push({ x: i, y: estimated, label: "10X" }); multipliersFound["10x"] = true; }
     }
 
     try {
@@ -1923,9 +1959,9 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: { labels: { color: '#888' } },
-                    tooltip: { 
+                    tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 let label = context.dataset.label || '';
                                 if (label) { label += ': '; }
                                 if (context.parsed.y !== null) {
@@ -1938,12 +1974,12 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
                 },
                 scales: {
                     x: { grid: { display: false }, ticks: { color: '#666' } },
-                    y: { 
-                        grid: { color: '#333' }, 
-                        ticks: { 
+                    y: {
+                        grid: { color: '#333' },
+                        ticks: {
                             color: '#666',
-                            callback: function(value) { return '₹' + (value/100000).toFixed(0) + 'L'; }
-                        } 
+                            callback: function (value) { return '₹' + (value / 100000).toFixed(0) + 'L'; }
+                        }
                     }
                 }
             },
@@ -1953,18 +1989,18 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
                     const ctx = chart.ctx;
                     points.forEach(p => {
                         const meta = chart.getDatasetMeta(0);
-                        if(p.x < meta.data.length && meta.data[p.x]) {
+                        if (p.x < meta.data.length && meta.data[p.x]) {
                             const x = meta.data[p.x].x;
                             const y = meta.data[p.x].y;
-                            
+
                             ctx.fillStyle = "#f1c40f";
                             ctx.beginPath();
                             ctx.arc(x, y, 6, 0, 2 * Math.PI);
                             ctx.fill();
-                            
+
                             const textMetrics = ctx.measureText(p.label);
                             ctx.fillStyle = "rgba(255,255,255,0.9)";
-                            ctx.fillRect(x - textMetrics.width/2 - 2, y - 22, textMetrics.width + 4, 12);
+                            ctx.fillRect(x - textMetrics.width / 2 - 2, y - 22, textMetrics.width + 4, 12);
 
                             ctx.fillStyle = "black";
                             ctx.font = "bold 10px Arial";
@@ -1975,5 +2011,5 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
                 }
             }]
         });
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
 }

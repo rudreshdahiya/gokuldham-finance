@@ -1,0 +1,34 @@
+[
+    {
+        "topic": "Asset Allocation - Tenure",
+        "content": "For goals less than 3 years away, allocation to Equity should be 0%. High volatility makes equity unsuitable for short timelines. Stick to Arbitrage Funds or Liquid Debt."
+    },
+    {
+        "topic": "Asset Allocation - Tenure",
+        "content": "For goals 3-7 years away, a balanced Hybrid approach (40-60% Equity) is best. It balances growth with capital safety."
+    },
+    {
+        "topic": "Asset Allocation - Tenure",
+        "content": "For goals 10+ years away (like Retirement), Equity allocation should be high (70-90%) to beat inflation. Volatility smooths out over long periods."
+    },
+    {
+        "topic": "Tax Saving",
+        "content": "Section 80C allows tax deduction up to ₹1.5 Lakhs. ELSS (Equity Linked Savings Scheme) is the best instrument with the shortest lock-in period of 3 years compared to PPF (15 years)."
+    },
+    {
+        "topic": "Emergency Fund",
+        "content": "Before investing, ensure you have an Emergency Fund covering 6-12 months of expenses. Keep this in a Liquid Fund or Sweep-in FD, not in the stock market."
+    },
+    {
+        "topic": "Gold Allocation",
+        "content": "Gold acts as a hedge against inflation and currency depreciation. A 10-15% allocation to SGB (Sovereign Gold Bonds) is recommended for long-term portfolios."
+    },
+    {
+        "topic": "Market Valuation",
+        "content": "When Nifty 50 PE Ratio exceeds 25, the market is considered expensive. Reduce lump sum investments and stick to SIPs."
+    },
+    {
+        "topic": "Debt Strategy",
+        "content": "Debt Funds are for stability, not high returns. Avoid Credit Risk funds unless you are an expert. Stick to Gilt or Corporate Bond funds for safety."
+    }
+]

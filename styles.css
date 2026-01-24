@@ -901,6 +901,29 @@ input[type=range]::-webkit-slider-thumb {
     cursor: pointer;
 }
 
+
+/* --- DELTA SCREEN (SPLIT VIEW) --- */
+.delta-left {
+    display: none;
+    /* Mobile Default: Hide Base Plan, Focus on Chat */
+}
+
+.delta-right {
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .delta-left {
+        display: block !important;
+        flex: 0 0 40%;
+        /* 40% width for stats */
+    }
+
+    .delta-right {
+        flex: 1;
+    }
+}
+
 /* LOADING STATES */
 .loading-text {
     color: #777;
