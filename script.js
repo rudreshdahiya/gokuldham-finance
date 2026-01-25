@@ -141,6 +141,9 @@ function goToPage(pageNum) {
     if (pageNum === 7) {
         renderPersonalizationGap();
     }
+    if (pageNum === 8) {
+        renderAppRecommendations();
+    }
 }
 
 // ==========================================
@@ -2039,6 +2042,232 @@ function renderPersonalizationGap() {
         insightsContainer.innerHTML = insights.map(i =>
             `<div style="padding:8px; background:var(--color-bg); border-radius:8px; margin-bottom:8px;">${i}</div>`
         ).join('');
+    }
+}
+
+// ===================================
+// FINTECH APP DATABASE (Page 8)
+// Content-based filtering with OS-aware deep links
+// ===================================
+const FINTECH_APPS = [
+    // Mutual Funds
+    {
+        id: 'groww', name: 'Groww', category: 'mf', icon: '🌱', color: '#00d09c',
+        desc: 'Zero commission MFs', rating: 4.5, users: '10Cr+',
+        ios: 'https://apps.apple.com/app/groww-stocks-mutual-funds/id1404871703',
+        android: 'https://play.google.com/store/apps/details?id=com.nextbillion.groww',
+        tags: ['beginner', 'low-cost', 'sip']
+    },
+    {
+        id: 'kuvera', name: 'Kuvera', category: 'mf', icon: '💎', color: '#5c6bc0',
+        desc: 'Direct MFs, goal-based', rating: 4.4, users: '50L+',
+        ios: 'https://apps.apple.com/app/kuvera-mutual-funds-goals/id1196abordf',
+        android: 'https://play.google.com/store/apps/details?id=com.kuvera.app',
+        tags: ['advanced', 'goal-tracking', 'direct']
+    },
+    {
+        id: 'paytm-money', name: 'Paytm Money', category: 'mf', icon: '💙', color: '#00b9f1',
+        desc: 'MFs + Stocks', rating: 4.3, users: '5Cr+',
+        ios: 'https://apps.apple.com/app/paytm-money-mutual-funds/id1434995498',
+        android: 'https://play.google.com/store/apps/details?id=com.paytmmoney',
+        tags: ['beginner', 'all-in-one']
+    },
+    {
+        id: 'coin-zerodha', name: 'Coin by Zerodha', category: 'mf', icon: '🪙', color: '#387ed1',
+        desc: 'Direct MFs only', rating: 4.2, users: '1Cr+',
+        ios: 'https://apps.apple.com/app/coin-by-zerodha/id1489750771',
+        android: 'https://play.google.com/store/apps/details?id=com.zerodha.coin',
+        tags: ['advanced', 'direct', 'low-cost']
+    },
+
+    // Stocks
+    {
+        id: 'zerodha', name: 'Zerodha Kite', category: 'stocks', icon: '🪁', color: '#387ed1',
+        desc: 'India\'s #1 broker', rating: 4.4, users: '1.5Cr+',
+        ios: 'https://apps.apple.com/app/kite-by-zerodha/id1449453498',
+        android: 'https://play.google.com/store/apps/details?id=com.zerodha.kite3',
+        tags: ['advanced', 'trading', 'low-cost']
+    },
+    {
+        id: 'upstox', name: 'Upstox', category: 'stocks', icon: '📈', color: '#7c3aed',
+        desc: 'Free equity delivery', rating: 4.3, users: '1Cr+',
+        ios: 'https://apps.apple.com/app/upstox-pro-trading-app/id1445573419',
+        android: 'https://play.google.com/store/apps/details?id=in.upstox.pro',
+        tags: ['beginner', 'free', 'trading']
+    },
+    {
+        id: 'angel-one', name: 'Angel One', category: 'stocks', icon: '👼', color: '#e11d48',
+        desc: 'Free trades + research', rating: 4.2, users: '2Cr+',
+        ios: 'https://apps.apple.com/app/angel-one-trading-app/id1505197756',
+        android: 'https://play.google.com/store/apps/details?id=com.msf.angelbrokingandroid',
+        tags: ['beginner', 'research', 'free']
+    },
+    {
+        id: '5paisa', name: '5Paisa', category: 'stocks', icon: '5️⃣', color: '#00a651',
+        desc: '₹20 flat brokerage', rating: 4.1, users: '50L+',
+        ios: 'https://apps.apple.com/app/5paisa-online-trading-app/id1148283723',
+        android: 'https://play.google.com/store/apps/details?id=com.paisa5.trading',
+        tags: ['low-cost', 'trading']
+    },
+
+    // Budgeting
+    {
+        id: 'walnut', name: 'Walnut (Axio)', category: 'budget', icon: '🥜', color: '#ff6b35',
+        desc: 'Auto expense tracking', rating: 4.3, users: '1Cr+',
+        ios: 'https://apps.apple.com/app/walnut-expense-manager/id1073787193',
+        android: 'https://play.google.com/store/apps/details?id=com.daamitt.walnut',
+        tags: ['beginner', 'expense-tracking', 'auto']
+    },
+    {
+        id: 'moneyview', name: 'Money View', category: 'budget', icon: '💵', color: '#2563eb',
+        desc: 'Track + Loans', rating: 4.4, users: '5Cr+',
+        ios: 'https://apps.apple.com/app/money-view-loans-money-manager/id1073022588',
+        android: 'https://play.google.com/store/apps/details?id=com.whizdm.moneyview',
+        tags: ['beginner', 'expense-tracking', 'loans']
+    },
+    {
+        id: 'finart', name: 'Finart', category: 'budget', icon: '🎨', color: '#8b5cf6',
+        desc: 'Net worth tracking', rating: 4.5, users: '10L+',
+        ios: 'https://apps.apple.com/app/finart-expense-investment/id1557331891',
+        android: 'https://play.google.com/store/apps/details?id=com.finart.portfolio',
+        tags: ['advanced', 'net-worth', 'portfolio']
+    },
+    {
+        id: 'et-money', name: 'ET Money', category: 'budget', icon: '📊', color: '#ef4444',
+        desc: 'MFs + Insurance + NPS', rating: 4.4, users: '1Cr+',
+        ios: 'https://apps.apple.com/app/et-money-mf-nps-insurance/id1227739646',
+        android: 'https://play.google.com/store/apps/details?id=com.smartspends',
+        tags: ['all-in-one', 'insurance', 'nps']
+    },
+
+    // Gold
+    {
+        id: 'digital-gold-paytm', name: 'Paytm Gold', category: 'gold', icon: '🥇', color: '#fbbf24',
+        desc: 'Buy gold from ₹1', rating: 4.2, users: '5Cr+',
+        ios: 'https://apps.apple.com/app/paytm-recharge-bill-payment/id473941634',
+        android: 'https://play.google.com/store/apps/details?id=net.one97.paytm',
+        tags: ['beginner', 'digital-gold', 'small-amounts']
+    },
+    {
+        id: 'safegold', name: 'SafeGold', category: 'gold', icon: '🛡️', color: '#d97706',
+        desc: 'Trusted digital gold', rating: 4.3, users: '50L+',
+        ios: 'https://apps.apple.com/app/safegold-24k-digital-gold/id1508475635',
+        android: 'https://play.google.com/store/apps/details?id=com.safegold.app',
+        tags: ['trusted', 'digital-gold']
+    },
+    {
+        id: 'gpay-gold', name: 'Google Pay Gold', category: 'gold', icon: '💛', color: '#4285f4',
+        desc: 'Gold via GPay', rating: 4.1, users: '10Cr+',
+        ios: 'https://apps.apple.com/app/google-pay/id1193357041',
+        android: 'https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user',
+        tags: ['beginner', 'convenient', 'digital-gold']
+    },
+    {
+        id: 'jar', name: 'Jar', category: 'gold', icon: '🫙', color: '#f59e0b',
+        desc: 'Round-up savings to gold', rating: 4.4, users: '1Cr+',
+        ios: 'https://apps.apple.com/app/jar-save-money-daily/id1558556688',
+        android: 'https://play.google.com/store/apps/details?id=com.jar.app',
+        tags: ['beginner', 'auto-save', 'round-up']
+    }
+];
+
+let currentAppFilter = 'all';
+
+function renderAppRecommendations() {
+    // Detect OS
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+    const isAndroid = /android/i.test(userAgent);
+    const os = isIOS ? 'iOS' : isAndroid ? 'Android' : 'Web';
+
+    // Update OS badge
+    const osBadge = document.getElementById('app-os-badge');
+    if (osBadge) {
+        osBadge.textContent = os;
+        osBadge.style.background = isIOS ? '#007aff' : isAndroid ? '#3ddc84' : '#3498db';
+    }
+
+    // Get user preferences from behavioral vector
+    const personaResult = GLOBAL_STATE.personaResult || {};
+    const userVector = personaResult.userVector || [50, 50, 50, 50, 50, 50];
+    const riskScore = userVector[0];
+    const savingsScore = userVector[5];
+
+    // Score apps based on user profile
+    const scoredApps = FINTECH_APPS.map(app => {
+        let score = app.rating * 10;
+
+        // Boost beginner-friendly for low risk users
+        if (riskScore < 40 && app.tags.includes('beginner')) score += 15;
+        if (riskScore > 60 && app.tags.includes('advanced')) score += 10;
+
+        // Boost low-cost for high savers
+        if (savingsScore > 50 && app.tags.includes('low-cost')) score += 10;
+
+        return { ...app, score };
+    }).sort((a, b) => b.score - a.score);
+
+    // Store for filtering
+    window.SCORED_APPS = scoredApps;
+
+    // Render all apps initially
+    filterApps('all');
+}
+
+function filterApps(category) {
+    currentAppFilter = category;
+
+    // Update tab states
+    document.querySelectorAll('.app-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.category === category);
+    });
+
+    // Filter apps
+    const apps = (window.SCORED_APPS || FINTECH_APPS)
+        .filter(app => category === 'all' || app.category === category)
+        .slice(0, 8); // Max 8 apps per view
+
+    // Detect OS for links
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
+
+    // Render cards
+    const container = document.getElementById('app-cards-container');
+    if (!container) return;
+
+    container.innerHTML = apps.map(app => `
+        <div class="app-card" data-category="${app.category}">
+            <div class="app-card-icon" style="background:${app.color}20;">
+                ${app.icon}
+            </div>
+            <div class="app-card-name">${app.name}</div>
+            <div class="app-card-desc">${app.desc}</div>
+            <div class="app-card-rating">⭐ ${app.rating} • ${app.users}</div>
+            <button class="app-card-btn" onclick="window.open('${isIOS ? app.ios : app.android}', '_blank')">
+                Download
+            </button>
+        </div>
+    `).join('');
+}
+
+function shareFullReport() {
+    const persona = GLOBAL_STATE.persona || 'shyam';
+    const personaData = DATA_ENGINE.PERSONAS[persona] || {};
+    const alloc = GLOBAL_STATE.recommendation || { equity: 50, debt: 30, gold: 20 };
+
+    const text = `🎯 My Jigri Financial Profile!
+
+📊 I'm "${personaData.name || 'Unknown'}"
+💰 Asset Mix: ${alloc.equity}% Equity, ${alloc.debt}% Debt, ${alloc.gold}% Gold
+✨ Personalized using AI + Behavioral Finance
+
+Try it: https://gokuldham-finance.vercel.app`;
+
+    if (navigator.share) {
+        navigator.share({ title: 'My Financial Profile', text });
+    } else {
+        // Fallback to WhatsApp
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 }
 

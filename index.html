@@ -899,6 +899,166 @@
         </div>
     </div>
 
+    <!-- ==============================================
+         Page 8: APP RECOMMENDATIONS
+         ============================================== -->
+    <div id="ui-page-8" class="ui-screen hidden">
+        <div class="std-container">
+            <!-- 1. HEADER -->
+            <header class="std-header">
+                <div class="std-header-left">
+                    <div class="std-back-btn" onclick="goToPage(7)">❮</div>
+                    <button class="theme-toggle-btn" onclick="toggleTheme()">
+                        <span class="theme-icon-inner">☀️</span>
+                    </button>
+                </div>
+                <div class="std-title">YOUR APPS</div>
+                <div class="std-header-right">
+                    <div class="page-counter">8/8</div>
+                </div>
+            </header>
+
+            <!-- 2. BODY -->
+            <main class="std-body">
+                <!-- Hero -->
+                <div style="text-align:center; margin-bottom:20px;">
+                    <div style="font-size:2.5rem; margin-bottom:5px;">📲</div>
+                    <h2 style="margin:0; font-size:1.2rem; color:var(--color-text-main);">Recommended Apps</h2>
+                    <p style="margin:8px 0 0; color:var(--color-text-muted); font-size:0.8rem;">
+                        Curated for <span id="app-os-badge"
+                            style="background:#3498db; color:#fff; padding:2px 8px; border-radius:10px; font-size:0.7rem;">iOS</span>
+                        based on your profile
+                    </p>
+                </div>
+
+                <!-- Category Tabs -->
+                <div id="app-category-tabs"
+                    style="display:flex; gap:8px; overflow-x:auto; margin-bottom:20px; padding-bottom:5px;">
+                    <button class="app-tab active" data-category="all" onclick="filterApps('all')">All</button>
+                    <button class="app-tab" data-category="mf" onclick="filterApps('mf')">Mutual Funds</button>
+                    <button class="app-tab" data-category="stocks" onclick="filterApps('stocks')">Stocks</button>
+                    <button class="app-tab" data-category="budget" onclick="filterApps('budget')">Budgeting</button>
+                    <button class="app-tab" data-category="gold" onclick="filterApps('gold')">Gold</button>
+                </div>
+
+                <!-- App Cards Grid -->
+                <div id="app-cards-container"
+                    style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; margin-bottom:20px;">
+                    <!-- JS injects app cards -->
+                </div>
+
+                <!-- Why These Apps -->
+                <div class="card"
+                    style="padding:15px; background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:12px; margin-bottom:20px;">
+                    <h3 style="margin:0 0 10px 0; font-size:0.85rem; color:var(--color-text-main);">
+                        🎯 Why These Apps?
+                    </h3>
+                    <div id="app-reasoning" style="font-size:0.75rem; color:var(--color-text-muted); line-height:1.6;">
+                        <div style="margin-bottom:8px;">✅ <strong>Low cost</strong> - Minimal fees for maximum returns
+                        </div>
+                        <div style="margin-bottom:8px;">✅ <strong>SEBI Registered</strong> - Safe and compliant</div>
+                        <div>✅ <strong>User friendly</strong> - Easy for beginners</div>
+                    </div>
+                </div>
+
+                <!-- Disclaimer -->
+                <div
+                    style="padding:10px; background:rgba(231,76,60,0.1); border-radius:8px; border-left:3px solid #e74c3c; font-size:0.65rem; color:var(--color-text-muted);">
+                    ⚠️ <strong>Disclaimer:</strong> These are suggestions, not financial advice. All apps are SEBI
+                    registered. Mutual fund investments are subject to market risks.
+                </div>
+            </main>
+
+            <!-- 3. FOOTER -->
+            <footer class="std-footer">
+                <button class="std-cta" onclick="shareFullReport()"
+                    style="background:linear-gradient(135deg, #9b59b6, #3498db);">
+                    📤 SHARE MY COMPLETE REPORT
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- App Tab Styles -->
+    <style>
+        .app-tab {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            color: var(--color-text-main);
+        }
+
+        .app-tab:hover {
+            border-color: var(--color-primary);
+        }
+
+        .app-tab.active {
+            background: var(--color-primary);
+            color: #fff;
+            border-color: var(--color-primary);
+        }
+
+        .app-card {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .app-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .app-card-name {
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: var(--color-text-main);
+        }
+
+        .app-card-desc {
+            font-size: 0.7rem;
+            color: var(--color-text-muted);
+            margin-bottom: 8px;
+        }
+
+        .app-card-rating {
+            font-size: 0.7rem;
+            color: #f1c40f;
+            margin-bottom: 8px;
+        }
+
+        .app-card-btn {
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
     <script src="data_engine.js"></script>
