@@ -1833,6 +1833,99 @@ function updateGoalTimeline() {
     // Remove old Legend container if empty
     const legDiv = document.querySelector('.scenario-legend');
     if (legDiv) legDiv.innerHTML = "";
+
+    // 8. FINANCIAL GAP ANALYSIS (Portfolio Showcase: shows shortfall vs goal)
+    renderFinancialGap(targetCorpus, totalMonthlySIP, totalCorpus, baseRate, baseYears);
+}
+
+// ===================================
+// FINANCIAL GAP ANALYSIS
+// Shows projected corpus vs target with visual progress bar
+// ===================================
+function renderFinancialGap(targetCorpusL, monthlySIP, initialCorpus, annualRate, targetYears) {
+    const gapVisual = document.getElementById('gap-visual');
+    const gapDetails = document.getElementById('gap-details');
+    if (!gapVisual || !gapDetails) return;
+
+    // Calculate projected corpus at goal timeline
+    const years = Math.min(parseFloat(targetYears) || 10, 30);
+    const monthlyRate = annualRate / 12;
+    const months = years * 12;
+
+    // Future Value calculation
+    let projectedCorpus = initialCorpus;
+    for (let m = 0; m < months; m++) {
+        projectedCorpus = projectedCorpus * (1 + monthlyRate) + monthlySIP;
+    }
+    projectedCorpus = projectedCorpus / 100000; // Convert to Lakhs
+
+    const targetL = targetCorpusL;
+    const gap = Math.max(0, targetL - projectedCorpus);
+    const progressPercent = Math.min(100, (projectedCorpus / targetL) * 100);
+    const isGoalMet = progressPercent >= 100;
+
+    // Progress bar color based on progress
+    let barColor = '#e74c3c'; // Red
+    if (progressPercent >= 80) barColor = '#f39c12'; // Orange  
+    if (progressPercent >= 100) barColor = '#27ae60'; // Green
+
+    gapVisual.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.75rem;">
+            <span style="color:var(--color-text-muted);">Current Progress</span>
+            <span style="color:${barColor}; font-weight:bold;">${progressPercent.toFixed(0)}%</span>
+        </div>
+        <div style="height:12px; background:var(--color-bg); border-radius:6px; overflow:hidden; position:relative;">
+            <div style="width:${progressPercent}%; height:100%; background:${barColor}; border-radius:6px; transition:width 0.5s;"></div>
+            ${progressPercent < 100 ? `
+                <div style="position:absolute; right:5px; top:50%; transform:translateY(-50%); font-size:0.6rem; color:var(--color-text-muted);">
+                    🎯 Target
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    if (isGoalMet) {
+        gapDetails.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; color:#27ae60; font-weight:bold;">
+                <span>✅ Goal Achievable!</span>
+            </div>
+            <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div>
+                    <div style="color:var(--color-text-muted);">Projected</div>
+                    <div style="font-size:1rem; font-weight:bold; color:#27ae60;">₹${projectedCorpus.toFixed(1)}L</div>
+                </div>
+                <div>
+                    <div style="color:var(--color-text-muted);">Target</div>
+                    <div style="font-size:1rem; font-weight:bold;">₹${targetL}L</div>
+                </div>
+            </div>
+            <div style="margin-top:10px; padding:8px; background:rgba(39,174,96,0.1); border-radius:6px; border-left:3px solid #27ae60;">
+                💡 You're on track to reach your goal in <strong>${years.toFixed(1)} years</strong>!
+            </div>
+        `;
+    } else {
+        const monthlyGapSIP = Math.round(gap * 100000 / (((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate)));
+
+        gapDetails.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; text-align:center;">
+                <div>
+                    <div style="color:var(--color-text-muted);">Projected</div>
+                    <div style="font-size:0.9rem; font-weight:bold; color:${barColor};">₹${projectedCorpus.toFixed(1)}L</div>
+                </div>
+                <div>
+                    <div style="color:var(--color-text-muted);">Gap</div>
+                    <div style="font-size:0.9rem; font-weight:bold; color:#e74c3c;">₹${gap.toFixed(1)}L</div>
+                </div>
+                <div>
+                    <div style="color:var(--color-text-muted);">Target</div>
+                    <div style="font-size:0.9rem; font-weight:bold;">₹${targetL}L</div>
+                </div>
+            </div>
+            <div style="margin-top:12px; padding:10px; background:rgba(231,76,60,0.1); border-radius:6px; border-left:3px solid #e74c3c;">
+                💡 <strong>Close the gap:</strong> Add ₹${(monthlyGapSIP / 1000).toFixed(1)}k/month more SIP to reach your goal on time.
+            </div>
+        `;
+    }
 }
 
 // Alias for backwards compatibility
@@ -1961,7 +2054,7 @@ function initGrowthRace(bearY, baseY, bullY) {
     draw();
 }
 
-// === WEALTH CHART (Motilal Style) ===
+// === WEALTH CHART (Monte Carlo Style - 3 Scenarios) ===
 let wealthChartInstance = null;
 
 function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
@@ -1970,39 +2063,38 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
 
     if (wealthChartInstance) wealthChartInstance.destroy();
 
-    // Generate Data Points
+    // Scenario Returns (CAGR)
+    const SCENARIOS = {
+        bear: { rate: 0.08, color: '#ef9a9a', label: 'Bear (8%)' },
+        base: { rate: 0.12, color: '#ffe082', label: 'Base (12%)' },
+        bull: { rate: 0.16, color: '#a5d6a7', label: 'Bull (16%)' }
+    };
+
+    const maxYears = Math.min(30, Math.ceil(yearsInfo || 20) + 5);
     const labels = [];
     const investedData = [];
-    const estimatedData = [];
-    const rate = 0.12; // 12% Benchmark
+    const bearData = [];
+    const baseData = [];
+    const bullData = [];
 
-    // Determine max years for graph
-    const maxYears = Math.min(30, Math.ceil(yearsInfo || 20) + 5);
-
-    let multipliersFound = { "1.4x": false, "2x": false, "3x": false, "5x": false, "10x": false };
-    const points = [];
-
+    // Generate projections for each scenario
     for (let i = 0; i <= maxYears; i++) {
         labels.push(i + "y");
 
-        // Linear Investment
+        // Invested amount (linear)
         const invested = initialCorpus + (monthlySIP * 12 * i);
         investedData.push(invested);
 
-        // Compound Growth (Future Value)
-        const pComp = initialCorpus * Math.pow(1 + rate, i);
-        const sipComp = (monthlySIP * 12) * (Math.pow(1 + rate, i) - 1) / rate;
+        // Compound for each scenario
+        Object.entries(SCENARIOS).forEach(([key, scenario]) => {
+            const corpusGrowth = initialCorpus * Math.pow(1 + scenario.rate, i);
+            const sipGrowth = (monthlySIP * 12) * (Math.pow(1 + scenario.rate, i) - 1) / (scenario.rate || 0.01);
+            const total = Math.round(corpusGrowth + sipGrowth);
 
-        const estimated = Math.round(pComp + sipComp);
-        estimatedData.push(estimated);
-
-        // Check for Multipliers
-        const ratio = estimated / (invested || 1);
-        if (ratio >= 1.4 && !multipliersFound["1.4x"]) { points.push({ x: i, y: estimated, label: "1.4X" }); multipliersFound["1.4x"] = true; }
-        else if (ratio >= 2.0 && !multipliersFound["2x"]) { points.push({ x: i, y: estimated, label: "2X" }); multipliersFound["2x"] = true; }
-        else if (ratio >= 3.0 && !multipliersFound["3x"]) { points.push({ x: i, y: estimated, label: "3X" }); multipliersFound["3x"] = true; }
-        else if (ratio >= 5.0 && !multipliersFound["5x"]) { points.push({ x: i, y: estimated, label: "5X" }); multipliersFound["5x"] = true; }
-        else if (ratio >= 10.0 && !multipliersFound["10x"]) { points.push({ x: i, y: estimated, label: "10X" }); multipliersFound["10x"] = true; }
+            if (key === 'bear') bearData.push(total);
+            else if (key === 'base') baseData.push(total);
+            else if (key === 'bull') bullData.push(total);
+        });
     }
 
     try {
@@ -2011,24 +2103,49 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
             data: {
                 labels: labels,
                 datasets: [
+                    // Bull scenario (top line with light fill)
                     {
-                        label: 'Estimated Value (12%)',
-                        data: estimatedData,
-                        borderColor: '#f1c40f', // Motilal Gold
-                        backgroundColor: 'rgba(241, 196, 15, 0.1)',
-                        borderWidth: 3,
+                        label: '🚀 Bull (16% CAGR)',
+                        data: bullData,
+                        borderColor: SCENARIOS.bull.color,
+                        backgroundColor: 'rgba(165, 214, 167, 0.15)',
+                        borderWidth: 2,
                         tension: 0.4,
-                        fill: true,
+                        fill: '+1', // Fill to base
                         pointRadius: 0
                     },
+                    // Base scenario (middle - primary line)
                     {
-                        label: 'Invested Amount',
+                        label: '📊 Base (12% CAGR)',
+                        data: baseData,
+                        borderColor: SCENARIOS.base.color,
+                        backgroundColor: 'rgba(255, 224, 130, 0.2)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: '+1', // Fill to bear
+                        pointRadius: 0
+                    },
+                    // Bear scenario (bottom line)
+                    {
+                        label: '🐻 Bear (8% CAGR)',
+                        data: bearData,
+                        borderColor: SCENARIOS.bear.color,
+                        backgroundColor: 'rgba(239, 154, 154, 0.15)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: 'origin',
+                        pointRadius: 0
+                    },
+                    // Invested amount (dashed)
+                    {
+                        label: '💰 Invested',
                         data: investedData,
-                        borderColor: '#e67e22', // Orange
+                        borderColor: '#888',
                         borderWidth: 2,
                         borderDash: [5, 5],
                         tension: 0,
-                        pointRadius: 0
+                        pointRadius: 0,
+                        fill: false
                     }
                 ]
             },
@@ -2037,60 +2154,54 @@ function renderWealthChart(monthlySIP, initialCorpus, yearsInfo) {
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { labels: { color: '#888' } },
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            color: '#888',
+                            boxWidth: 12,
+                            font: { size: 10 }
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: function (context) {
                                 let label = context.dataset.label || '';
-                                if (label) { label += ': '; }
                                 if (context.parsed.y !== null) {
-                                    label += '₹' + (context.parsed.y / 100000).toFixed(2) + 'L';
+                                    const lakhs = (context.parsed.y / 100000).toFixed(1);
+                                    label += ': ₹' + lakhs + 'L';
                                 }
                                 return label;
+                            },
+                            afterBody: function (context) {
+                                const yearIdx = context[0].dataIndex;
+                                const invested = investedData[yearIdx];
+                                const base = baseData[yearIdx];
+                                const multiplier = (base / invested).toFixed(1);
+                                return [`\n💡 ${multiplier}x your investment`];
                             }
                         }
                     },
                 },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#666' } },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#666' }
+                    },
                     y: {
-                        grid: { color: '#333' },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
                         ticks: {
                             color: '#666',
-                            callback: function (value) { return '₹' + (value / 100000).toFixed(0) + 'L'; }
+                            callback: function (value) {
+                                if (value >= 10000000) return '₹' + (value / 10000000).toFixed(1) + 'Cr';
+                                return '₹' + (value / 100000).toFixed(0) + 'L';
+                            }
                         }
                     }
                 }
-            },
-            plugins: [{
-                id: 'customLabels',
-                afterDraw: (chart) => {
-                    const ctx = chart.ctx;
-                    points.forEach(p => {
-                        const meta = chart.getDatasetMeta(0);
-                        if (p.x < meta.data.length && meta.data[p.x]) {
-                            const x = meta.data[p.x].x;
-                            const y = meta.data[p.x].y;
-
-                            ctx.fillStyle = "#f1c40f";
-                            ctx.beginPath();
-                            ctx.arc(x, y, 6, 0, 2 * Math.PI);
-                            ctx.fill();
-
-                            const textMetrics = ctx.measureText(p.label);
-                            ctx.fillStyle = "rgba(255,255,255,0.9)";
-                            ctx.fillRect(x - textMetrics.width / 2 - 2, y - 22, textMetrics.width + 4, 12);
-
-                            ctx.fillStyle = "black";
-                            ctx.font = "bold 10px Arial";
-                            ctx.textAlign = "center";
-                            ctx.fillText(p.label, x, y - 12);
-                        }
-                    });
-                }
-            }]
+            }
         });
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error('Chart error:', e); }
 }
 
 // ==========================================
