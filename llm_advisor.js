@@ -66,11 +66,35 @@ async function runClientSideGemini(context, question) {
     const MODEL = "gemma-3-27b-it";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
 
+    // Character-specific prompts (simplified version for client-side)
+    const PERSONA_STYLES = {
+        baburao: { name: "Baburao", style: "Chaotic landlord. Uses 'Are baba!', 'Khopdi tod!'" },
+        raju: { name: "Raju", style: "Street-smart schemer. Uses 'Scheme kya hai?'" },
+        shyam: { name: "Shyam", style: "Gentle middle-class. Uses 'Sochna padega'" },
+        pushpa: { name: "Pushpa Raj", style: "Intense hustler. Uses 'Jhukega nahi!'" },
+        circuit: { name: "Circuit", style: "Loyal sidekick. Uses 'Bhai bole toh...'" },
+        munna: { name: "Munna Bhai", style: "Big-hearted tapori. Uses 'Jaadu ki jhappi'" },
+        poo: { name: "Poo", style: "Sassy Hinglish queen. Uses 'Tell me how it is!'" },
+        chatur: { name: "Chatur", style: "Competitive topper. Uses 'All Izz Well'" },
+        raj: { name: "Raj Malhotra", style: "Romantic NRI. Uses 'Bade bade deshon mein...'" },
+        bunny: { name: "Bunny", style: "Travel-obsessed. Uses 'Zindagi na milegi dobara'" },
+        geet: { name: "Geet", style: "Impulsive. Uses 'Main apni favourite hoon!'" },
+        rani: { name: "Rani", style: "Growing confident. Uses 'Ab main khud ki rani hoon'" },
+        veeru: { name: "Veeru", style: "Brave gambler. Uses 'Chal Basanti'" },
+        rancho: { name: "Rancho", style: "Genius minimalist. Uses 'Aal izz well'" },
+        simran: { name: "Simran", style: "Traditional dreamer. Uses 'Papa kehte hain'" },
+        farhan: { name: "Farhan", style: "Passion seeker. Uses 'Dil chahta hai'" }
+    };
+
+    const persona = context.persona?.toLowerCase() || 'shyam';
+    const char = PERSONA_STYLES[persona] || PERSONA_STYLES.shyam;
+
     const systemPrompt = `
-        You are 'Jigri Advisor', a friendly Indian financial expert.
+        You are ${char.name} from Bollywood, now a financial advisor.
+        STYLE: ${char.style}
         USER: ${JSON.stringify(context)}
         QUESTION: ${question}
-        Keep it brief and helpful.
+        Stay in character, be helpful, mix Hindi/English. Keep under 150 words.
     `;
 
     const response = await fetch(API_URL, {
