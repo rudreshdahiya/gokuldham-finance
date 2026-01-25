@@ -726,6 +726,176 @@
                 </div>
 
             </main>
+
+            <!-- 3. FOOTER -->
+            <footer class="std-footer">
+                <button class="std-cta" id="btn-to-page-7" onclick="goToPage(7)">
+                    ✨ SEE MY PERSONALIZED PLAN
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ==============================================
+         Page 7: PERSONALIZATION GAP (Plan v1 vs v2)
+         ============================================== -->
+    <div id="ui-page-7" class="ui-screen hidden">
+        <div class="std-container">
+            <!-- 1. HEADER -->
+            <header class="std-header">
+                <div class="std-header-left">
+                    <div class="std-back-btn" onclick="goToPage(6)">❮</div>
+                    <button class="theme-toggle-btn" onclick="toggleTheme()">
+                        <span class="theme-icon-inner">☀️</span>
+                    </button>
+                </div>
+                <div class="std-title">YOUR UPGRADE</div>
+                <div class="std-header-right">
+                    <div class="page-counter">7/8</div>
+                </div>
+            </header>
+
+            <!-- 2. BODY -->
+            <main class="std-body">
+                <!-- Hero Banner -->
+                <div
+                    style="text-align:center; margin-bottom:25px; padding:20px; background:linear-gradient(135deg, rgba(46,204,113,0.15), rgba(52,152,219,0.15)); border-radius:16px; border:1px solid var(--color-border);">
+                    <div style="font-size:2rem; margin-bottom:10px;">🎯</div>
+                    <h2 style="margin:0; font-size:1.3rem; color:var(--color-text-main);">Your Personalized Plan</h2>
+                    <p style="margin:8px 0 0; color:var(--color-text-muted); font-size:0.85rem;">
+                        Improved by <span id="improvement-percent" style="color:#2ecc71; font-weight:bold;">analyzing
+                            your chat</span>
+                    </p>
+                </div>
+
+                <!-- Comparison Cards -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+                    <!-- Plan v1 (Algorithm) -->
+                    <div class="card"
+                        style="padding:15px; background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:12px; opacity:0.7;">
+                        <div
+                            style="font-size:0.7rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">
+                            🤖 Algorithm's Plan
+                        </div>
+                        <div id="plan-v1-allocation" style="font-size:0.85rem; margin-bottom:10px;">
+                            <div>Equity: <span id="v1-equity">50</span>%</div>
+                            <div>Debt: <span id="v1-debt">30</span>%</div>
+                            <div>Gold: <span id="v1-gold">20</span>%</div>
+                        </div>
+                        <div style="font-size:0.75rem; color:var(--color-text-muted);">
+                            Timeline: <span id="v1-years">15</span> years
+                        </div>
+                    </div>
+
+                    <!-- Plan v2 (Personalized) -->
+                    <div class="card"
+                        style="padding:15px; background:var(--color-bg-card); border:2px solid #2ecc71; border-radius:12px; position:relative;">
+                        <div
+                            style="position:absolute; top:-10px; right:10px; background:#2ecc71; color:#fff; font-size:0.6rem; padding:3px 8px; border-radius:10px; font-weight:bold;">
+                            ✨ UPGRADED
+                        </div>
+                        <div
+                            style="font-size:0.7rem; color:#2ecc71; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">
+                            🎯 Your Plan
+                        </div>
+                        <div id="plan-v2-allocation" style="font-size:0.85rem; margin-bottom:10px; font-weight:bold;">
+                            <div>Equity: <span id="v2-equity">60</span>%</div>
+                            <div>Debt: <span id="v2-debt">25</span>%</div>
+                            <div>Gold: <span id="v2-gold">15</span>%</div>
+                        </div>
+                        <div style="font-size:0.75rem; color:#2ecc71;">
+                            Timeline: <span id="v2-years">12</span> years 🚀
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gap Closure Visualization -->
+                <div class="card"
+                    style="padding:20px; background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:12px; margin-bottom:20px;">
+                    <h3 style="margin:0 0 15px 0; font-size:0.85rem; color:var(--color-text-main);">
+                        📊 Personalization Impact
+                    </h3>
+
+                    <!-- Improvement Bars -->
+                    <div id="improvement-metrics">
+                        <!-- Risk Alignment -->
+                        <div style="margin-bottom:15px;">
+                            <div
+                                style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.75rem;">
+                                <span>Risk Alignment</span>
+                                <span id="metric-risk" style="color:#2ecc71; font-weight:bold;">+15%</span>
+                            </div>
+                            <div style="height:8px; background:var(--color-bg); border-radius:4px; overflow:hidden;">
+                                <div id="bar-risk"
+                                    style="width:75%; height:100%; background:linear-gradient(90deg, #3498db, #2ecc71); border-radius:4px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Goal Optimization -->
+                        <div style="margin-bottom:15px;">
+                            <div
+                                style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.75rem;">
+                                <span>Goal Optimization</span>
+                                <span id="metric-goal" style="color:#2ecc71; font-weight:bold;">+20%</span>
+                            </div>
+                            <div style="height:8px; background:var(--color-bg); border-radius:4px; overflow:hidden;">
+                                <div id="bar-goal"
+                                    style="width:80%; height:100%; background:linear-gradient(90deg, #9b59b6, #2ecc71); border-radius:4px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Time Savings -->
+                        <div>
+                            <div
+                                style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:0.75rem;">
+                                <span>Time Savings</span>
+                                <span id="metric-time" style="color:#2ecc71; font-weight:bold;">3 years faster</span>
+                            </div>
+                            <div style="height:8px; background:var(--color-bg); border-radius:4px; overflow:hidden;">
+                                <div id="bar-time"
+                                    style="width:85%; height:100%; background:linear-gradient(90deg, #e74c3c, #2ecc71); border-radius:4px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Insights from Chat -->
+                <div class="card"
+                    style="padding:15px; background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:12px; margin-bottom:20px;">
+                    <h3 style="margin:0 0 12px 0; font-size:0.85rem; color:var(--color-text-main);">
+                        💡 Insights from Your Chat
+                    </h3>
+                    <div id="chat-insights" style="font-size:0.8rem; color:var(--color-text-muted); line-height:1.6;">
+                        <div style="padding:8px; background:var(--color-bg); border-radius:8px; margin-bottom:8px;">
+                            ✅ You prefer <strong>lower volatility</strong> - adjusted debt allocation
+                        </div>
+                        <div style="padding:8px; background:var(--color-bg); border-radius:8px; margin-bottom:8px;">
+                            ✅ Travel is a priority - <strong>goal-based buckets</strong> added
+                        </div>
+                        <div style="padding:8px; background:var(--color-bg); border-radius:8px;">
+                            ✅ Risk tolerance matches <strong>aggressive growth</strong> profile
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Showcase: ML Explanation -->
+                <div
+                    style="padding:12px; background:rgba(52,152,219,0.1); border-radius:10px; border-left:3px solid #3498db; font-size:0.7rem; color:var(--color-text-muted);">
+                    <strong style="color:#3498db;">📈 How We Personalized:</strong>
+                    Bayesian updating from chat responses + behavioral feature extraction → asset allocation
+                    optimization using Modern Portfolio Theory (Markowitz).
+                </div>
+            </main>
+
+            <!-- 3. FOOTER -->
+            <footer class="std-footer">
+                <button class="std-cta" onclick="goToPage(8)">
+                    📲 GET APP RECOMMENDATIONS
+                </button>
+            </footer>
         </div>
     </div>
 
