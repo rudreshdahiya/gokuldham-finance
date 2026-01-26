@@ -20,19 +20,32 @@ async function startAdvisorChat(userContext) {
     try {
         // 1. Try Server API
         let data;
-        try {
-            const response = await fetch('/api/inspector', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    context,
-                    question: "Analyze my profile and give me a brutally honest critique in Bollywood style."
-                })
-            });
-            if (!response.ok) throw new Error("API Route Failed");
+        const response = await fetch('/api/inspector', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                context,
+                question: "Analyze my profile and give me a brutally honest critique in Bollywood style."
+            })
+        });
+
+        if (response.ok) {
             data = await response.json();
-        } catch (apiError) {
-            console.warn("Inspector API failed, trying Client-Side...", apiError);
+        } else {
+            // If server returned an error, try to get the message
+            const errorData = await response.json().catch(() => ({}));
+            const serverMsg = errorData.error || `Server Error ${response.status}`;
+
+            console.warn("Inspector API failed:", serverMsg);
+
+            // IF it's a 404 (Route not found) or 503 (Server down), THEN fallback
+            // But if it's 401 (Missing Key), show the message!
+            if (response.status === 401 || response.status === 403) {
+                appendMessage("system", "⚠️ API Key Error: " + serverMsg);
+                return;
+            }
+
+            console.info("Trying client-side fallback...");
             data = await runClientSideGemini(context, "Analyze my profile and give me a brutally honest critique in Bollywood style.");
         }
 
@@ -105,8 +118,14 @@ async function getEducationContext(question) {
 
 async function runClientSideGemini(context, question) {
     if (!CONFIG.GEMINI_API_KEY) {
-        throw new Error("Missing API Key in CONFIG.");
+        // More helpful error for local development
+        const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        const message = isLocal
+            ? "Missing API Key. For local testing, run 'vercel dev' or add your key to config.js temporarily (do not commit!)."
+            : "Advisor Connection Error. Please ensure GEMINI_API_KEY is set in Vercel settings.";
+        throw new Error(message);
     }
+    // ... rest of the function ...
 
     // Use direct REST API instead of SDK for maximum compatibility
     const MODEL = "gemini-2.0-flash";
