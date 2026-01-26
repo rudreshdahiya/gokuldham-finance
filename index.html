@@ -143,6 +143,32 @@
                     </div>
                 </div>
 
+                <!-- Gender and Location -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
+                    <div class="input-section"
+                        style="background:var(--color-bg-card); padding:12px; border-radius:8px; border:1px solid var(--color-border);">
+                        <label
+                            style="font-size:0.7rem; font-weight:bold; color:var(--color-text-muted); display:block; margin-bottom:6px;">GENDER</label>
+                        <select id="input-gender" onchange="GLOBAL_STATE.demographics.gender = this.value"
+                            style="width:100%; padding:8px; border:1px solid var(--color-border); border-radius:6px; background:var(--color-bg); color:var(--color-text-main); font-size:0.85rem;">
+                            <option value="male">👨 Male</option>
+                            <option value="female">👩 Female</option>
+                            <option value="other">🧑 Other</option>
+                        </select>
+                    </div>
+                    <div class="input-section"
+                        style="background:var(--color-bg-card); padding:12px; border-radius:8px; border:1px solid var(--color-border);">
+                        <label
+                            style="font-size:0.7rem; font-weight:bold; color:var(--color-text-muted); display:block; margin-bottom:6px;">LOCATION</label>
+                        <select id="input-location-type" onchange="GLOBAL_STATE.demographics.locationType = this.value"
+                            style="width:100%; padding:8px; border:1px solid var(--color-border); border-radius:6px; background:var(--color-bg); color:var(--color-text-main); font-size:0.85rem;">
+                            <option value="metro">🏙️ Metro City</option>
+                            <option value="small-city">🏘️ Small City</option>
+                            <option value="village">🌾 Village/Rural</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div style="text-align:center; margin:20px 0; font-weight:bold; font-size:var(--text-md);">SPENDING
                     BREAKDOWN (%)</div>
 
@@ -295,7 +321,7 @@
 
             <!-- 2. BODY -->
             <main class="std-body"
-                style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                style="display:flex; flex-direction:column; align-items:center; justify-content:flex-start; overflow-y:auto;">
                 <div class="persona-card"
                     style="width:100%; text-align:center; padding:30px 20px; border-radius:var(--radius-card); background:var(--color-bg-card); border:1px solid var(--color-border); box-shadow:var(--shadow-card);">
                     <div class="persona-header"
@@ -616,6 +642,14 @@
 
 
 
+                <!-- RIA Disclaimer -->
+                <div
+                    style="padding:12px; margin:20px 0; background:rgba(231,76,60,0.1); border-radius:8px; border-left:3px solid #e74c3c; font-size:0.65rem; color:var(--color-text-muted);">
+                    ⚠️ <strong>Important:</strong> This is an educational tool, not financial advice. We are NOT a SEBI
+                    Registered Investment Advisor. The suggestions shown are for learning purposes only. Please consult
+                    a certified financial planner before making investment decisions.
+                </div>
+
                 <div style="text-align:center; margin-top:30px; margin-bottom: 20px;">
                     <button class="btn-text" onclick="localStorage.clear(); location.reload();"
                         style="color:var(--color-danger); background:none; border:none; font-weight:bold; cursor:pointer;">
@@ -934,10 +968,12 @@
                 <!-- Category Tabs -->
                 <div id="app-category-tabs"
                     style="display:flex; gap:8px; overflow-x:auto; margin-bottom:20px; padding-bottom:5px;">
-                    <button class="app-tab active" data-category="all" onclick="filterApps('all')">All</button>
-                    <button class="app-tab" data-category="mf" onclick="filterApps('mf')">Mutual Funds</button>
+                    <button class="app-tab active" data-category="top3" onclick="filterApps('top3')">🎯 Top 3 For
+                        You</button>
+                    <button class="app-tab" data-category="all" onclick="filterApps('all')">All</button>
+                    <button class="app-tab" data-category="mf" onclick="filterApps('mf')">MFs</button>
                     <button class="app-tab" data-category="stocks" onclick="filterApps('stocks')">Stocks</button>
-                    <button class="app-tab" data-category="budget" onclick="filterApps('budget')">Budgeting</button>
+                    <button class="app-tab" data-category="budget" onclick="filterApps('budget')">Budget</button>
                     <button class="app-tab" data-category="gold" onclick="filterApps('gold')">Gold</button>
                 </div>
 
@@ -963,9 +999,11 @@
 
                 <!-- Disclaimer -->
                 <div
-                    style="padding:10px; background:rgba(231,76,60,0.1); border-radius:8px; border-left:3px solid #e74c3c; font-size:0.65rem; color:var(--color-text-muted);">
-                    ⚠️ <strong>Disclaimer:</strong> These are suggestions, not financial advice. All apps are SEBI
-                    registered. Mutual fund investments are subject to market risks.
+                    style="padding:12px; background:rgba(231,76,60,0.1); border-radius:8px; border-left:3px solid #e74c3c; font-size:0.65rem; color:var(--color-text-muted);">
+                    ⚠️ <strong>Disclaimer:</strong> We are NOT a SEBI Registered Investment Advisor (RIA). These are
+                    educational suggestions based on your inputs, not personalized financial advice. All apps listed are
+                    SEBI registered. Mutual fund investments are subject to market risks. Please consult a certified
+                    financial planner before investing.
                 </div>
             </main>
 

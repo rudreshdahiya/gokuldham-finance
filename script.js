@@ -230,6 +230,14 @@ function updateLedger(changedId, categoryKey) {
             document.getElementById(changedId).value = correctVal;
             GRANULAR_ALLOC[categoryKey] = correctVal;
             document.getElementById(`val-${categoryKey}`).innerText = correctVal + "%";
+
+            // FIX: Also update the amount label when clamping
+            const amtEl = document.getElementById(`amt-${categoryKey}`);
+            if (amtEl) {
+                const amt = Math.round((GLOBAL_STATE.income * correctVal) / 100);
+                amtEl.innerText = `(₹${amt.toLocaleString()})`;
+            }
+
             total = 100;
         }
     }
@@ -2079,6 +2087,13 @@ const FINTECH_APPS = [
         android: 'https://play.google.com/store/apps/details?id=com.zerodha.coin',
         tags: ['advanced', 'direct', 'low-cost']
     },
+    {
+        id: 'lxme', name: 'LXME', category: 'mf', icon: '💜', color: '#9333ea',
+        desc: 'Built for women investors', rating: 4.6, users: '10L+',
+        ios: 'https://apps.apple.com/app/lxme-invest-like-a-woman/id1552345678',
+        android: 'https://play.google.com/store/apps/details?id=com.lxme.app',
+        tags: ['women', 'beginner', 'sip', 'goal-tracking']
+    },
 
     // Stocks
     {
@@ -2193,6 +2208,10 @@ function renderAppRecommendations() {
     const riskScore = userVector[0];
     const savingsScore = userVector[5];
 
+    // Get gender and location from demographics
+    const gender = GLOBAL_STATE.demographics?.gender || 'male';
+    const locationType = GLOBAL_STATE.demographics?.locationType || 'metro';
+
     // Score apps based on user profile
     const scoredApps = FINTECH_APPS.map(app => {
         let score = app.rating * 10;
@@ -2204,14 +2223,24 @@ function renderAppRecommendations() {
         // Boost low-cost for high savers
         if (savingsScore > 50 && app.tags.includes('low-cost')) score += 10;
 
+        // Gender-based personalization: Boost women-focused apps for female users
+        if (gender === 'female' && app.tags.includes('women')) score += 25;
+
+        // Location-based personalization
+        if (locationType === 'village' || locationType === 'small-city') {
+            // Boost simpler, beginner-friendly apps for rural/small city users
+            if (app.tags.includes('beginner')) score += 10;
+            if (app.tags.includes('auto-save') || app.tags.includes('round-up')) score += 8;
+        }
+
         return { ...app, score };
     }).sort((a, b) => b.score - a.score);
 
     // Store for filtering
     window.SCORED_APPS = scoredApps;
 
-    // Render all apps initially
-    filterApps('all');
+    // Render top 3 apps initially (changed from 'all')
+    filterApps('top3');
 }
 
 function filterApps(category) {
@@ -2222,10 +2251,17 @@ function filterApps(category) {
         tab.classList.toggle('active', tab.dataset.category === category);
     });
 
-    // Filter apps
-    const apps = (window.SCORED_APPS || FINTECH_APPS)
-        .filter(app => category === 'all' || app.category === category)
-        .slice(0, 8); // Max 8 apps per view
+    // Filter apps - 'top3' shows top 3 personalized recommendations
+    let apps;
+    if (category === 'top3') {
+        apps = (window.SCORED_APPS || FINTECH_APPS).slice(0, 3); // Top 3 only
+    } else if (category === 'all') {
+        apps = (window.SCORED_APPS || FINTECH_APPS).slice(0, 6);
+    } else {
+        apps = (window.SCORED_APPS || FINTECH_APPS)
+            .filter(app => app.category === category)
+            .slice(0, 6);
+    }
 
     // Detect OS for links
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
