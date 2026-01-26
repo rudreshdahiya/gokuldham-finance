@@ -32,21 +32,27 @@ async function startAdvisorChat(userContext) {
         if (response.ok) {
             data = await response.json();
         } else {
-            // If server returned an error, try to get the message
+            // Get the server error message
             const errorData = await response.json().catch(() => ({}));
-            const serverMsg = errorData.error || `Server Error ${response.status}`;
+            const serverMsg = errorData.error || `Error ${response.status}: ${response.statusText}`;
 
             console.warn("Inspector API failed:", serverMsg);
 
-            // IF it's a 404 (Route not found) or 503 (Server down), THEN fallback
-            // But if it's 401 (Missing Key), show the message!
-            if (response.status === 401 || response.status === 403) {
-                appendMessage("system", "⚠️ API Key Error: " + serverMsg);
+            // CRITICAL: Only fallback if the API route is missing (404) 
+            // If it's 500, 401, 403, etc., the server is alive and reporting a specific problem.
+            if (response.status === 404) {
+                console.info("API Route not found, trying client-side fallback...");
+                try {
+                    data = await runClientSideGemini(context, "Analyze my profile and give me a brutally honest critique in Bollywood style.");
+                } catch (fallbackError) {
+                    appendMessage("system", "⚠️ Connection failed: " + fallbackError.message);
+                    return;
+                }
+            } else {
+                // Show the specific server error instead of falling back to a failing client-side key
+                appendMessage("system", "⚠️ Advisor Error: " + serverMsg);
                 return;
             }
-
-            console.info("Trying client-side fallback...");
-            data = await runClientSideGemini(context, "Analyze my profile and give me a brutally honest critique in Bollywood style.");
         }
 
         if (data.error) {
