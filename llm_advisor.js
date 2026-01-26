@@ -56,6 +56,52 @@ function getAppRecommendations() {
     sendUserMessage();
 }
 
+/* --- EDUCATION RAG: Retrieve from NISM/Varsity knowledge --- */
+async function getEducationContext(question) {
+    if (!supabaseClient) return null;
+
+    try {
+        // First, get embedding for the question
+        const embedResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${CONFIG.GEMINI_API_KEY}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'models/text-embedding-004',
+                    content: { parts: [{ text: question }] }
+                })
+            }
+        );
+
+        if (!embedResponse.ok) return null;
+
+        const embedData = await embedResponse.json();
+        const queryVector = embedData?.embedding?.values;
+
+        if (!queryVector) return null;
+
+        // Search education_knowledge via Supabase RPC
+        const { data: results, error } = await supabaseClient.rpc('match_education_content', {
+            query_embedding: queryVector,
+            match_count: 3,
+            category_filter: null
+        });
+
+        if (error || !results?.length) return null;
+
+        // Format as educational context
+        const educationContext = results.map(r =>
+            `📚 [${r.source}, Page ${r.page_number}]:\n${r.content}`
+        ).join('\n\n---\n\n');
+
+        return educationContext;
+
+    } catch (e) {
+        console.warn('Education RAG error:', e);
+        return null;
+    }
+}
 
 async function runClientSideGemini(context, question) {
     if (!CONFIG.GEMINI_API_KEY) {
@@ -63,8 +109,25 @@ async function runClientSideGemini(context, question) {
     }
 
     // Use direct REST API instead of SDK for maximum compatibility
-    const MODEL = "gemma-3-27b";
+    const MODEL = "gemini-2.0-flash";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
+
+    // Retrieve educational context from NISM/Varsity RAG
+    let educationBlock = "";
+    try {
+        const eduContext = await getEducationContext(question);
+        if (eduContext) {
+            educationBlock = `
+            
+EDUCATIONAL REFERENCE (from NISM & Varsity - use this to educate the user):
+${eduContext}
+
+IMPORTANT: Use the above reference to teach the user something new. Cite the source (e.g., "According to NISM...").
+            `;
+        }
+    } catch (e) {
+        console.warn('Education RAG failed:', e);
+    }
 
     // Character-specific prompts (simplified version for client-side)
     const PERSONA_STYLES = {
@@ -90,11 +153,18 @@ async function runClientSideGemini(context, question) {
     const char = PERSONA_STYLES[persona] || PERSONA_STYLES.shyam;
 
     const systemPrompt = `
-        You are ${char.name} from Bollywood, now a financial advisor.
+        You are ${char.name} from Bollywood, now a financial EDUCATOR (not advisor).
         STYLE: ${char.style}
-        USER: ${JSON.stringify(context)}
+        USER PROFILE: ${JSON.stringify(context)}
         QUESTION: ${question}
-        Stay in character, be helpful, mix Hindi/English. Keep under 150 words.
+        ${educationBlock}
+        
+        YOUR GOAL: EDUCATE the user so they can make their own decisions. 
+        - Explain the WHY behind everything
+        - Teach concepts, don't just give answers
+        - If you have educational reference, cite it (e.g., "NISM says...")
+        - Stay in character, mix Hindi/English
+        - Keep under 200 words
     `;
 
     const response = await fetch(API_URL, {
