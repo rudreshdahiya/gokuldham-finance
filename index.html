@@ -960,21 +960,26 @@
             <main class="std-body">
                 <!-- Hero -->
                 <div style="text-align:center; margin-bottom:20px;">
-                    <div style="font-size:2.5rem; margin-bottom:5px;">📲</div>
-                    <h2 style="margin:0; font-size:1.2rem; color:var(--color-text-main);">Recommended Apps</h2>
+                    <div style="font-size:2.5rem; margin-bottom:5px;">🔍</div>
+                    <h2 style="margin:0; font-size:1.2rem; color:var(--color-text-main);">AI-Powered App Suggestions
+                    </h2>
                     <p style="margin:8px 0 0; color:var(--color-text-muted); font-size:0.8rem;">
-                        Curated for <span id="app-os-badge"
+                        Personalized for <span id="app-os-badge"
                             style="background:#3498db; color:#fff; padding:2px 8px; border-radius:10px; font-size:0.7rem;">iOS</span>
-                        based on your profile
+                        based on YOUR profile
                     </p>
                 </div>
+
+                <!-- Live Search Button -->
+                <button onclick="getLiveAppRecommendations()"
+                    style="width:100%; padding:15px; margin-bottom:15px; background:linear-gradient(135deg, #9b59b6, #3498db); color:white; border:none; border-radius:12px; font-weight:bold; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    🔍 Search Live For Me (AI-Powered)
+                </button>
 
                 <!-- Category Tabs -->
                 <div id="app-category-tabs"
                     style="display:flex; gap:8px; overflow-x:auto; margin-bottom:20px; padding-bottom:5px;">
-                    <button class="app-tab active" data-category="top3" onclick="filterApps('top3')">🎯 Top 3 For
-                        You</button>
-                    <button class="app-tab" data-category="all" onclick="filterApps('all')">All</button>
+                    <button class="app-tab active" data-category="top3" onclick="filterApps('top3')">📋 Curated</button>
                     <button class="app-tab" data-category="mf" onclick="filterApps('mf')">MFs</button>
                     <button class="app-tab" data-category="stocks" onclick="filterApps('stocks')">Stocks</button>
                     <button class="app-tab" data-category="budget" onclick="filterApps('budget')">Budget</button>

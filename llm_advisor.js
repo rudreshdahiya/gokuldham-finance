@@ -191,6 +191,153 @@ function appendMessage(role, text) {
 window.startAdvisorChat = startAdvisorChat;
 window.sendUserMessage = sendUserMessage;
 window.findPeerInsights = findPeerInsights;
+window.getLiveAppRecommendations = getLiveAppRecommendations;
+
+/* --- LIVE APP RECOMMENDATIONS (Gemini with Grounding) --- */
+async function getLiveAppRecommendations() {
+    const container = document.getElementById('app-cards-container');
+    if (!container) return;
+
+    // Show loading state
+    container.innerHTML = `
+        <div style="grid-column: span 2; text-align:center; padding:40px;">
+            <div style="font-size:2rem; margin-bottom:10px;">🔍</div>
+            <div style="color:var(--color-text-muted);">Searching for the best apps for YOUR profile...</div>
+        </div>
+    `;
+
+    // Build user profile parameters
+    const personaResult = GLOBAL_STATE.personaResult || {};
+    const userVector = personaResult.userVector || [50, 50, 50, 50, 50, 50];
+    const gender = GLOBAL_STATE.demographics?.gender || 'not specified';
+    const locationType = GLOBAL_STATE.demographics?.locationType || 'metro';
+    const goals = GLOBAL_STATE.demographics?.goals || [];
+    const persona = GLOBAL_STATE.persona || 'balanced';
+    const income = GLOBAL_STATE.income || 50000;
+
+    // Detect OS
+    const userAgent = navigator.userAgent || navigator.vendor;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+    const os = isIOS ? 'iOS' : 'Android';
+
+    // Build the search prompt
+    const searchPrompt = `
+        Search the web for the TOP 3 best fintech/investment apps in India for this user profile:
+        
+        USER PROFILE:
+        - Gender: ${gender}
+        - Location: ${locationType} (${locationType === 'village' ? 'rural area, needs simple UI and vernacular support' : locationType === 'metro' ? 'tech-savvy urban user' : 'semi-urban, moderate tech comfort'})
+        - Risk Tolerance: ${userVector[0] > 60 ? 'High (comfortable with volatility)' : userVector[0] < 40 ? 'Low (prefers stability)' : 'Moderate'}
+        - Savings Discipline: ${userVector[5] > 50 ? 'Strong' : 'Building'}
+        - Monthly Income: ₹${income.toLocaleString()}
+        - Goals: ${goals.join(', ') || 'Wealth building'}
+        - Platform: ${os}
+        
+        REQUIREMENTS:
+        1. Only suggest SEBI-registered, legitimate apps
+        2. For each app, explain WHY it's good for THIS specific user profile
+        3. Include: App name, what it does, why it suits this user, and a key learning tip
+        4. ${gender === 'female' ? 'Prioritize women-focused platforms like LXME if relevant' : ''}
+        5. ${locationType === 'village' ? 'Prefer apps with Hindi/vernacular support and simple UX' : ''}
+        
+        Format as JSON array:
+        [
+            {
+                "name": "App Name",
+                "category": "MF/Stocks/Budget/Gold",
+                "why_for_you": "Specific reason for this user",
+                "learning_tip": "One finance concept they'll learn using this app",
+                "icon": "emoji"
+            }
+        ]
+        
+        Return ONLY the JSON array, no other text.
+    `;
+
+    try {
+        const MODEL = "gemini-2.0-flash";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: searchPrompt }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 1024
+                },
+                // Enable grounding with Google Search
+                tools: [{
+                    googleSearch: {}
+                }]
+            })
+        });
+
+        if (!response.ok) throw new Error('API request failed');
+
+        const data = await response.json();
+        let textResponse = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+        // Clean the JSON response
+        textResponse = textResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+        let apps;
+        try {
+            apps = JSON.parse(textResponse);
+        } catch (e) {
+            // Fallback to basic recommendations if JSON parse fails
+            apps = [
+                { name: "Groww", category: "MF", icon: "🌱", why_for_you: "Start with zero-commission mutual funds", learning_tip: "Learn about SIPs - systematic investing" },
+                { name: "Zerodha", category: "Stocks", icon: "🪁", why_for_you: "India's largest broker with great learning resources", learning_tip: "Varsity module teaches stock market fundamentals" },
+                { name: "Jar", category: "Gold", icon: "🫙", why_for_you: "Build saving habit with round-up gold savings", learning_tip: "Understand digital gold as an asset class" }
+            ];
+        }
+
+        // Render the live recommendations
+        container.innerHTML = apps.slice(0, 3).map((app, index) => `
+            <div class="app-card" style="grid-column: span 2; background:var(--color-bg-card); border:1px solid var(--color-border); border-radius:12px; padding:16px; margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                    <div style="font-size:2rem;">${app.icon || '📱'}</div>
+                    <div>
+                        <div style="font-weight:bold; font-size:1rem;">${app.name}</div>
+                        <div style="font-size:0.7rem; color:var(--color-text-muted);">${app.category}</div>
+                    </div>
+                    <div style="margin-left:auto; background:var(--color-primary); color:white; padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:bold;">
+                        #${index + 1} For You
+                    </div>
+                </div>
+                
+                <div style="background:rgba(39,174,96,0.1); padding:10px; border-radius:8px; margin-bottom:10px; border-left:3px solid #27ae60;">
+                    <div style="font-size:0.7rem; color:#27ae60; font-weight:bold; margin-bottom:4px;">✅ Why this suits YOU:</div>
+                    <div style="font-size:0.8rem; color:var(--color-text-main);">${app.why_for_you}</div>
+                </div>
+                
+                <div style="background:rgba(52,152,219,0.1); padding:10px; border-radius:8px; border-left:3px solid #3498db;">
+                    <div style="font-size:0.7rem; color:#3498db; font-weight:bold; margin-bottom:4px;">📚 What you'll learn:</div>
+                    <div style="font-size:0.8rem; color:var(--color-text-main);">${app.learning_tip}</div>
+                </div>
+            </div>
+        `).join('');
+
+        // Add search timestamp
+        container.innerHTML += `
+            <div style="grid-column: span 2; text-align:center; font-size:0.6rem; color:var(--color-text-muted); margin-top:10px;">
+                🔄 Live search at ${new Date().toLocaleTimeString()} • Powered by Gemini
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('Live search error:', error);
+        container.innerHTML = `
+            <div style="grid-column: span 2; text-align:center; padding:20px; color:var(--color-text-muted);">
+                ⚠️ Couldn't search live. Showing curated suggestions instead.
+            </div>
+        `;
+        // Fallback to static recommendations
+        filterApps('top3');
+    }
+}
 
 /* --- VECTOR INTELLIGENCE (PEER MATCHING) --- */
 async function findPeerInsights(userContext) {

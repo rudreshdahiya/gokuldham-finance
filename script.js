@@ -1396,6 +1396,25 @@ function renderStrategyInsights(personaKey) {
         // Final note
         allocReason += `<br><em style="color:var(--color-text-muted); font-size:0.85rem;">All percentages clamped to safe ranges (Equity: 20-85%, Debt: 10-60%).</em>`;
 
+        // === EDUCATIONAL SECTION ===
+        allocReason += `<br><br>
+        <div style="background:rgba(52,152,219,0.1); padding:12px; border-radius:8px; border-left:3px solid #3498db; margin-top:10px;">
+            <div style="font-weight:bold; color:#3498db; margin-bottom:8px;">📚 LEARN FROM THIS (So You Can Do It Yourself)</div>
+            <div style="font-size:0.85rem; line-height:1.6;">
+                <strong>Rule 1:</strong> <em>Time Horizon = Risk Capacity</em><br>
+                More years = more room for market ups and downs = higher equity%.<br><br>
+                
+                <strong>Rule 2:</strong> <em>100 Minus Age</em><br>
+                A simple rule: Your equity% should roughly be (100 - your age). We refined this for you.<br><br>
+                
+                <strong>Rule 3:</strong> <em>Match Risk Tolerance to Allocation</em><br>
+                If you can't sleep when markets fall 20%, reduce equity. If you get excited, increase it.<br><br>
+                
+                <strong>Rule 4:</strong> <em>Goals Define Buckets</em><br>
+                Short-term goals (1-3 years) = Debt/FD. Medium (3-7 years) = Balanced. Long (7+ years) = Equity.
+            </div>
+        </div>`;
+
         reasonDiv.innerHTML = allocReason;
     }
 
