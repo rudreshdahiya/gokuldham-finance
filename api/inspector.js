@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 // Model Configuration - Using currently supported models
-const CHAT_MODEL = "gemini-1.5-flash";
+const CHAT_MODEL = "gemma-3-27b";
 const EMBED_MODEL = "text-embedding-004";
 
 export default async function handler(req, res) {
