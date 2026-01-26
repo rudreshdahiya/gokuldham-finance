@@ -1121,7 +1121,7 @@ function generateStrategy() {
 
     // 2. LOGIC STEP B: GENERATE RECOMMENDATION
     console.log("Generating Strategy...", GLOBAL_STATE);
-    goToPage(5);
+    goToPage(6);
 
     // Trigger Async Loaders
     runAssetAllocationEngine(tenure); // Pass calculated tenure

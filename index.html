@@ -44,7 +44,7 @@
                 </div>
                 <div class="std-title">OPEN LEDGER</div>
                 <div class="std-header-right">
-                    <div class="page-counter">1/6</div>
+                    <div class="page-counter">1/8</div>
                 </div>
             </header>
 
@@ -112,7 +112,7 @@
                 </div>
                 <div class="std-title">INPUT LEDGER</div>
                 <div class="std-header-right">
-                    <div class="page-counter">2/6</div>
+                    <div class="page-counter">2/8</div>
                 </div>
             </header>
 
@@ -315,7 +315,7 @@
                 </div>
                 <div class="std-title">YOUR PROFILE</div>
                 <div class="std-header-right">
-                    <div class="page-counter">3/6</div>
+                    <div class="page-counter">3/8</div>
                 </div>
             </header>
 
@@ -380,92 +380,56 @@
          Page 4: CONTEXT (Demographics) - Refactored V2.0
          ============================================== -->
     <div id="ui-page-4" class="ui-screen hidden">
-        <div class="std-container">
+        <div class="std-container" style="max-width: 1200px; height: 100vh; display: flex; flex-direction: column;">
             <!-- 1. HEADER -->
             <header class="std-header">
                 <div class="std-header-left">
                     <div class="std-back-btn" onclick="goToPage(3)">❮</div>
-                    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                    <button class="theme-toggle-btn" onclick="toggleTheme()">
                         <span class="theme-icon-inner">☀️</span>
                     </button>
                 </div>
-                <div class="std-title">PROFILE CONTEXT</div>
+                <div class="std-title">ADVISOR CHAT</div>
                 <div class="std-header-right">
-                    <div class="page-counter">4/6</div>
+                    <div class="page-counter">4/8</div>
                 </div>
             </header>
 
             <!-- 2. BODY -->
-            <main class="std-body">
-                <div class="receipt-header" style="margin-bottom:20px;">
-                    <div style="font-size:0.8rem; color:var(--color-text-muted); text-align:center;">To build your
-                        strategy, we need context.</div>
+            <main class="std-body"
+                style="flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; padding: 10px;">
+                <h3
+                    style="color:var(--color-primary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                    <img src="assets/inspector_avatar.png" style="width: 24px; height: 24px; border-radius: 50%;">
+                    Jigri Advisor <span style="font-size: 0.6rem; color: #2ecc71; margin-left: auto;">● Live
+                        Analysis</span>
+                </h3>
+
+                <!-- Chat History -->
+                <div id="chat-history-container"
+                    style="flex: 1; background: var(--color-bg); border-radius: 12px; padding: 15px; overflow-y: auto; border: 1px solid var(--color-border); margin-bottom: 15px;">
+                    <!-- Messages injected by llm_advisor.js -->
                 </div>
 
-                <!-- 2. BODY -->
-                <main class="std-body">
-                    <div class="input-section" style="margin-bottom:20px;">
-                        <label
-                            style="display:block; font-size:var(--text-sm); font-weight:bold; margin-bottom:8px; color:var(--color-text-main);">CURRENT
-                            AGE</label>
-                        <select id="input-age" class="modern-select" onchange="updateGoals()"
-                            style="width:100%; height:50px; padding:0 15px; border-radius:var(--radius-btn); border:1px solid var(--color-border); font-size:var(--text-md); background:#fff;">
-                            <option value="18-25">18-25 (Gen Z)</option>
-                            <option value="26-35" selected>26-35 (Millennial)</option>
-                            <option value="36-50">36-50 (Gen X)</option>
-                            <option value="50+">50+ (Boomer)</option>
-                        </select>
-                    </div>
-
-                    <div class="input-section" style="margin-bottom:20px;">
-                        <label
-                            style="display:block; font-size:var(--text-sm); font-weight:bold; margin-bottom:8px; color:var(--color-text-main);">SELECT
-                            YOUR STATE
-                            <span style="font-size:0.7rem; font-weight:normal; color:var(--color-text-muted);">(Search
-                                or scroll)</span></label>
-                        <select id="input-state" class="modern-select" onchange="updateStateContext()"
-                            style="width:100%; height:50px; padding:0 15px; border-radius:var(--radius-btn); border:1px solid var(--color-border); font-size:var(--text-md); background:#fff;">
-                            <!-- JS injects options here. First one should be placeholder -->
-                        </select>
-                        <!-- NEW: State Context Insight -->
-                        <div id="state-context-display"
-                            style="margin-top:10px; font-size:0.8rem; background:#f0fcf4; border:1px solid #c3e6cb; border-radius:4px; padding:8px; display:none;">
-                            <!-- Injected JS: "Expenses here are 20% higher..." -->
-                        </div>
-                    </div>
-
-                    <div class="input-section" style="margin-bottom:20px;">
-                        <label
-                            style="display:block; font-size:var(--text-sm); font-weight:bold; margin-bottom:8px; color:var(--color-text-main);">TOP
-                            2 FINANCIAL GOALS <span
-                                style="font-size:0.7rem; font-weight:normal; color:var(--color-text-muted);">(Select
-                                maximum 2)</span></label>
-
-                        <div id="goal-pills-container" class="goal-pills-wrapper"
-                            style="display:flex; flex-wrap:wrap; gap:10px;">
-                            <!-- Populated via JS -->
-                        </div>
-                        <!-- NEW: Goal Context Insight -->
-                        <div id="goal-context-display"
-                            style="margin-top:10px; font-size:0.8rem; color:#555; font-style:italic; display:none;">
-                            Goal Insight will appear here...
-                        </div>
-                        <div
-                            style="margin-top:15px; font-size:0.7rem; color:var(--color-text-muted); text-align:center; font-style:italic;">
-                            TIMELINES AND AMOUNTS ARE AVERAGES BASED ON TYPICAL USER DATA
-                        </div>
-                    </div>
-                </main>
-
-                <!-- 3. FOOTER -->
-                <footer class="std-footer" style="flex-direction:column; gap:10px; height:auto; padding:15px;">
-                    <button class="std-cta" onclick="generateStrategy()">
-                        GENERATE MASTER PLAN
+                <!-- Input -->
+                <div
+                    style="display:flex; width:100%; gap:10px; background:var(--color-bg-card); padding:10px; border-radius:30px; border:1px solid var(--color-border); box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                    <input type="text" id="chat-input-box" placeholder="Reply to advisor..."
+                        style="flex:1; background:transparent; border:none; padding:5px 10px; font-family:inherit; font-size:0.95rem; outline:none; color: var(--color-text-main);"
+                        onkeypress="if(event.key==='Enter') sendUserMessage()">
+                    <button id="chat-send-btn" onclick="sendUserMessage()"
+                        style="width:36px; height:36px; background:var(--color-primary); color:#fff; border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold; transition: transform 0.2s;">
+                        ➤
                     </button>
-                    <div style="font-size:0.75rem; color:var(--color-text-muted); text-align:center;">
-                        AI is designing your personalized strategy...
-                    </div>
-                </footer>
+                </div>
+            </main>
+
+            <!-- 3. FOOTER -->
+            <footer class="std-footer">
+                <button class="std-cta" onclick="goToPage(5)">
+                    NEXT: DEFINE MY GOALS
+                </button>
+            </footer>
         </div>
     </div>
 
@@ -485,9 +449,100 @@
                         <span class="theme-icon-inner">☀️</span>
                     </button>
                 </div>
+                <div class="std-title">PROFILE CONTEXT</div>
+                <div class="std-header-right">
+                    <div class="page-counter">5/8</div>
+                </div>
+            </header>
+
+            <!-- 2. BODY -->
+            <main class="std-body">
+                <div class="receipt-header" style="margin-bottom:20px;">
+                    <div style="font-size:0.8rem; color:var(--color-text-muted); text-align:center;">Now, let's set your
+                        targets.</div>
+                </div>
+
+                <div class="input-section" style="margin-bottom:20px;">
+                    <label
+                        style="display:block; font-size:var(--text-sm); font-weight:bold; margin-bottom:8px; color:var(--color-text-main);">CURRENT
+                        AGE</label>
+                    <select id="input-age" class="modern-select" onchange="updateGoals()"
+                        style="width:100%; height:50px; padding:0 15px; border-radius:var(--radius-btn); border:1px solid var(--color-border); font-size:var(--text-md); background:#fff;">
+                        <option value="18-25">18-25 (Gen Z)</option>
+                        <option value="26-35" selected>26-35 (Millennial)</option>
+                        <option value="36-50">36-50 (Gen X)</option>
+                        <option value="50+">50+ (Boomer)</option>
+                    </select>
+                </div>
+
+                <div class="input-section" style="margin-bottom:20px;">
+                    <label
+                        style="display:block; font-size:var(--text-sm); font-weight:bold; margin-bottom:8px; color:var(--color-text-main);">SELECT
+                        YOUR STATE
+                        <span style="font-size:0.7rem; font-weight:normal; color:var(--color-text-muted);">(Search
+                            or scroll)</span></label>
+                    <select id="input-state" class="modern-select" onchange="updateStateContext()"
+                        style="width:100%; height:50px; padding:0 15px; border-radius:var(--radius-btn); border:1px solid var(--color-border); font-size:var(--text-md); background:#fff;">
+                        <!-- JS injects options here. First one should be placeholder -->
+                    </select>
+                    <!-- NEW: State Context Insight -->
+                    <div id="state-context-display"
+                        style="margin-top:10px; font-size:0.8rem; background:#f0fcf4; border:1px solid #c3e6cb; border-radius:4px; padding:8px; display:none;">
+                        <!-- Injected JS: "Expenses here are 20% higher..." -->
+                    </div>
+                </div>
+
+                <div class="input-section" style="margin-bottom:20px;">
+                    <label
+                        style="display:block; font-size:var(--text-sm); font-weight:bold; margin-bottom:8px; color:var(--color-text-main);">TOP
+                        2 FINANCIAL GOALS <span
+                            style="font-size:0.7rem; font-weight:normal; color:var(--color-text-muted);">(Select
+                            maximum 2)</span></label>
+
+                    <div id="goal-pills-container" class="goal-pills-wrapper"
+                        style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <!-- Populated via JS -->
+                    </div>
+                    <!-- NEW: Goal Context Insight -->
+                    <div id="goal-context-display"
+                        style="margin-top:10px; font-size:0.8rem; color:#555; font-style:italic; display:none;">
+                        Goal Insight will appear here...
+                    </div>
+                    <div
+                        style="margin-top:15px; font-size:0.7rem; color:var(--color-text-muted); text-align:center; font-style:italic;">
+                        TIMELINES AND AMOUNTS ARE AVERAGES BASED ON TYPICAL USER DATA
+                    </div>
+                </div>
+            </main>
+
+            <!-- 3. FOOTER -->
+            <footer class="std-footer" style="flex-direction:column; gap:10px; height:auto; padding:15px;">
+                <button class="std-cta" onclick="generateStrategy()">
+                    GENERATE MASTER PLAN
+                </button>
+                <div style="font-size:0.75rem; color:var(--color-text-muted); text-align:center;">
+                    AI is designing your personalized strategy...
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ==============================================
+         Page 6: THE PERSONALIZATION DELTA (Split View)
+         ============================================== -->
+    <div id="ui-page-6" class="ui-screen hidden">
+        <div class="std-container">
+            <!-- 1. HEADER -->
+            <header class="std-header">
+                <div class="std-header-left">
+                    <div class="std-back-btn" onclick="goToPage(5)">❮</div>
+                    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                        <span class="theme-icon-inner">☀️</span>
+                    </button>
+                </div>
                 <div class="std-title">MASTER PLAN</div>
                 <div class="std-header-right">
-                    <div class="page-counter">5/6</div>
+                    <div class="page-counter">6/8</div>
                 </div>
             </header>
 
@@ -529,9 +584,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Card 2: Strategic DNA -->
-                <!-- Section Removed: Generic strengths/weaknesses -->
 
                 <!-- Card 3: Goal Timeline (Redesigned) -->
                 <div class="card"
@@ -591,7 +643,6 @@
                         <!-- JS injects: "🚀 Adding ₹5k saved you 1.2 Years!" -->
                     </div>
 
-                    <!-- Timeline Scenario Cards (No Graph) -->
                     <!-- Growth Race Visual (Canvas) -->
                     <div
                         style="background:#121212; border-radius:12px; padding:15px; border:1px solid #333; margin-bottom:15px; position:relative;">
@@ -629,18 +680,7 @@
                             <!-- JS injects corpus projections -->
                         </div>
                     </div>
-
-                    <!-- Timeline Details -->
-                    <div class="scenario-legend">
-                        <!-- JS will inject timeline context here -->
-                    </div>
                 </div>
-
-
-
-
-
-
 
                 <!-- RIA Disclaimer -->
                 <div
@@ -649,116 +689,6 @@
                     Registered Investment Advisor. The suggestions shown are for learning purposes only. Please consult
                     a certified financial planner before making investment decisions.
                 </div>
-
-                <div style="text-align:center; margin-top:30px; margin-bottom: 20px;">
-                    <button class="btn-text" onclick="localStorage.clear(); location.reload();"
-                        style="color:var(--color-danger); background:none; border:none; font-weight:bold; cursor:pointer;">
-                        ⚠ DELETE MY DATA
-                    </button>
-                </div>
-            </main>
-
-            <!-- 3. FOOTER -->
-            <footer class="std-footer">
-                <button class="std-cta"
-                    onclick="document.getElementById('ui-page-5').classList.add('hidden'); document.getElementById('ui-page-6').classList.remove('hidden'); startAdvisorChat(GLOBAL_STATE);">
-                    CHAT WITH INSPECTOR
-                </button>
-            </footer>
-        </div>
-    </div>
-
-    <!-- ==============================================
-         Page 6: THE PERSONALIZATION DELTA (Split View)
-         ============================================== -->
-    <div id="ui-page-6" class="ui-screen hidden">
-        <div class="std-container" style="max-width: 1200px; height: 100vh; display: flex; flex-direction: column;">
-            <!-- 1. HEADER -->
-            <header class="std-header">
-                <div class="std-header-left">
-                    <div class="std-back-btn" onclick="goToPage(5)">❮</div>
-                    <button class="theme-toggle-btn" onclick="toggleTheme()">
-                        <span class="theme-icon-inner">☀️</span>
-                    </button>
-                </div>
-                <div class="std-title">FINAL REVIEW</div>
-                <div class="std-header-right">
-                    <div class="page-counter">6/6</div>
-                </div>
-            </header>
-
-            <!-- 2. BODY (Split View) -->
-            <main class="std-body" style="flex: 1; display: flex; gap: 20px; overflow: hidden; padding: 10px;">
-
-                <!-- LEFT: THE MACHINE (Base Plan) -->
-                <div class="delta-left"
-                    style="flex: 1; border-right: 1px solid var(--color-border); padding-right: 20px; overflow-y: auto; display: none;">
-                    <!-- Hidden on Mobile by default, toggled via tabs if needed? For now, implementing responsive CSS behavior via inline styles or class -->
-                    <h3
-                        style="color:var(--color-text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">
-                        🤖 The Algorithm's Plan
-                    </h3>
-
-                    <div class="card"
-                        style="padding: 15px; margin-bottom: 15px; background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 8px;">
-                        <div style="font-size: 0.8rem; color: var(--color-text-muted);">Asset Allocation</div>
-                        <div style="font-weight: bold; font-size: 1.1rem; margin-top: 5px;">
-                            <span style="color: #90caf9">Equity 50%</span> •
-                            <span style="color: #ce93d8">Debt 30%</span> •
-                            <span style="color: #fff59d">Gold 20%</span>
-                        </div>
-                    </div>
-
-                    <div class="card"
-                        style="padding: 15px; margin-bottom: 15px; background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 8px;">
-                        <div style="font-size: 0.8rem; color: var(--color-text-muted);">Projected Corpus (20Y)</div>
-                        <div style="font-weight: bold; font-size: 1.5rem; margin-top: 5px; color: var(--color-accent);">
-                            ₹1.2 Cr
-                        </div>
-                        <div style="font-size: 0.7rem; color: var(--color-text-muted); margin-top: 5px;">
-                            @ 12% Avg. Benchmark Return
-                        </div>
-                    </div>
-
-                    <div style="font-size: 0.85rem; color: var(--color-text-main); line-height: 1.6;">
-                        <strong>Logic Used:</strong><br>
-                        Based on your persona (<span id="delta-persona-name">Jethalal</span>) and goal priorities.
-                        The machine assumes standard volatility tolerance.
-                    </div>
-                </div>
-
-                <!-- RIGHT: THE HUMAN (Advisor) -->
-                <div class="delta-right" style="flex: 1; display: flex; flex-direction: column; height: 100%;">
-                    <h3
-                        style="color:var(--color-primary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-                        <img src="assets/inspector_avatar.png" style="width: 24px; height: 24px; border-radius: 50%;">
-                        Jigri Advisor <span style="font-size: 0.6rem; color: #2ecc71; margin-left: auto;">● Live
-                            Analysis</span>
-                    </h3>
-
-                    <!-- Chat History -->
-                    <div id="chat-history-container"
-                        style="flex: 1; background: var(--color-bg); border-radius: 12px; padding: 15px; overflow-y: auto; border: 1px solid var(--color-border); margin-bottom: 15px;">
-                        <!-- Messages injected by llm_advisor.js -->
-                    </div>
-
-                    <!-- Input -->
-                    <div
-                        style="display:flex; width:100%; gap:10px; background:var(--color-bg-card); padding:10px; border-radius:30px; border:1px solid var(--color-border); box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                        <button onclick="getAppRecommendations()" title="Get OS-specific app recos"
-                            style="background:#f1c40f; border:none; border-radius:20px; padding:0 12px; font-size:0.8rem; font-weight:bold; cursor:pointer; color:#000;">
-                            📲 Apps?
-                        </button>
-                        <input type="text" id="chat-input-box" placeholder="Reply to advisor..."
-                            style="flex:1; background:transparent; border:none; padding:5px 10px; font-family:inherit; font-size:0.95rem; outline:none; color: var(--color-text-main);"
-                            onkeypress="if(event.key==='Enter') sendUserMessage()">
-                        <button id="chat-send-btn" onclick="sendUserMessage()"
-                            style="width:36px; height:36px; background:var(--color-primary); color:#fff; border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold; transition: transform 0.2s;">
-                            ➤
-                        </button>
-                    </div>
-                </div>
-
             </main>
 
             <!-- 3. FOOTER -->
