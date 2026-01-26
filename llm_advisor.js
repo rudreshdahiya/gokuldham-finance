@@ -20,7 +20,10 @@ async function startAdvisorChat(userContext) {
     try {
         // 1. Try Server API
         let data;
-        const response = await fetch('/api/inspector', {
+        const apiPath = '/api/inspector';
+        console.log(`Advisor: Connecting to ${apiPath}... (Origin: ${window.location.origin})`);
+
+        const response = await fetch(apiPath, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -32,25 +35,21 @@ async function startAdvisorChat(userContext) {
         if (response.ok) {
             data = await response.json();
         } else {
-            // Get the server error message
-            const errorData = await response.json().catch(() => ({}));
-            const serverMsg = errorData.error || `Error ${response.status}: ${response.statusText}`;
+            const errorMsg = `HTTP ${response.status} (${response.statusText})`;
+            console.error(`Advisor API failed: ${errorMsg}`);
 
-            console.warn("Inspector API failed:", serverMsg);
-
-            // CRITICAL: Only fallback if the API route is missing (404) 
-            // If it's 500, 401, 403, etc., the server is alive and reporting a specific problem.
             if (response.status === 404) {
-                console.info("API Route not found, trying client-side fallback...");
+                appendMessage("system", `⚠️ API Route Not Found: The file /api/inspector.js might be missing or not deployed correctly on Vercel. (Status 404)`);
+                console.info("Trying client-side fallback...");
                 try {
                     data = await runClientSideGemini(context, "Analyze my profile and give me a brutally honest critique in Bollywood style.");
                 } catch (fallbackError) {
-                    appendMessage("system", "⚠️ Connection failed: " + fallbackError.message);
+                    appendMessage("system", "⚠️ Fallback Failed: " + fallbackError.message);
                     return;
                 }
             } else {
-                // Show the specific server error instead of falling back to a failing client-side key
-                appendMessage("system", "⚠️ Advisor Error: " + serverMsg);
+                const errorData = await response.json().catch(() => ({}));
+                appendMessage("system", `⚠️ Advisor Server Error: ${errorMsg}. ${errorData.error || ''}`);
                 return;
             }
         }
