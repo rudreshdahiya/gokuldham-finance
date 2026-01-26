@@ -445,18 +445,57 @@ function renderBehavioralDimensions(userVector) {
     if (!userVector || userVector.length !== 6) return '';
 
     const dimensions = [
-        { label: 'Risk Appetite', icon: '🎲', color: '#e74c3c', academic: 'Markowitz Risk Tolerance' },
-        { label: 'Future Focus', icon: '⏳', color: '#3498db', academic: 'Time Preference (Laibson)' },
-        { label: 'Social Spending', icon: '👥', color: '#9b59b6', academic: 'Social Capital Investment' },
-        { label: 'Status Seeking', icon: '👑', color: '#f39c12', academic: 'Conspicuous Consumption (Veblen)' },
-        { label: 'Money Anxiety', icon: '😰', color: '#95a5a6', academic: 'Loss Aversion (Kahneman)' },
-        { label: 'Saving Power', icon: '🐷', color: '#27ae60', academic: 'Savings Discipline' }
+        {
+            label: 'Risk Appetite',
+            icon: '🎲',
+            color: '#e74c3c',
+            academic: 'Markowitz Risk Tolerance',
+            explain: 'How comfortable are you with market ups and downs? Higher = okay with volatility for better returns.'
+        },
+        {
+            label: 'Future Focus',
+            icon: '⏳',
+            color: '#3498db',
+            academic: 'Time Preference (Laibson)',
+            explain: 'Do you think long-term or short-term? Higher = you prioritize future goals over instant spending.'
+        },
+        {
+            label: 'Social Spending',
+            icon: '👥',
+            color: '#9b59b6',
+            academic: 'Social Capital Investment',
+            explain: 'How much do you spend on friends, family, gifts? Higher = relationships are a priority.'
+        },
+        {
+            label: 'Status Seeking',
+            icon: '👑',
+            color: '#f39c12',
+            academic: 'Conspicuous Consumption (Veblen)',
+            explain: 'Do you buy to impress others? Higher = you care about brands and appearances.'
+        },
+        {
+            label: 'Money Anxiety',
+            icon: '😰',
+            color: '#95a5a6',
+            academic: 'Loss Aversion (Kahneman)',
+            explain: 'How stressed are you about money? Higher = you worry more about losses than gains.'
+        },
+        {
+            label: 'Saving Power',
+            icon: '🐷',
+            color: '#27ae60',
+            academic: 'Savings Discipline',
+            explain: 'How disciplined are you at saving? Higher = you consistently set money aside.'
+        }
     ];
 
     let html = `
         <div style="margin:20px 0; padding:15px; background:var(--color-bg-secondary); border-radius:12px; border:1px solid var(--color-border);">
             <div style="font-size:0.7rem; font-weight:bold; color:var(--color-primary); letter-spacing:1px; margin-bottom:12px; text-align:center;">
                 📊 YOUR BEHAVIORAL PROFILE
+            </div>
+            <div style="font-size:0.6rem; color:var(--color-text-muted); text-align:center; margin-bottom:15px;">
+                Tap any bar to learn what it means
             </div>
     `;
 
@@ -465,9 +504,9 @@ function renderBehavioralDimensions(userVector) {
         const level = value > 70 ? 'High' : value > 40 ? 'Moderate' : 'Low';
 
         html += `
-            <div style="margin-bottom:10px;" title="${dim.academic}">
+            <div style="margin-bottom:12px; cursor:pointer;" onclick="alert('${dim.label}:\\n\\n${dim.explain}')">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span style="font-size:0.75rem; color:var(--color-text-main);">${dim.icon} ${dim.label}</span>
+                    <span style="font-size:0.75rem; color:var(--color-text-main);">${dim.icon} ${dim.label} <span style="font-size:0.6rem; color:var(--color-text-muted);">ⓘ</span></span>
                     <span style="font-size:0.7rem; color:${dim.color}; font-weight:bold;">${level}</span>
                 </div>
                 <div style="height:6px; background:var(--color-bg); border-radius:3px; overflow:hidden;">
@@ -478,8 +517,8 @@ function renderBehavioralDimensions(userVector) {
     });
 
     html += `
-            <div style="font-size:0.6rem; color:var(--color-text-muted); text-align:center; margin-top:10px; font-style:italic;">
-                Based on behavioral finance research (Kahneman & Tversky, Markowitz)
+            <div style="font-size:0.55rem; color:var(--color-text-muted); text-align:center; margin-top:12px; padding-top:10px; border-top:1px dashed var(--color-border);">
+                🔬 Based on behavioral finance research by Nobel laureates Kahneman & Thaler
             </div>
         </div>
     `;
@@ -1937,6 +1976,10 @@ function renderFinancialGap(targetCorpusL, monthlySIP, initialCorpus, annualRate
             </div>
             <div style="margin-top:12px; padding:10px; background:rgba(231,76,60,0.1); border-radius:6px; border-left:3px solid #e74c3c;">
                 💡 <strong>Close the gap:</strong> Add ₹${(monthlyGapSIP / 1000).toFixed(1)}k/month more SIP to reach your goal on time.
+            </div>
+            <div style="margin-top:10px; padding:8px; background:rgba(52,152,219,0.1); border-radius:6px; cursor:pointer;" 
+                onclick="alert('How we calculate this:\\n\\n• TARGET: Sum of your goal amounts\\n• PROJECTED: Your current SIP × ${years} years × ${(annualRate * 100).toFixed(0)}% return\\n• GAP: Target - Projected\\n\\nFormula: Future Value = SIP × ((1+r)^n - 1) / r\\nwhere r = monthly return, n = months')">
+                <span style="font-size:0.65rem; color:#3498db;">📐 How is this calculated? <span style="font-size:0.5rem;">ⓘ tap to learn</span></span>
             </div>
         `;
     }
