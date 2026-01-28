@@ -1,26 +1,174 @@
-[
-    {
-        "topic": "Best App for Mutual Funds (Direct)",
-        "content": "Zerodha Coin is the top choice for Direct Mutual Funds. It has 0 commission, a clean UI, and works seamlessly on both Android and iOS. Best for long-term SIP investors."
-    },
-    {
-        "topic": "Best App for US Stocks",
-        "content": "INDmoney is highly recommended for investing in US Stocks (Apple, Tesla, etc.) from India. It offers a great iOS and Android experience with low remittance fees."
-    },
-    {
-        "topic": "Best App for Beginners (Gold/Small Savings)",
-        "content": "Jar App is excellent for beginners who want to automate small savings into Digital Gold. It works automatically via SMS detection on Android (limited on iOS)."
-    },
-    {
-        "topic": "Best App for Active Trading (F&O)",
-        "content": "Groww offers a very simplified interface for F&O trading, making it less intimidating for new traders compared to Zerodha Kite. Available on all platforms."
-    },
-    {
-        "topic": "Best App for Expense Tracking",
-        "content": "Fold is a fantastic expense tracker that connects to your bank accounts (Account Aggregator). It has a premium iOS app and a solid Android version."
-    },
-    {
-        "topic": "App for Fixed Deposits",
-        "content": "Stable Money allows you to book FDs in various banks with higher interest rates than standard savings accounts. Works well on both mobile platforms."
-    }
-]
+{
+    "apps": [
+        {
+            "id": "zerodha",
+            "name": "Zerodha (Kite)",
+            "category": "Investing",
+            "tags": [
+                "stocks",
+                "trader",
+                "advanced",
+                "low-cost"
+            ],
+            "persona_fit": [
+                "Chatur",
+                "Rancho",
+                "Farhan"
+            ],
+            "why": "Best for serious investors who want control and low costs.",
+            "learning_tip": "Use 'Varsity' by Zerodha to learn stock basics for free."
+        },
+        {
+            "id": "groww",
+            "name": "Groww",
+            "category": "Investing",
+            "tags": [
+                "mutual-funds",
+                "beginner",
+                "easy-ui"
+            ],
+            "persona_fit": [
+                "Raju",
+                "Shyam",
+                "Geet",
+                "Bunny"
+            ],
+            "why": "Super simple interface. Perfect for your first Mutual Fund SIP.",
+            "learning_tip": "Start with a ₹500 SIP in an Index Fund to test the waters."
+        },
+        {
+            "id": "indmoney",
+            "name": "INDmoney",
+            "category": "Tracking",
+            "tags": [
+                "us-stocks",
+                "tracker",
+                "automated"
+            ],
+            "persona_fit": [
+                "Chatur",
+                "Raj",
+                "Poo"
+            ],
+            "why": "Tracks all your family's money in one place. Also allows US investing.",
+            "learning_tip": "Connect your email to auto-track credit card spends."
+        },
+        {
+            "id": "jar",
+            "name": "Jar App",
+            "category": "Savings",
+            "tags": [
+                "gold",
+                "micro-savings",
+                "daily"
+            ],
+            "persona_fit": [
+                "Baburao",
+                "Simran",
+                "Pushpa"
+            ],
+            "why": "Automates savings. Invests your 'chhutte paise' (loose change) into Gold.",
+            "learning_tip": "Digital Gold is a great way to start saving without feeling the pinch."
+        },
+        {
+            "id": "cred",
+            "name": "CRED",
+            "category": "Credit",
+            "tags": [
+                "rewards",
+                "premium",
+                "credit-score"
+            ],
+            "persona_fit": [
+                "Poo",
+                "Raj",
+                "Chatur"
+            ],
+            "why": "Rewards you for paying bills. Good for maintaining a high credit score.",
+            "learning_tip": "Never pay just the 'Minimum Due' on credit cards. Always pay full."
+        },
+        {
+            "id": "etmoney",
+            "name": "ET Money",
+            "category": "Investing",
+            "tags": [
+                "genius-report",
+                "mutual-funds",
+                "insurance"
+            ],
+            "persona_fit": [
+                "Rancho",
+                "Shyam"
+            ],
+            "why": "Gives you a 'Portfolio Health Check' report which is very detailed.",
+            "learning_tip": "Check your 'Portfolio Overlap' to ensure you aren't buying duplicates."
+        },
+        {
+            "id": "fampay",
+            "name": "FamPay",
+            "category": "Teen",
+            "tags": [
+                "UPI",
+                "students",
+                "no-bank-account"
+            ],
+            "persona_fit": [
+                "Geet",
+                "Bunny",
+                "Rani"
+            ],
+            "why": "Great for students/teens to manage their own pocket money via UPI.",
+            "learning_tip": "Learn to budget your monthly allowance before you get a real salary."
+        },
+        {
+            "id": "jupiter",
+            "name": "Jupiter",
+            "category": "Banking",
+            "tags": [
+                "neobank",
+                "pots",
+                "tracking"
+            ],
+            "persona_fit": [
+                "Bunny",
+                "Farhan"
+            ],
+            "why": "A digital bank that helps you categorize spends into 'Pots'.",
+            "learning_tip": "Use 'Pots' to save separately for Travel and Gadgets."
+        },
+        {
+            "id": "uni",
+            "name": "Uni Cards",
+            "category": "Credit",
+            "tags": [
+                "pay-1/3",
+                "credit",
+                "flexible"
+            ],
+            "persona_fit": [
+                "Raju",
+                "Munna",
+                "Veeru"
+            ],
+            "why": "Split reliable bills into 3 parts. Good for managing cash flow.",
+            "learning_tip": "Splitting payments is useful, but ensure you have the cashflow for next month."
+        },
+        {
+            "id": "smallcase",
+            "name": "Smallcase",
+            "category": "Investing",
+            "tags": [
+                "portfolio",
+                "themes",
+                "equity"
+            ],
+            "persona_fit": [
+                "Chatur",
+                "Raj",
+                "Farhan"
+            ],
+            "why": "Invest in ideas (e.g., 'Electric Vehicles') instead of single stocks.",
+            "learning_tip": "Thematic investing is riskier than Mutual Funds but safer than single stocks."
+        }
+    ]
+}
