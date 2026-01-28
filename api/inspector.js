@@ -200,32 +200,49 @@ export default async function handler(req, res) {
         DO NOT recommend apps - that's handled separately.
         `;
 
-        // --- GENERATE WITH REST API ---
+        // --- GENERATE WITH GROQ API (Llama 3) ---
+        // reliable, fast, and free tier friendly
+        const groqApiKey = process.env.GPT_API_KEY;
+        if (!groqApiKey) {
+            throw new Error("Missing GPT_API_KEY (Groq) in Vercel env");
+        }
+
         const chatResponse = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${CHAT_MODEL}:generateContent?key=${apiKey}`,
+            "https://api.groq.com/openai/v1/chat/completions",
             {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${groqApiKey}`
+                },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: systemPrompt }] }],
-                    generationConfig: {
-                        maxOutputTokens: 150,
-                        temperature: 0.8
-                    }
+                    model: "llama3-70b-8192",
+                    messages: [
+                        {
+                            role: "system",
+                            content: systemPrompt
+                        },
+                        {
+                            role: "user",
+                            content: question
+                        }
+                    ],
+                    max_tokens: 300,
+                    temperature: 0.8
                 })
             }
         );
 
         if (!chatResponse.ok) {
             const errorData = await chatResponse.json().catch(() => ({}));
-            console.error("Gemini API Error:", chatResponse.status, errorData);
+            console.error("Groq API Error:", chatResponse.status, errorData);
             return res.status(500).json({
-                error: `Gemini API failed: ${errorData?.error?.message || chatResponse.statusText}`
+                error: `Groq API failed: ${errorData?.error?.message || chatResponse.statusText}`
             });
         }
 
         const chatData = await chatResponse.json();
-        const answer = chatData?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
+        const answer = chatData?.choices?.[0]?.message?.content || "No response from AI.";
 
         return res.status(200).json({ answer });
 
