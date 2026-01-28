@@ -133,7 +133,7 @@ async function runClientSideGemini(context, question) {
     // ... rest of the function ...
 
     // Use direct REST API instead of SDK for maximum compatibility
-    const MODEL = "gemini-2.0-flash-lite-001";
+    const MODEL = "gemini-1.5-flash";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
 
     // Retrieve educational context from NISM/Varsity RAG
@@ -359,7 +359,7 @@ async function getLiveAppRecommendations() {
     `;
 
     try {
-        const MODEL = "gemini-2.0-flash";
+        const MODEL = "gemini-1.5-flash";
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
 
         const response = await fetch(API_URL, {
