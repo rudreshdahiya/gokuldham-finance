@@ -213,7 +213,7 @@ export default async function handler(req, res) {
                     "Authorization": `Bearer ${groqApiKey}`
                 },
                 body: JSON.stringify({
-                    model: "llama3-70b-8192",
+                    model: "llama-3.3-70b-versatile",
                     messages: [
                         {
                             role: "system",
