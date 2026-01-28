@@ -237,19 +237,28 @@ async function sendUserMessage() {
 
     try {
         // 1. Try Server API (Production)
+        const response = await fetch('/api/inspector', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ context, question: msg })
+        });
+
         let data;
-        try {
-            const response = await fetch('/api/inspector', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ context, question: msg })
-            });
-            if (!response.ok) throw new Error("API Failure");
+        if (response.ok) {
             data = await response.json();
-        } catch (apiError) {
-            // 2. Fallback to Client Side (Local Testing)
-            console.warn("API Failed, switching to Client-Side Gemini:", apiError);
-            data = await runClientSideGemini(context, msg);
+        } else {
+            const errorMsg = `HTTP ${response.status} (${response.statusText})`;
+            console.error(`Advisor API failed: ${errorMsg}`);
+
+            if (response.status === 404) {
+                console.info("API Route not found, trying client-side fallback...");
+                data = await runClientSideGemini(context, msg);
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                appendMessage("system", `⚠️ Advisor Server Error: ${errorMsg}. ${errorData.error || ''}`);
+                document.getElementById(loadingId).remove();
+                return;
+            }
         }
 
         document.getElementById(loadingId).remove();
@@ -261,7 +270,8 @@ async function sendUserMessage() {
         }
 
     } catch (e) {
-        document.getElementById(loadingId).remove();
+        if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+        console.error("Chat Error:", e);
         appendMessage("system", "⚠️ Connection failed: " + e.message);
     }
 }
