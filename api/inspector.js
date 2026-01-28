@@ -16,11 +16,8 @@ export default async function handler(req, res) {
     const { context, question } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    if (!apiKey) {
-        return res.status(401).json({
-            error: 'Missing GEMINI_API_KEY in Vercel Environment Variables. Go to Vercel Dashboard > Project Settings > Environment Variables and add GEMINI_API_KEY.'
-        });
-    }
+    // Gemini Key is now optional (only for RAG/Embeddings)
+    // if (!apiKey) ... we proceed without RAG if missing
 
     try {
         // --- RAG STEP 1: RETRIEVE KNOWLEDGE (Optional) ---
