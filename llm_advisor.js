@@ -369,7 +369,7 @@ async function getLiveAppRecommendations() {
                 contents: [{ parts: [{ text: searchPrompt }] }],
                 generationConfig: {
                     temperature: 0.7,
-                    maxOutputTokens: 1024
+                    maxOutputTokens: 150
                 },
                 // Enable grounding with Google Search
                 tools: [{
